@@ -166,3 +166,5 @@ do not merge or deploy from this branch without explicit approval.
   Firefly-open controls.
 - Trust summary now counts neutral `Info` sources separately so live
   not-wired checks are visible without being treated as failures.
+- Review summary now counts stale rows separately from the oldest row age so
+  queue pressure is visible without opening every review group.

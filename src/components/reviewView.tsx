@@ -8,6 +8,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
   const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
   const totalQueued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
+  const staleCount = items.filter((item) => item.ageDays >= staleAgeDays).length;
   const groups = reviewGroups(items);
   const riskCount = groups.find((group) => group.tone === 'risk')?.items.length ?? 0;
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
@@ -29,6 +30,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
             <Metric label="Risk" value={formatRowCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
             <Metric label="Queued" value={formatMoney(totalQueued, true)} tone={summaryTone} />
             <Metric label="Oldest" value={`${oldestAgeDays}d`} tone={oldestAgeDays >= 7 ? 'watch' : 'ok'} />
+            <Metric label="Stale" value={formatRowCount(staleCount)} tone={staleCount > 0 ? 'watch' : 'ok'} />
           </section>
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
@@ -140,3 +142,5 @@ const reviewActionMatchers = [
   { label: 'Rule candidate', tone: 'watch', test: /rule/i },
   { label: 'Clean payee', tone: 'neutral', test: /payee|metadata/i },
 ] satisfies Array<{ label: string; tone: Tone; test: RegExp }>;
+
+const staleAgeDays = 7;
