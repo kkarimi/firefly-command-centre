@@ -14,9 +14,9 @@ export function AccountsView({ groups }: { groups: Record<string, Account[]> }) 
     <div className="view-stack">
       <ViewHeading icon={Landmark} title="Accounts" meta={`Cash accounts ${formatMoney(budgetableCash)}`} />
       <section className="split-summary">
-        <Metric label="Cash accounts" value={formatMoney(budgetableCash)} tone="ok" />
-        <Metric label="Net worth view" value={formatMoney(netWorth)} tone="neutral" />
-        <Metric label="Manual/freshness" value={`${flagged} flagged`} tone={flagged > 0 ? 'watch' : 'ok'} />
+        <Metric label="Budgetable cash" value={formatMoney(budgetableCash)} tone="ok" />
+        <Metric label="Net position" value={formatMoney(netWorth)} tone="neutral" />
+        <Metric label="Needs review" value={`${flagged} flagged`} tone={flagged > 0 ? 'watch' : 'ok'} />
       </section>
       <div className="map-grid">
         <AccountGroup title="Cash accounts" icon={PiggyBank} accounts={groups.budgetableCash} />

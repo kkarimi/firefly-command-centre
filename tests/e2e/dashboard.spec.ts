@@ -69,6 +69,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
   await expect(page.getByText('Cash accounts \u00a37,090.24')).toBeVisible();
+  await expect(page.getByText('Budgetable cash')).toBeVisible();
+  await expect(page.getByText('Needs review')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-accounts-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Expected' }).click();
   await expect(page.getByRole('heading', { name: 'Expected' })).toBeVisible();
