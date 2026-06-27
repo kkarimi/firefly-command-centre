@@ -50,7 +50,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
               <section className="review-group" key={group.label} aria-label={`${group.label} review rows`}>
                 <header>
                   <span className={`status-chip ${toneClass(group.tone)}`}>{group.label}</span>
-                  <span>{formatRowCount(group.items.length)}</span>
+                  <span>{formatReviewGroupSummary(group.items)}</span>
                 </header>
                 <div className="review-list">
                   {group.items.map((item) => (
@@ -116,6 +116,11 @@ function reviewGroups(items: ReviewItem[]) {
 
 function formatRowCount(count: number) {
   return `${count} ${count === 1 ? 'row' : 'rows'}`;
+}
+
+function formatReviewGroupSummary(items: ReviewItem[]) {
+  const queued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
+  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)}`;
 }
 
 function reviewActionBuckets(items: ReviewItem[]) {
