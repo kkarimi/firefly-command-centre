@@ -9,6 +9,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
   const groups = reviewGroups(items);
   const riskCount = groups.find((group) => group.tone === 'risk')?.items.length ?? 0;
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
+  const actionBuckets = reviewActionBuckets(items);
 
   return (
     <div className="view-stack">
@@ -21,6 +22,19 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
             <Metric label="Risk" value={formatRowCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
             <Metric label="Queued" value={formatMoney(totalQueued, true)} tone={summaryTone} />
             <Metric label="Oldest" value={`${oldestAgeDays}d`} tone={oldestAgeDays >= 7 ? 'watch' : 'ok'} />
+          </section>
+          <section className="review-actions" aria-label="Suggested fixes">
+            <header>
+              <h3>Suggested fixes</h3>
+              <span>{formatRowCount(items.length)}</span>
+            </header>
+            <div>
+              {actionBuckets.map((bucket) => (
+                <span className={`status-chip ${toneClass(bucket.tone)}`} key={bucket.label}>
+                  {bucket.label} {bucket.count}
+                </span>
+              ))}
+            </div>
           </section>
           <div className="review-groups">
             {groups.map((group) => (
@@ -83,4 +97,21 @@ function reviewGroups(items: ReviewItem[]) {
 
 function formatRowCount(count: number) {
   return `${count} ${count === 1 ? 'row' : 'rows'}`;
+}
+
+function reviewActionBuckets(items: ReviewItem[]) {
+  const buckets = [
+    { label: 'Set category', tone: 'risk', test: /category|budget|tag/i },
+    { label: 'Rule candidate', tone: 'watch', test: /rule/i },
+    { label: 'Classify movement', tone: 'watch', test: /transfer|investment|cash-movement/i },
+    { label: 'Clean payee', tone: 'neutral', test: /payee|metadata/i },
+  ] satisfies Array<{ label: string; tone: Tone; test: RegExp }>;
+
+  return buckets
+    .map((bucket) => ({
+      label: bucket.label,
+      tone: bucket.tone,
+      count: items.filter((item) => bucket.test.test(`${item.reason} ${item.suggestion}`)).length,
+    }))
+    .filter((bucket) => bucket.count > 0);
 }

@@ -61,6 +61,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Review summary' })).toBeVisible();
   await expect(page.getByText('£2,246')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Suggested fixes' })).toBeVisible();
+  await expect(page.getByText('Rule candidate 1')).toBeVisible();
+  await expect(page.getByText('Clean payee 2')).toBeVisible();
   await expect(page.getByText('Handle first')).toBeVisible();
   await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByText('Unknown card presentment')).toBeVisible();

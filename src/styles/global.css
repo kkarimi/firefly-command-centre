@@ -836,6 +836,37 @@ p {
   gap: 10px;
 }
 
+.review-actions {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.review-actions header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-actions header span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.review-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.review-actions .status-chip {
+  margin-top: 0;
+}
+
 .review-groups {
   display: grid;
   gap: 18px;
