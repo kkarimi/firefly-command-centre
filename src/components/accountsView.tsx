@@ -5,6 +5,7 @@ import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 
 export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; groups: Record<string, Account[]> }) {
   const budgetableCash = sumAccounts(groups.budgetableCash);
+  const liabilities = sumAccounts(groups.creditAndLiabilities);
   const netWorth = Object.values(groups).flat().reduce((sum, account) => sum + account.balance, 0);
   const flagged = Object.values(groups)
     .flat()
@@ -17,8 +18,9 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
   return (
     <div className="view-stack">
       <ViewHeading icon={Landmark} title="Accounts" meta={`Cash accounts ${formatMoney(budgetableCash)}`} />
-      <section className="split-summary">
+      <section className="split-summary accounts-summary">
         <Metric label="Budgetable cash" value={formatMoney(budgetableCash)} tone="ok" />
+        <Metric label="Liabilities" value={formatMoney(liabilities)} tone={liabilities < 0 ? 'watch' : 'ok'} />
         <Metric label="Net position" value={formatMoney(netWorth)} tone="neutral" />
         <Metric label="Needs review" value={`${flagged} flagged`} tone={flagged > 0 ? 'watch' : 'ok'} />
       </section>

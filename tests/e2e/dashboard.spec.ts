@@ -78,9 +78,11 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
   await expect(page.getByText('Cash accounts \u00a37,090.24')).toBeVisible();
-  await expect(page.getByText('Budgetable cash')).toBeVisible();
-  await expect(page.getByText('Needs review')).toBeVisible();
-  await expect(page.getByText('-£9,864.98')).toBeVisible();
+  const accountsSummary = page.locator('.accounts-summary');
+  await expect(accountsSummary.getByText('Budgetable cash')).toBeVisible();
+  await expect(accountsSummary.locator('.metric').filter({ hasText: 'Liabilities' })).toContainText('-£9,864.98');
+  await expect(accountsSummary.getByText('Needs review')).toBeVisible();
+  await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' })).toContainText('-£9,864.98');
   await expect(page.getByText('£81,930.33')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Cash coverage' })).toBeVisible();
   await expect(page.getByText('Reserved £1,810')).toBeVisible();
