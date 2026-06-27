@@ -445,14 +445,12 @@ function applyExpected(data: CommandCentreData, transactions: FireflyResource[],
   data.expected.obligations = expectedObligations(splits, bills);
   data.expected.candidates = expectedBillCandidates(bills);
 
-  const currentMonthOutstanding = bills
-    .map(billFromResource)
-    .filter((bill): bill is ExpectedEvent => Boolean(bill))
-    .filter((bill) => bill.tone === 'watch' && isCurrentMonthDue(bill.due))
-    .reduce((sum, bill) => sum + bill.expected, 0);
+  const upcomingOutstanding = data.expected.obligations
+    .filter((event) => event.status === 'Upcoming')
+    .reduce((sum, event) => sum + event.expected, 0);
 
-  data.cash.committedUntilMonthEnd = currentMonthOutstanding;
-  data.cash.projectedLeft = data.cash.budgetableCash - currentMonthOutstanding;
+  data.cash.committedUntilMonthEnd = upcomingOutstanding;
+  data.cash.projectedLeft = data.cash.budgetableCash - upcomingOutstanding;
 }
 
 function expectedIncome(splits: FireflySplit[]): ExpectedEvent[] {
@@ -634,16 +632,6 @@ function dateSort(left: FireflySplit, right: FireflySplit) {
 function startOfToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-}
-
-function isCurrentMonthDue(shortDue: string) {
-  const due = parseShortDue(shortDue);
-  if (!Number.isFinite(due)) {
-    return false;
-  }
-  const date = new Date(due);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
 }
 
 function parseShortDue(value: string) {

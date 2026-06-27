@@ -13,7 +13,7 @@ test('renders the command centre and all v0 sections', async ({ page }, testInfo
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Money Map' }).click();
+  await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
   await expect(page.getByText('Cash accounts \u00a37,090.24')).toBeVisible();
 
@@ -21,7 +21,7 @@ test('renders the command centre and all v0 sections', async ({ page }, testInfo
   await expect(page.getByRole('heading', { name: 'Expected' })).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Ops' }).click();
+  await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
   await expect(page.getByText('Firefly')).toBeVisible();
 
