@@ -164,3 +164,5 @@ do not merge or deploy from this branch without explicit approval.
   appear before healthy sources.
 - `980fe6d` made the Review copy action functional and disabled unavailable
   Firefly-open controls.
+- Trust summary now counts neutral `Info` sources separately so live
+  not-wired checks are visible without being treated as failures.
