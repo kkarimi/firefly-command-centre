@@ -52,6 +52,7 @@ This repository is a public, source-only project for a Firefly III companion UI.
 bun run check
 bun run test
 bun run build
+bun run test:e2e
 ```
 
 ## GitHub

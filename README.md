@@ -37,7 +37,11 @@ Checks:
 bun run check
 bun run test
 bun run build
+bun run test:e2e
 ```
+
+`test:e2e` runs the built app through Playwright and writes ignored desktop and
+mobile screenshots under `test-results/`.
 
 ## Safety
 

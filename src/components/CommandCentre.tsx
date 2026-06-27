@@ -1,0 +1,420 @@
+import { useMemo, useState } from 'react';
+import {
+  Activity,
+  ArrowUpRight,
+  Banknote,
+  CalendarClock,
+  CheckCircle2,
+  Clipboard,
+  Copy,
+  Gauge,
+  GitBranch,
+  Landmark,
+  Layers3,
+  ListChecks,
+  PiggyBank,
+  RefreshCw,
+  ShieldCheck,
+  WalletCards,
+  type LucideIcon,
+} from 'lucide-react';
+import {
+  commandCentreFixture,
+  type Account,
+  type BudgetCard,
+  type ExpectedEvent,
+  type ReviewItem,
+  type Tone,
+} from '../data/fixtures';
+import { budgetStatus, formatMoney, formatSignedMoney, percentUsed, projectMonthEnd, remainingBudget } from '../lib/money';
+
+type TabId = 'month' | 'review' | 'money' | 'expected' | 'ops';
+
+type Tab = {
+  id: TabId;
+  label: string;
+  icon: LucideIcon;
+};
+
+const tabs: Tab[] = [
+  { id: 'month', label: 'Month', icon: Gauge },
+  { id: 'review', label: 'Review', icon: ListChecks },
+  { id: 'money', label: 'Money Map', icon: Layers3 },
+  { id: 'expected', label: 'Expected', icon: CalendarClock },
+  { id: 'ops', label: 'Ops', icon: ShieldCheck },
+];
+
+const toneLabels: Record<Tone, string> = {
+  ok: 'Good',
+  watch: 'Watch',
+  risk: 'Risk',
+  neutral: 'Info',
+};
+
+const statusLabels = {
+  ok: 'On track',
+  watch: 'Tight',
+  risk: 'Overrun',
+  review: 'Review',
+};
+
+function toneClass(tone: Tone | 'review') {
+  return `tone-${tone}`;
+}
+
+export default function CommandCentre() {
+  const [activeTab, setActiveTab] = useState<TabId>('month');
+  const data = commandCentreFixture;
+
+  const activeSpend = useMemo(() => data.budgets.reduce((sum, budget) => sum + budget.spent, 0), [data.budgets]);
+  const activeLimit = useMemo(() => data.budgets.reduce((sum, budget) => sum + budget.limit, 0), [data.budgets]);
+  const reviewCount = data.reviewItems.length;
+  const atRiskBudgets = data.budgets.filter((budget) => {
+    const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
+    return budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue) === 'risk';
+  }).length;
+
+  return (
+    <main className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <header className="shell-grid">
+          <section className="identity-panel">
+            <div>
+              <p className="eyebrow">{data.period.range}</p>
+              <h1>Firefly Command Centre</h1>
+            </div>
+            <div className="period-pill">
+              <RefreshCw size={16} aria-hidden="true" />
+              <span>{data.period.lastRefresh}</span>
+            </div>
+          </section>
+
+          <section className="cash-panel" aria-label="Month status">
+            <Metric label="Budgetable cash" value={formatMoney(data.cash.budgetableCash)} tone="ok" />
+            <Metric label="Projected left" value={formatMoney(data.cash.projectedLeft)} tone="ok" />
+            <Metric label="Review rows" value={String(reviewCount)} tone={reviewCount > 0 ? 'watch' : 'ok'} />
+            <Metric label="At risk" value={String(atRiskBudgets)} tone={atRiskBudgets > 0 ? 'risk' : 'ok'} />
+          </section>
+        </header>
+
+        <OpsStrip />
+
+        <div className="workspace">
+          <nav className="tab-rail" aria-label="Dashboard sections">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  className={activeTab === tab.id ? 'tab-button active' : 'tab-button'}
+                  type="button"
+                  aria-pressed={activeTab === tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                >
+                  <Icon size={18} aria-hidden="true" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+
+          <section className="content-surface">
+            {activeTab === 'month' && (
+              <MonthView activeSpend={activeSpend} activeLimit={activeLimit} budgets={data.budgets} />
+            )}
+            {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
+            {activeTab === 'money' && <MoneyMapView groups={data.moneyMap} />}
+            {activeTab === 'expected' && <ExpectedView groups={data.expected} />}
+            {activeTab === 'ops' && <OpsView />}
+          </section>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function OpsStrip() {
+  return (
+    <section className="ops-strip" aria-label="Operational health">
+      {commandCentreFixture.ops.map((item) => (
+        <div className="ops-cell" key={item.label}>
+          <span className={`status-dot ${toneClass(item.tone)}`} aria-hidden="true" />
+          <span className="ops-label">{item.label}</span>
+          <strong>{item.value}</strong>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function MonthView({
+  activeSpend,
+  activeLimit,
+  budgets,
+}: {
+  activeSpend: number;
+  activeLimit: number;
+  budgets: BudgetCard[];
+}) {
+  const overallPercent = percentUsed(activeSpend, activeLimit);
+
+  return (
+    <div className="view-stack">
+      <section className="month-overview">
+        <div>
+          <p className="eyebrow">Current month</p>
+          <h2>Spend is {overallPercent}% of planned household budget</h2>
+        </div>
+        <div className="overview-metrics">
+          <Metric label="Spent" value={formatMoney(activeSpend)} tone="neutral" />
+          <Metric label="Plan" value={formatMoney(activeLimit)} tone="neutral" />
+          <Metric label="Monzo drift" value={formatSignedMoney(commandCentreFixture.cash.fireflyDrift)} tone="ok" />
+          <Metric label="Committed" value={formatMoney(commandCentreFixture.cash.committedUntilMonthEnd)} tone="watch" />
+        </div>
+      </section>
+
+      <section className="budget-grid" aria-label="Budget cards">
+        {budgets.map((budget) => (
+          <BudgetTile key={budget.id} budget={budget} />
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function BudgetTile({ budget }: { budget: BudgetCard }) {
+  const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
+  const status = budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue);
+  const used = percentUsed(budget.spent, budget.limit);
+  const remaining = remainingBudget(budget.limit, budget.spent);
+  const progressWidth = budget.reviewQueue ? 100 : Math.min(100, used);
+
+  return (
+    <article className={`budget-tile ${budget.reviewQueue ? 'review-queue' : ''}`}>
+      <div className="tile-head">
+        <div>
+          <h3>{budget.name}</h3>
+          <span className={`status-chip ${toneClass(status)}`}>{statusLabels[status]}</span>
+        </div>
+        <span className="tile-percent">{budget.reviewQueue ? formatMoney(budget.spent) : `${used}%`}</span>
+      </div>
+
+      <div className="budget-values">
+        <span>
+          <small>Spent</small>
+          {formatMoney(budget.spent)}
+        </span>
+        <span>
+          <small>{budget.reviewQueue ? 'Target' : 'Left'}</small>
+          {budget.reviewQueue ? formatMoney(0) : formatMoney(remaining)}
+        </span>
+        <span>
+          <small>Projected</small>
+          {formatMoney(projected)}
+        </span>
+      </div>
+
+      <div className="progress-track" aria-hidden="true">
+        <span className={`progress-fill ${toneClass(status)}`} style={{ width: `${progressWidth}%` }} />
+      </div>
+
+      <div className="merchant-line">
+        {budget.merchants.map((merchant) => (
+          <span key={merchant}>{merchant}</span>
+        ))}
+      </div>
+
+      {budget.unusual && <p className={`tile-note ${toneClass(status)}`}>{budget.unusual}</p>}
+    </article>
+  );
+}
+
+function ReviewView({ items }: { items: ReviewItem[] }) {
+  return (
+    <div className="view-stack">
+      <ViewHeading
+        icon={Clipboard}
+        title="Review Inbox"
+        meta={`${items.length} rows need a decision`}
+        actionLabel="Export draft"
+      />
+      <div className="review-list">
+        {items.map((item) => (
+          <article className="review-row" key={item.id}>
+            <div className="row-main">
+              <span className={`status-chip ${toneClass(item.severity)}`}>{toneLabels[item.severity]}</span>
+              <div>
+                <h3>{item.payee}</h3>
+                <p>{item.reason}</p>
+              </div>
+            </div>
+            <div className="row-detail">
+              <span>{item.source}</span>
+              <strong>{formatMoney(item.amount)}</strong>
+              <span>{item.ageDays}d</span>
+            </div>
+            <div className="suggestion">
+              <span>{item.suggestion}</span>
+              <div className="icon-actions">
+                <button type="button" title={`Copy ${item.fireflyGroupId}`} aria-label={`Copy ${item.fireflyGroupId}`}>
+                  <Copy size={16} />
+                </button>
+                <button type="button" title="Open transaction in Firefly" aria-label="Open transaction in Firefly">
+                  <ArrowUpRight size={16} />
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MoneyMapView({ groups }: { groups: Record<string, Account[]> }) {
+  const budgetableCash = sumAccounts(groups.budgetableCash);
+  const netWorth = Object.values(groups).flat().reduce((sum, account) => sum + account.balance, 0);
+
+  return (
+    <div className="view-stack">
+      <ViewHeading icon={Landmark} title="Money Map" meta={`Budgetable cash ${formatMoney(budgetableCash)}`} />
+      <section className="split-summary">
+        <Metric label="Budgetable cash" value={formatMoney(budgetableCash)} tone="ok" />
+        <Metric label="Net worth view" value={formatMoney(netWorth)} tone="neutral" />
+        <Metric label="Manual assets" value="4 flagged" tone="watch" />
+      </section>
+      <div className="map-grid">
+        <AccountGroup title="Budgetable cash" icon={PiggyBank} accounts={groups.budgetableCash} />
+        <AccountGroup title="Credit and liabilities" icon={WalletCards} accounts={groups.creditAndLiabilities} />
+        <AccountGroup title="Wealth and manual assets" icon={Banknote} accounts={groups.wealth} />
+        <AccountGroup title="Excluded and accounting" icon={GitBranch} accounts={groups.excluded} />
+      </div>
+    </div>
+  );
+}
+
+function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[]> }) {
+  return (
+    <div className="view-stack">
+      <ViewHeading icon={CalendarClock} title="Expected vs Actual" meta="Income, obligations, statements, candidates" />
+      <div className="expected-grid">
+        <ExpectedGroup title="Salary status" events={groups.income} />
+        <ExpectedGroup title="Bills, tax, AMEX" events={groups.obligations} />
+        <ExpectedGroup title="Recurring candidates" events={groups.candidates} />
+      </div>
+    </div>
+  );
+}
+
+function OpsView() {
+  const checks = [
+    ['Checkout alignment', 'Local, Umbrel, and GitHub are expected to match before deploys.', 'ok'],
+    ['Firefly API posture', 'Phase 0 uses fixtures; live mode must proxy server-side only.', 'ok'],
+    ['Backup confidence', 'Backup and restore-test state belong in the always-visible strip.', 'ok'],
+    ['Mutation safety', 'No browser path can modify Firefly in this prototype.', 'ok'],
+  ] satisfies Array<[string, string, Tone]>;
+
+  return (
+    <div className="view-stack">
+      <ViewHeading icon={Activity} title="Ops" meta="Data confidence before finance decisions" />
+      <div className="ops-detail-grid">
+        {checks.map(([title, detail, tone]) => (
+          <article className="ops-detail" key={title}>
+            <CheckCircle2 className={toneClass(tone)} size={22} aria-hidden="true" />
+            <div>
+              <h3>{title}</h3>
+              <p>{detail}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: LucideIcon; accounts: Account[] }) {
+  return (
+    <article className="account-group">
+      <header>
+        <Icon size={18} aria-hidden="true" />
+        <h3>{title}</h3>
+      </header>
+      <div className="account-list">
+        {accounts.map((account) => (
+          <div className="account-row" key={account.name}>
+            <div>
+              <strong>{account.name}</strong>
+              <span>{account.kind}</span>
+            </div>
+            <div>
+              <strong>{formatMoney(account.balance)}</strong>
+              <span className={toneClass(account.tone)}>{account.freshness}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function ExpectedGroup({ title, events }: { title: string; events: ExpectedEvent[] }) {
+  return (
+    <article className="expected-group">
+      <h3>{title}</h3>
+      {events.map((event) => (
+        <div className="expected-row" key={event.name}>
+          <div>
+            <strong>{event.name}</strong>
+            <span>{event.due}</span>
+          </div>
+          <div>
+            <strong>{formatMoney(event.actual ?? event.expected)}</strong>
+            <span className={toneClass(event.tone)}>{event.status}</span>
+          </div>
+        </div>
+      ))}
+    </article>
+  );
+}
+
+function ViewHeading({
+  icon: Icon,
+  title,
+  meta,
+  actionLabel,
+}: {
+  icon: LucideIcon;
+  title: string;
+  meta: string;
+  actionLabel?: string;
+}) {
+  return (
+    <div className="view-heading">
+      <div>
+        <Icon size={20} aria-hidden="true" />
+        <div>
+          <h2>{title}</h2>
+          <p>{meta}</p>
+        </div>
+      </div>
+      {actionLabel && (
+        <button type="button" className="text-action">
+          {actionLabel}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function Metric({ label, value, tone }: { label: string; value: string; tone: Tone }) {
+  return (
+    <div className={`metric ${toneClass(tone)}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function sumAccounts(accounts: Account[]) {
+  return accounts.reduce((sum, account) => sum + account.balance, 0);
+}
