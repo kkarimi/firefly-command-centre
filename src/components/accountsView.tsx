@@ -52,15 +52,19 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
 
 function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: LucideIcon; accounts: Account[] }) {
   const total = sumAccounts(accounts);
+  const flaggedCount = flaggedAccountCount(accounts);
 
   return (
     <article className="account-group">
       <header>
-        <div>
+        <div className="account-group-title">
           <Icon size={18} aria-hidden="true" />
           <h3>{title}</h3>
         </div>
-        <strong>{formatMoney(total)}</strong>
+        <div className="account-group-summary">
+          <strong>{formatMoney(total)}</strong>
+          <span className={flaggedCount > 0 ? toneClass('watch') : toneClass('ok')}>{formatFlaggedCount(flaggedCount)}</span>
+        </div>
       </header>
       <div className="account-list">
         {accounts.length === 0 ? (
@@ -86,4 +90,12 @@ function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: Lu
 
 function sumAccounts(accounts: Account[]) {
   return accounts.reduce((sum, account) => sum + account.balance, 0);
+}
+
+function flaggedAccountCount(accounts: Account[]) {
+  return accounts.filter((account) => account.tone === 'watch').length;
+}
+
+function formatFlaggedCount(count: number) {
+  return count === 0 ? 'Clear' : `${count} flagged`;
 }
