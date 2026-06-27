@@ -139,3 +139,15 @@ Stop candidates:
 
 Use branch `improve/finance-ui-loop` for this loop. Keep `main` deployable and
 do not merge or deploy from this branch without explicit approval.
+
+## Accepted Checkpoints
+
+- `e777355` added this self-contained improvement loop context.
+- `c6a6d23` tightened the Trust view with a compact clear/watch/risk summary
+  and shorter source rows.
+- `0d12293` reorganized the Review inbox into a triage queue with summary
+  metrics and severity groups.
+- `da4f1b9` summarized Expected cash events with income seen, still expected,
+  and watch rows.
+- `a9834d7` clarified Accounts summary labels and added Accounts visual
+  evidence to the browser test flow.
