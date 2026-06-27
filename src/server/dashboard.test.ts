@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMonthPeriod, currentMonthKey, isSelectableMonthKey } from './dashboard';
+import { buildMonthPeriod, currentMonthKey, isSelectableMonthKey, reviewReason } from './dashboard';
 
 describe('dashboard period helpers', () => {
   const now = new Date(2026, 5, 27, 14, 30);
@@ -43,5 +43,35 @@ describe('dashboard period helpers', () => {
     expect(isSelectableMonthKey('2026-07', now)).toBe(false);
     expect(isSelectableMonthKey('2026-13', now)).toBe(false);
     expect(isSelectableMonthKey('not-a-month', now)).toBe(false);
+  });
+});
+
+describe('dashboard review suggestions', () => {
+  it('keeps generic cash-in rows out of household spend suggestions', () => {
+    expect(
+      reviewReason({
+        amount: '25',
+        category_name: 'General',
+        description: 'Ahmad Ali',
+        type: 'deposit',
+      }),
+    ).toEqual({
+      reason: 'Generic category on material cash-in',
+      suggestion: 'Confirm income, transfer, or accounting category instead of General',
+    });
+  });
+
+  it('keeps generic withdrawals in the household budget review flow', () => {
+    expect(
+      reviewReason({
+        amount: '-25',
+        category_name: 'General',
+        description: 'Cafe',
+        type: 'withdrawal',
+      }),
+    ).toEqual({
+      reason: 'Household spend has no budget',
+      suggestion: 'Attach to General / Review or confirm it stays outside budgets',
+    });
   });
 });
