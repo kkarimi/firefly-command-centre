@@ -101,8 +101,8 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('heading', { name: 'Expected' })).toBeVisible();
   const expectedSummary = page.getByRole('region', { name: 'Expected summary' });
   await expect(expectedSummary).toBeVisible();
-  await expect(page.getByText('£9,300')).toBeVisible();
-  await expect(page.getByText('£3,435')).toBeVisible();
+  await expect(expectedSummary.getByText('£9,300')).toBeVisible();
+  await expect(expectedSummary.getByText('£3,435')).toBeVisible();
   await expect(expectedSummary.getByText('Due next')).toBeVisible();
   await expect(expectedSummary.getByText('4 Jul')).toBeVisible();
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
@@ -111,6 +111,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
   await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
+  await expect(page.locator('.expected-group').filter({ hasText: 'Income' }).locator('header')).toContainText('£9,300');
+  await expect(page.locator('.expected-group').filter({ hasText: 'Bills and tax' }).locator('header')).toContainText('£3,649');
+  await expect(page.locator('.expected-group').filter({ hasText: 'Known bills' }).locator('header')).toContainText('£13');
   const firstExpectedGroupGap = await page.locator('.expected-group').first().evaluate((group) => {
     const heading = group.querySelector('h3')?.getBoundingClientRect();
     const row = group.querySelector('.expected-row')?.getBoundingClientRect();

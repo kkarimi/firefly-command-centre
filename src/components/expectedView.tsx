@@ -57,7 +57,10 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
 function ExpectedGroup({ title, events, empty }: { title: string; events: ExpectedEvent[]; empty: string }) {
   return (
     <article className="expected-group">
-      <h3>{title}</h3>
+      <header>
+        <h3>{title}</h3>
+        <strong>{formatMoney(sumExpectedEvents(events), true)}</strong>
+      </header>
       {events.length === 0 ? (
         <EmptyState title="Nothing found" detail={empty} compact />
       ) : (
@@ -84,6 +87,10 @@ function sumActual(events: ExpectedEvent[]) {
 
 function sumOutstanding(events: ExpectedEvent[]) {
   return events.reduce((sum, event) => sum + Math.max(event.expected - (event.actual ?? 0), 0), 0);
+}
+
+function sumExpectedEvents(events: ExpectedEvent[]) {
+  return events.reduce((sum, event) => sum + (event.actual ?? event.expected), 0);
 }
 
 function formatRowCount(count: number) {
