@@ -1,4 +1,4 @@
-import { Activity, CheckCircle2 } from 'lucide-react';
+import { Activity, AlertCircle, CheckCircle2, Info, ShieldAlert, type LucideIcon } from 'lucide-react';
 import type { DashboardData, Tone } from '../data/fixtures';
 import { Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
@@ -20,18 +20,21 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
         <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
       </section>
       <div className="ops-detail-grid">
-        {sortedOps.map((item) => (
-          <article className="ops-detail" key={item.label}>
-            <div className="ops-detail-main">
-              <CheckCircle2 className={toneClass(item.tone)} size={22} aria-hidden="true" />
-              <div>
-                <h3>{item.label}</h3>
-                <p>{item.value}</p>
+        {sortedOps.map((item) => {
+          const StatusIcon = statusIconForTone(item.tone);
+          return (
+            <article className="ops-detail" key={item.label}>
+              <div className="ops-detail-main">
+                <StatusIcon className={toneClass(item.tone)} size={22} aria-hidden="true" />
+                <div>
+                  <h3>{item.label}</h3>
+                  <p>{item.value}</p>
+                </div>
               </div>
-            </div>
-            <span className={`ops-detail-state ${toneClass(item.tone)}`}>{toneLabels[item.tone]}</span>
-          </article>
-        ))}
+              <span className={`ops-detail-state ${toneClass(item.tone)}`}>{toneLabels[item.tone]}</span>
+            </article>
+          );
+        })}
       </div>
     </div>
   );
@@ -46,4 +49,20 @@ const toneRank: Record<Tone, number> = {
 
 function formatSourceCount(count: number) {
   return `${count} ${count === 1 ? 'source' : 'sources'}`;
+}
+
+function statusIconForTone(tone: Tone): LucideIcon {
+  if (tone === 'risk') {
+    return ShieldAlert;
+  }
+
+  if (tone === 'watch') {
+    return AlertCircle;
+  }
+
+  if (tone === 'neutral') {
+    return Info;
+  }
+
+  return CheckCircle2;
 }
