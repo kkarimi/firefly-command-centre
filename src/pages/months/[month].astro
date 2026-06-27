@@ -1,6 +1,7 @@
 ---
 import CommandCentre from '../../components/CommandCentre';
 import { isSelectableMonthKey, loadCommandCentreData } from '../../server/dashboard';
+import '../../styles/global.css';
 
 const month = Astro.params.month;
 
@@ -14,10 +15,12 @@ const dashboardData = await loadCommandCentreData({ month });
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta name="description" content="A read-only Firefly III command centre prototype for monthly finance review." />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
     <title>{dashboardData.period.label} | Finances</title>
   </head>
   <body>
