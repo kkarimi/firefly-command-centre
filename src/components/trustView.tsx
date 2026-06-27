@@ -7,6 +7,7 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
   const watchCount = ops.filter((item) => item.tone === 'watch').length;
   const riskCount = ops.filter((item) => item.tone === 'risk').length;
   const summaryTone: Tone = riskCount > 0 ? 'risk' : watchCount > 0 ? 'watch' : 'ok';
+  const sortedOps = [...ops].sort((left, right) => toneRank[left.tone] - toneRank[right.tone]);
 
   return (
     <div className="view-stack">
@@ -17,7 +18,7 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
         <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
       </section>
       <div className="ops-detail-grid">
-        {ops.map((item) => (
+        {sortedOps.map((item) => (
           <article className="ops-detail" key={item.label}>
             <div className="ops-detail-main">
               <CheckCircle2 className={toneClass(item.tone)} size={22} aria-hidden="true" />
@@ -33,6 +34,13 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
     </div>
   );
 }
+
+const toneRank: Record<Tone, number> = {
+  risk: 0,
+  watch: 1,
+  neutral: 2,
+  ok: 3,
+};
 
 function formatSourceCount(count: number) {
   return `${count} ${count === 1 ? 'source' : 'sources'}`;

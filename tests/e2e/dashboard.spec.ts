@@ -97,6 +97,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByText('7/8')).toBeVisible();
   await expect(page.getByText('1 source')).toBeVisible();
   await expect(page.getByText('Firefly')).toBeVisible();
+  await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
 });
