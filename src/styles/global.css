@@ -931,6 +931,60 @@ p {
   gap: 12px;
 }
 
+.expected-timeline {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.expected-timeline header,
+.expected-timeline article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  padding: 12px 14px;
+}
+
+.expected-timeline header span,
+.expected-timeline article span {
+  color: var(--muted);
+}
+
+.expected-timeline header span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.expected-timeline > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 1px;
+}
+
+.expected-timeline article {
+  grid-template-columns: 1fr;
+  align-content: space-between;
+  min-height: 112px;
+}
+
+.expected-timeline article > div {
+  display: grid;
+  gap: 4px;
+}
+
+.expected-timeline article > div:last-child {
+  align-self: end;
+}
+
+.expected-timeline article strong {
+  line-height: 1.2;
+}
+
 .expected-grid {
   grid-template-columns: repeat(3, minmax(250px, 1fr));
 }
@@ -1120,6 +1174,7 @@ p {
   .budget-grid,
   .map-grid,
   .expected-grid,
+  .expected-timeline > div,
   .ops-detail-grid,
   .review-row {
     grid-template-columns: 1fr;

@@ -78,6 +78,10 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('region', { name: 'Expected summary' })).toBeVisible();
   await expect(page.getByText('£9,300')).toBeVisible();
   await expect(page.getByText('£3,435')).toBeVisible();
+  const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
+  await expect(cashCalendar).toBeVisible();
+  await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
+  await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-expected-dashboard.png`), fullPage: true });
 

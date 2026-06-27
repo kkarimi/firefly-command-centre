@@ -9,6 +9,7 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
   const watchCount = Object.values(groups)
     .flat()
     .filter((event) => event.tone === 'watch' || event.tone === 'risk').length;
+  const timeline = expectedTimeline(groups);
 
   return (
     <div className="view-stack">
@@ -18,6 +19,28 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
         <Metric label="Still expected" value={formatMoney(stillExpected, true)} tone={stillExpected > 0 ? 'watch' : 'ok'} />
         <Metric label="Watch" value={formatRowCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
       </section>
+      {timeline.length > 0 && (
+        <section className="expected-timeline" aria-label="Cash calendar">
+          <header>
+            <h3>Cash calendar</h3>
+            <span>{formatRowCount(timeline.length)}</span>
+          </header>
+          <div>
+            {timeline.map((event) => (
+              <article key={`${event.name}-${event.due}`}>
+                <div>
+                  <strong>{event.name}</strong>
+                  <span>{event.due}</span>
+                </div>
+                <div>
+                  <strong>{formatMoney(event.actual ?? event.expected)}</strong>
+                  <span className={toneClass(event.tone)}>{event.status}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       <div className="expected-grid">
         <ExpectedGroup title="Income" events={groups.income} empty="No tagged salary or bonus rows this month." />
         <ExpectedGroup title="Bills and tax" events={groups.obligations} empty="No upcoming bills or matched tax rows found." />
@@ -61,4 +84,26 @@ function sumOutstanding(events: ExpectedEvent[]) {
 
 function formatRowCount(count: number) {
   return `${count} ${count === 1 ? 'row' : 'rows'}`;
+}
+
+function expectedTimeline(groups: Record<string, ExpectedEvent[]>) {
+  return Object.values(groups)
+    .flat()
+    .filter((event) => event.dateKey)
+    .sort((left, right) => {
+      const leftOpen = isOpenEvent(left);
+      const rightOpen = isOpenEvent(right);
+      if (leftOpen !== rightOpen) {
+        return leftOpen ? -1 : 1;
+      }
+
+      const leftTime = Date.parse(left.dateKey ?? '');
+      const rightTime = Date.parse(right.dateKey ?? '');
+      return leftOpen ? leftTime - rightTime : rightTime - leftTime;
+    })
+    .slice(0, 5);
+}
+
+function isOpenEvent(event: ExpectedEvent) {
+  return event.actual === undefined && (event.tone === 'watch' || event.tone === 'risk' || /upcoming|outstanding|awaiting/i.test(event.status));
 }
