@@ -1,43 +1,47 @@
-# Astro Starter Kit: Minimal
+# Firefly Command Centre
 
-```sh
-bun create astro@latest -- --template minimal
+A modern, read-first command-centre UI for a Firefly III household finance
+setup.
+
+Firefly stays the ledger. This app focuses on the questions the Firefly UI does
+not answer quickly enough:
+
+- Are we safe this month?
+- What needs review?
+- What changed since last review?
+- Can we trust the syncs, backups, and external evidence?
+- What is budgetable cash versus net worth versus project/accounting movement?
+
+## Status
+
+Early v0. The current app is fixture-backed and read-only by design.
+
+## Stack
+
+- Astro 7
+- TypeScript
+- React
+- Tailwind CSS
+- Bun
+
+## Development
+
+```bash
+bun install
+bun run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Checks:
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+bun run check
+bun run test
+bun run build
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Safety
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Do not commit Firefly tokens, exports, raw transactions, `.env` files, or
+private finance data. Public examples must use fixture or sanitized data.
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+See [spec.md](./spec.md) for the product and implementation plan.
