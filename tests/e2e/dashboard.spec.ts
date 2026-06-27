@@ -108,9 +108,11 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
 
   await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Trust summary' })).toBeVisible();
-  await expect(page.getByText('7/8')).toBeVisible();
-  await expect(page.getByText('1 source')).toBeVisible();
+  const trustSummary = page.getByRole('region', { name: 'Trust summary' });
+  await expect(trustSummary).toBeVisible();
+  await expect(trustSummary.getByText('7/8')).toBeVisible();
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Info' })).toContainText('0 sources');
+  await expect(trustSummary.getByText('1 source')).toBeVisible();
   await expect(page.getByText('Firefly')).toBeVisible();
   await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
 

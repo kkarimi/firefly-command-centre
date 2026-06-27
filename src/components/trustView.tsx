@@ -4,6 +4,7 @@ import { Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
 export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
   const clearCount = ops.filter((item) => item.tone === 'ok').length;
+  const infoCount = ops.filter((item) => item.tone === 'neutral').length;
   const watchCount = ops.filter((item) => item.tone === 'watch').length;
   const riskCount = ops.filter((item) => item.tone === 'risk').length;
   const summaryTone: Tone = riskCount > 0 ? 'risk' : watchCount > 0 ? 'watch' : 'ok';
@@ -14,6 +15,7 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
       <ViewHeading icon={Activity} title="Data Trust" meta="What this UI can currently verify itself" />
       <section className="split-summary trust-summary" aria-label="Trust summary">
         <Metric label="Clear" value={`${clearCount}/${ops.length}`} tone={summaryTone} />
+        <Metric label="Info" value={formatSourceCount(infoCount)} tone="neutral" />
         <Metric label="Watch" value={formatSourceCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
         <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
       </section>
