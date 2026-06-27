@@ -168,3 +168,5 @@ do not merge or deploy from this branch without explicit approval.
   not-wired checks are visible without being treated as failures.
 - Review summary now counts stale rows separately from the oldest row age so
   queue pressure is visible without opening every review group.
+- Accounts summary now surfaces liabilities separately from net position so
+  debt exposure is visible before opening the account map.
