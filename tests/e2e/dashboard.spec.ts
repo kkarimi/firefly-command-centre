@@ -59,19 +59,47 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
 
   await page.getByRole('button', { name: 'Review' }).click();
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Review summary' })).toBeVisible();
+  await expect(page.getByText('£2,246')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Suggested fixes' })).toBeVisible();
+  await expect(page.getByText('Classify movement 1')).toBeVisible();
+  await expect(page.getByText('Rule candidate 1')).toBeVisible();
+  await expect(page.getByText('Clean payee 1')).toBeVisible();
+  await expect(page.getByText('Handle first')).toBeVisible();
+  await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copy grp_9A2F' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' }).first()).toBeDisabled();
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-review-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
   await expect(page.getByText('Cash accounts \u00a37,090.24')).toBeVisible();
+  await expect(page.getByText('Budgetable cash')).toBeVisible();
+  await expect(page.getByText('Needs review')).toBeVisible();
+  await expect(page.getByText('-£9,864.98')).toBeVisible();
+  await expect(page.getByText('£81,930.33')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-accounts-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Expected' }).click();
   await expect(page.getByRole('heading', { name: 'Expected' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Expected summary' })).toBeVisible();
+  await expect(page.getByText('£9,300')).toBeVisible();
+  await expect(page.getByText('£3,435')).toBeVisible();
+  const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
+  await expect(cashCalendar).toBeVisible();
+  await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
+  await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-expected-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Trust summary' })).toBeVisible();
+  await expect(page.getByText('7/8')).toBeVisible();
+  await expect(page.getByText('1 source')).toBeVisible();
   await expect(page.getByText('Firefly')).toBeVisible();
+  await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
 });

@@ -527,6 +527,16 @@ p {
   padding-top: 8px;
 }
 
+.spend-bars-empty {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  grid-column: 1 / -1;
+}
+
 .spend-bars::after {
   position: absolute;
   right: 0;
@@ -653,6 +663,10 @@ p {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
   gap: 12px;
+}
+
+.budget-grid-empty {
+  grid-column: 1 / -1;
 }
 
 .budget-tile {
@@ -822,6 +836,60 @@ p {
   gap: 10px;
 }
 
+.review-actions {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.review-actions header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.review-actions header span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.review-actions > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.review-actions .status-chip {
+  margin-top: 0;
+}
+
+.review-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.review-group {
+  display: grid;
+  gap: 10px;
+}
+
+.review-group header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.review-group header .status-chip {
+  margin-top: 0;
+}
+
 .review-row {
   display: grid;
   grid-template-columns: minmax(280px, 1.4fr) minmax(190px, 0.7fr) minmax(280px, 1fr);
@@ -833,8 +901,13 @@ p {
 
 .row-main {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 12px;
+}
+
+.row-main > div {
+  min-width: 0;
 }
 
 .row-detail {
@@ -849,6 +922,7 @@ p {
 
 .suggestion {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -856,6 +930,11 @@ p {
   color: var(--ink);
   font-size: 0.9rem;
   padding-left: 14px;
+}
+
+.suggestion > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .icon-actions {
@@ -875,12 +954,71 @@ p {
   cursor: pointer;
 }
 
+.icon-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .map-grid,
 .expected-grid,
 .ops-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(260px, 1fr));
   gap: 12px;
+}
+
+.expected-timeline {
+  display: grid;
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.expected-timeline header,
+.expected-timeline article {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  padding: 12px 14px;
+}
+
+.expected-timeline header span,
+.expected-timeline article span {
+  color: var(--muted);
+}
+
+.expected-timeline header span {
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.expected-timeline > div {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 1px;
+}
+
+.expected-timeline article {
+  grid-template-columns: 1fr;
+  align-content: space-between;
+  min-height: 112px;
+}
+
+.expected-timeline article > div {
+  display: grid;
+  gap: 4px;
+}
+
+.expected-timeline article > div:last-child {
+  align-self: end;
+}
+
+.expected-timeline article strong {
+  line-height: 1.2;
 }
 
 .expected-grid {
@@ -896,9 +1034,21 @@ p {
 }
 
 .account-group header {
-  justify-content: flex-start;
+  justify-content: space-between;
   border-bottom: 1px solid var(--line);
   padding-bottom: 10px;
+}
+
+.account-group header > div {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-group header > strong {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .account-list,
@@ -935,8 +1085,31 @@ p {
 
 .ops-detail {
   display: flex;
+  min-height: 78px;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  min-height: 116px;
+}
+
+.ops-detail-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.ops-detail-main > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.ops-detail-state {
+  flex: 0 0 auto;
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .tone-ok {
@@ -1049,6 +1222,7 @@ p {
   .budget-grid,
   .map-grid,
   .expected-grid,
+  .expected-timeline > div,
   .ops-detail-grid,
   .review-row {
     grid-template-columns: 1fr;
