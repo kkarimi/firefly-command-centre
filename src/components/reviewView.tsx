@@ -100,18 +100,26 @@ function formatRowCount(count: number) {
 }
 
 function reviewActionBuckets(items: ReviewItem[]) {
-  const buckets = [
-    { label: 'Set category', tone: 'risk', test: /category|budget|tag/i },
-    { label: 'Rule candidate', tone: 'watch', test: /rule/i },
-    { label: 'Classify movement', tone: 'watch', test: /transfer|investment|cash-movement/i },
-    { label: 'Clean payee', tone: 'neutral', test: /payee|metadata/i },
-  ] satisfies Array<{ label: string; tone: Tone; test: RegExp }>;
+  const buckets: Array<{ label: string; tone: Tone; count: number }> = reviewActionMatchers.map((matcher) => ({
+    label: matcher.label,
+    tone: matcher.tone,
+    count: 0,
+  }));
 
-  return buckets
-    .map((bucket) => ({
-      label: bucket.label,
-      tone: bucket.tone,
-      count: items.filter((item) => bucket.test.test(`${item.reason} ${item.suggestion}`)).length,
-    }))
-    .filter((bucket) => bucket.count > 0);
+  for (const item of items) {
+    const match = reviewActionMatchers.find((matcher) => matcher.test.test(`${item.reason} ${item.suggestion}`));
+    const bucket = buckets.find((entry) => entry.label === (match?.label ?? 'Clean payee'));
+    if (bucket) {
+      bucket.count += 1;
+    }
+  }
+
+  return buckets.filter((bucket) => bucket.count > 0);
 }
+
+const reviewActionMatchers = [
+  { label: 'Classify movement', tone: 'watch', test: /transfer|investment|cash-movement/i },
+  { label: 'Set category', tone: 'risk', test: /category|budget|tag/i },
+  { label: 'Rule candidate', tone: 'watch', test: /rule/i },
+  { label: 'Clean payee', tone: 'neutral', test: /payee|metadata/i },
+] satisfies Array<{ label: string; tone: Tone; test: RegExp }>;
