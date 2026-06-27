@@ -153,3 +153,14 @@ do not merge or deploy from this branch without explicit approval.
   evidence to the browser test flow.
 - `57e2bd6` added Month empty states for no daily spend rows and no visible
   categories without changing the populated fixture layout.
+- `36a6e6f` added an Expected cash calendar inspired by scheduled and recurring
+  finance workflows, using existing dated events only.
+- `441ee10` summarized Review cleanup actions into non-mutating suggested-fix
+  chips.
+- `9d9a3d9` added account group totals to make the Money Map easier to scan.
+- `2a23ce6` made Review suggested-fix counts exclusive so each row contributes
+  to one primary action.
+- `550cfc5` sorted Trust checks by attention level so watch and risk states
+  appear before healthy sources.
+- `980fe6d` made the Review copy action functional and disabled unavailable
+  Firefly-open controls.
