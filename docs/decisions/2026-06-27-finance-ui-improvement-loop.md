@@ -172,3 +172,5 @@ do not merge or deploy from this branch without explicit approval.
   debt exposure is visible before opening the account map.
 - Expected cash calendar now separates open and logged dated events in the
   header so upcoming obligations are visible without scanning every tile.
+- Review severity group headers now include queued value as well as row count
+  so the work queue shows both effort and materiality.
