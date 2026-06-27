@@ -822,6 +822,29 @@ p {
   gap: 10px;
 }
 
+.review-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.review-group {
+  display: grid;
+  gap: 10px;
+}
+
+.review-group header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.review-group header .status-chip {
+  margin-top: 0;
+}
+
 .review-row {
   display: grid;
   grid-template-columns: minmax(280px, 1.4fr) minmax(190px, 0.7fr) minmax(280px, 1fr);
@@ -833,8 +856,13 @@ p {
 
 .row-main {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 12px;
+}
+
+.row-main > div {
+  min-width: 0;
 }
 
 .row-detail {
@@ -849,6 +877,7 @@ p {
 
 .suggestion {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -856,6 +885,11 @@ p {
   color: var(--ink);
   font-size: 0.9rem;
   padding-left: 14px;
+}
+
+.suggestion > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .icon-actions {

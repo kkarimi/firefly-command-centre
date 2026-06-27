@@ -59,7 +59,12 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
 
   await page.getByRole('button', { name: 'Review' }).click();
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Review summary' })).toBeVisible();
+  await expect(page.getByText('£2,246')).toBeVisible();
+  await expect(page.getByText('Handle first')).toBeVisible();
+  await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-review-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByRole('heading', { name: 'Accounts', exact: true })).toBeVisible();
