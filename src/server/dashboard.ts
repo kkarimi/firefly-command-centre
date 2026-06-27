@@ -1,5 +1,13 @@
 import { readFileSync } from 'node:fs';
-import { commandCentreFixture, type Account, type BudgetCard, type CommandCentreData, type ReviewItem, type Tone } from '../data/fixtures';
+import {
+  commandCentreFixture,
+  type Account,
+  type BudgetCard,
+  type CommandCentreData,
+  type ExpectedEvent,
+  type ReviewItem,
+  type Tone,
+} from '../data/fixtures';
 
 type FireflyDocument<T> = {
   data: T[];
@@ -9,6 +17,8 @@ type FireflyResource = {
   id: string;
   attributes?: Record<string, unknown>;
 };
+
+type FireflySplit = Record<string, unknown>;
 
 const householdBudgetNames = [
   'Bills & Utilities',
@@ -31,15 +41,19 @@ export async function loadCommandCentreData(): Promise<CommandCentreData> {
   }
 
   try {
-    const [accounts, budgets, transactions] = await Promise.all([
+    prepareLiveData(data);
+
+    const [accounts, budgets, bills, transactions] = await Promise.all([
       loadAccounts(token),
       loadBudgets(token, data.period),
+      loadBills(token),
       loadTransactions(token),
     ]);
 
     applyAccounts(data, accounts);
-    applyBudgets(data, budgets);
+    applyBudgets(data, budgets, transactions);
     applyReviewItems(data, transactions);
+    applyExpected(data, transactions, bills);
     markOps(data, 'Firefly', 'Live', 'ok');
     markOps(data, 'Repo', 'Live app', 'ok');
   } catch (error) {
@@ -83,6 +97,36 @@ export async function loadHealthStatus() {
 
 function cloneFixture(): CommandCentreData {
   return structuredClone(commandCentreFixture);
+}
+
+function prepareLiveData(data: CommandCentreData) {
+  data.cash = {
+    monzoBalance: 0,
+    fireflyDrift: 0,
+    budgetableCash: 0,
+    committedUntilMonthEnd: 0,
+    projectedLeft: 0,
+  };
+  data.budgets = [];
+  data.reviewItems = [];
+  data.moneyMap = {
+    budgetableCash: [],
+    creditAndLiabilities: [],
+    wealth: [],
+    excluded: [],
+  };
+  data.expected = {
+    income: [],
+    obligations: [],
+    candidates: [],
+  };
+  data.ops = data.ops.map((item) => {
+    if (item.label === 'Repo' || item.label === 'Firefly') {
+      return { ...item, value: 'Checking', tone: 'watch' };
+    }
+
+    return { ...item, value: 'Not wired', tone: 'neutral' };
+  });
 }
 
 function applyCurrentPeriod(data: CommandCentreData) {
@@ -162,20 +206,20 @@ async function fireflyGet<T>(token: string, path: string, params?: Record<string
 }
 
 async function loadAccounts(token: string) {
-  try {
-    return await loadCollection(token, '/accounts', { limit: '200' });
-  } catch {
-    const groups = await Promise.allSettled([
-      loadCollection(token, '/accounts', { type: 'asset', limit: '200' }),
-      loadCollection(token, '/accounts', { type: 'liabilities', limit: '200' }),
-    ]);
-    return groups.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
-  }
+  const groups = await Promise.allSettled([
+    loadCollection(token, '/accounts', { type: 'asset', limit: '200' }),
+    loadCollection(token, '/accounts', { type: 'liabilities', limit: '200' }),
+  ]);
+  return groups.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
 }
 
 async function loadBudgets(token: string, period: CommandCentreData['period']) {
   const { start, end } = monthApiRange(period);
   return loadCollection(token, '/budgets', { start, end, limit: '100' });
+}
+
+async function loadBills(token: string) {
+  return loadCollection(token, '/bills', { limit: '100' });
 }
 
 async function loadTransactions(token: string) {
@@ -208,30 +252,22 @@ function applyAccounts(data: CommandCentreData, accounts: FireflyResource[]) {
     return;
   }
 
-  const budgetable = mapped.filter((account) => /monzo|current|savings|pot/i.test(account.name) && account.balance >= 0);
+  const budgetable = mapped.filter((account) => /monzo/i.test(account.name) && account.balance >= 0);
   const liabilities = mapped.filter((account) => /amex|loan|liabil|credit|m&s|m & s/i.test(`${account.name} ${account.kind}`));
-  const wealth = mapped.filter((account) => /prosper|kraken|gold|sipp|isa|gia|fixed/i.test(account.name));
   const excluded = mapped.filter((account) => /house|company|cost basis|contribution/i.test(account.name));
+  const wealth = mapped.filter(
+    (account) => /prosper|kraken|gold|sipp|isa|gia|fixed/i.test(account.name) && !excluded.includes(account),
+  );
 
-  if (budgetable.length > 0) {
-    data.moneyMap.budgetableCash = budgetable.slice(0, 6);
-    const budgetableCash = budgetable.reduce((sum, account) => sum + account.balance, 0);
-    data.cash.budgetableCash = budgetableCash;
-    data.cash.monzoBalance = budgetable[0]?.balance ?? data.cash.monzoBalance;
-    data.cash.projectedLeft = budgetableCash - data.cash.committedUntilMonthEnd;
-  }
+  data.moneyMap.budgetableCash = budgetable.slice(0, 8);
+  const budgetableCash = budgetable.reduce((sum, account) => sum + account.balance, 0);
+  data.cash.budgetableCash = budgetableCash;
+  data.cash.monzoBalance = budgetable[0]?.balance ?? 0;
+  data.cash.projectedLeft = budgetableCash - data.cash.committedUntilMonthEnd;
 
-  if (liabilities.length > 0) {
-    data.moneyMap.creditAndLiabilities = liabilities.slice(0, 8);
-  }
-
-  if (wealth.length > 0) {
-    data.moneyMap.wealth = wealth.slice(0, 8);
-  }
-
-  if (excluded.length > 0) {
-    data.moneyMap.excluded = excluded.slice(0, 8);
-  }
+  data.moneyMap.creditAndLiabilities = liabilities.slice(0, 8);
+  data.moneyMap.wealth = wealth.slice(0, 10);
+  data.moneyMap.excluded = excluded.slice(0, 8);
 }
 
 function accountFromResource(resource: FireflyResource): Account | null {
@@ -254,30 +290,59 @@ function accountFromResource(resource: FireflyResource): Account | null {
   };
 }
 
-function applyBudgets(data: CommandCentreData, budgets: FireflyResource[]) {
+function applyBudgets(data: CommandCentreData, budgets: FireflyResource[], transactions: FireflyResource[]) {
   if (budgets.length === 0) {
     return;
   }
 
-  data.budgets = householdBudgetNames.map((name) => {
-    const existing = data.budgets.find((budget) => budget.name === name);
+  const merchantsByBudget = topMerchantsByBudget(transactions);
+  data.budgets = householdBudgetNames.flatMap((name) => {
     const live = budgets.find((budget) => stringValue(budget.attributes?.name).toLowerCase() === name.toLowerCase());
-    if (!existing || !live?.attributes) {
-      return existing;
+    if (!live?.attributes) {
+      return [];
     }
 
     const spent = Math.abs(spentFromBudget(live.attributes));
-    const limit = limitFromBudget(live.attributes) || existing.limit;
-    return {
-      ...existing,
+    const limit = limitFromBudget(live.attributes);
+    const reviewQueue = /review/i.test(name);
+    const card = {
+      id: slugify(name),
+      name,
       limit,
       spent,
       daysElapsed: data.period.daysElapsed,
       totalDays: data.period.totalDays,
-      merchants: existing.merchants,
-      unusual: existing.reviewQueue && spent > 0 ? 'Live review queue contains material spend' : existing.unusual,
+      merchants: merchantsByBudget.get(name)?.slice(0, 3) ?? [],
+      unusual: reviewQueue && spent > 0 ? 'Live review queue contains material spend' : undefined,
+      reviewQueue,
     } satisfies BudgetCard;
-  }).filter((budget): budget is BudgetCard => Boolean(budget));
+    return [card];
+  });
+}
+
+function topMerchantsByBudget(transactions: FireflyResource[]) {
+  const totals = new Map<string, Map<string, number>>();
+  for (const split of transactionSplits(transactions)) {
+    const budget = stringValue(split.budget_name);
+    const merchant = payeeName(split);
+    const type = stringValue(split.type);
+    if (!budget || !merchant || type !== 'withdrawal') {
+      continue;
+    }
+
+    const merchants = totals.get(budget) ?? new Map<string, number>();
+    merchants.set(merchant, (merchants.get(merchant) ?? 0) + Math.abs(numberValue(split.amount)));
+    totals.set(budget, merchants);
+  }
+
+  return new Map(
+    [...totals.entries()].map(([budget, merchants]) => [
+      budget,
+      [...merchants.entries()]
+        .sort(([, left], [, right]) => right - left)
+        .map(([merchant]) => merchant),
+    ]),
+  );
 }
 
 function spentFromBudget(attributes: Record<string, unknown>) {
@@ -312,41 +377,183 @@ function limitFromBudget(attributes: Record<string, unknown>) {
 function applyReviewItems(data: CommandCentreData, transactions: FireflyResource[]) {
   const items: ReviewItem[] = [];
 
-  for (const group of transactions) {
-    const splits = group.attributes?.transactions;
-    if (!Array.isArray(splits)) {
+  for (const { group, split } of transactionSplitEntries(transactions)) {
+    const review = reviewReason(split);
+    if (!review) {
       continue;
     }
 
-    for (const split of splits) {
-      const transaction = split as Record<string, unknown>;
-      const category = stringValue(transaction.category_name);
-      const budget = stringValue(transaction.budget_name);
-      const tags = Array.isArray(transaction.tags) ? transaction.tags.map(String) : [];
-      const reviewMatch = /review|uncategor/i.test(`${category} ${budget} ${tags.join(' ')}`);
-      if (!reviewMatch) {
-        continue;
-      }
-
-      const amount = numberValue(transaction.amount);
-      const payee = stringValue(transaction.destination_name) || stringValue(transaction.description) || 'Review transaction';
-      items.push({
-        id: stringValue(transaction.transaction_journal_id) || `${group.id}-${items.length}`,
-        source: stringValue(transaction.source_name) || 'Firefly',
-        payee,
-        amount,
-        ageDays: ageDays(stringValue(transaction.date)),
-        reason: category ? `Category is ${category}` : 'Missing review category',
-        suggestion: 'Decide category, budget, tags, and rule in Firefly',
-        severity: Math.abs(amount) > 100 ? 'risk' : 'watch',
-        fireflyGroupId: group.id,
-      });
-    }
+    const signed = signedAmount(split);
+    items.push({
+      id: stringValue(split.transaction_journal_id) || `${group.id}-${items.length}`,
+      source: stringValue(split.source_name) || 'Firefly',
+      payee: payeeName(split) || 'Review transaction',
+      amount: signed,
+      ageDays: ageDays(stringValue(split.date)),
+      reason: review.reason,
+      suggestion: review.suggestion,
+      severity: Math.abs(signed) > 100 ? 'risk' : 'watch',
+      fireflyGroupId: group.id,
+    });
   }
 
-  if (items.length > 0) {
-    data.reviewItems = items.slice(0, 12);
+  data.reviewItems = items.sort((left, right) => Math.abs(right.amount) - Math.abs(left.amount)).slice(0, 12);
+}
+
+function reviewReason(split: FireflySplit) {
+  const category = stringValue(split.category_name);
+  const budget = stringValue(split.budget_name);
+  const tags = tagsFromSplit(split);
+  const type = stringValue(split.type);
+  const amount = Math.abs(numberValue(split.amount));
+  const text = `${category} ${budget} ${tags.join(' ')} ${stringValue(split.description)}`;
+
+  if (/review|uncategor|setup/i.test(text)) {
+    return {
+      reason: category ? `Review marker: ${category}` : 'Review marker present',
+      suggestion: 'Decide category, budget, tags, and future rule',
+    };
   }
+
+  if (!category) {
+    return {
+      reason: 'Missing category',
+      suggestion: 'Assign a category or mark as transfer/accounting movement',
+    };
+  }
+
+  if (type === 'withdrawal' && !budget && isHouseholdCategory(category) && amount >= 25) {
+    return {
+      reason: 'Household spend has no budget',
+      suggestion: `Attach to ${categoryBudgetSuggestion(category)} or confirm it stays outside budgets`,
+    };
+  }
+
+  if (/^general$/i.test(category) && amount >= 25) {
+    return {
+      reason: 'Generic category on material row',
+      suggestion: 'Replace General with the smallest useful household category',
+    };
+  }
+
+  return null;
+}
+
+function applyExpected(data: CommandCentreData, transactions: FireflyResource[], bills: FireflyResource[]) {
+  const splits = transactionSplits(transactions);
+  data.expected.income = expectedIncome(splits);
+  data.expected.obligations = expectedObligations(splits, bills);
+  data.expected.candidates = expectedBillCandidates(bills);
+
+  const currentMonthOutstanding = bills
+    .map(billFromResource)
+    .filter((bill): bill is ExpectedEvent => Boolean(bill))
+    .filter((bill) => bill.tone === 'watch' && isCurrentMonthDue(bill.due))
+    .reduce((sum, bill) => sum + bill.expected, 0);
+
+  data.cash.committedUntilMonthEnd = currentMonthOutstanding;
+  data.cash.projectedLeft = data.cash.budgetableCash - currentMonthOutstanding;
+}
+
+function expectedIncome(splits: FireflySplit[]): ExpectedEvent[] {
+  const rows = splits.filter((split) => {
+    const tags = tagsFromSplit(split).join(' ');
+    const text = `${stringValue(split.description)} ${stringValue(split.source_name)} ${tags}`;
+    return stringValue(split.type) === 'deposit' && /salary|regular-income|variable-income|bonus|super-payments|wefindflats/i.test(text);
+  });
+
+  return rows
+    .sort((left, right) => dateSort(right, left))
+    .map((split) => ({
+      name: stringValue(split.description) || payeeName(split) || 'Income',
+      expected: signedAmount(split),
+      actual: signedAmount(split),
+      due: `Paid ${shortDate(stringValue(split.date))}`,
+      status: tagsFromSplit(split).some((tag) => /bonus|variable-income/i.test(tag)) ? 'Variable income' : 'Matched',
+      tone: 'ok' as const,
+    }));
+}
+
+function expectedObligations(splits: FireflySplit[], bills: FireflyResource[]): ExpectedEvent[] {
+  const paid = splits
+    .filter((split) => {
+      const text = `${stringValue(split.description)} ${stringValue(split.destination_name)} ${tagsFromSplit(split).join(' ')}`;
+      return stringValue(split.type) === 'withdrawal' && /hmrc|self-assessment|tax|american express|amex|council/i.test(text);
+    })
+    .map((split) => ({
+      name: stringValue(split.description) || payeeName(split) || 'Obligation',
+      expected: Math.abs(signedAmount(split)),
+      actual: Math.abs(signedAmount(split)),
+      due: `Paid ${shortDate(stringValue(split.date))}`,
+      status: 'Paid',
+      tone: 'ok' as const,
+    }));
+
+  const upcoming = bills.map(billFromResource).filter((bill): bill is ExpectedEvent => Boolean(bill));
+
+  return [...upcoming, ...paid]
+    .sort((left, right) => expectedSort(left, right))
+    .slice(0, 10);
+}
+
+function expectedBillCandidates(bills: FireflyResource[]): ExpectedEvent[] {
+  return bills
+    .map(billFromResource)
+    .filter((bill): bill is ExpectedEvent => Boolean(bill))
+    .filter((bill) => bill.tone === 'neutral')
+    .slice(0, 8);
+}
+
+function billFromResource(resource: FireflyResource): ExpectedEvent | null {
+  const attributes = resource.attributes ?? {};
+  if (attributes.active === false) {
+    return null;
+  }
+
+  const name = stringValue(attributes.name);
+  const rawDate = stringValue(attributes.date) || stringValue(attributes.next_expected_match);
+  if (!name || !rawDate) {
+    return null;
+  }
+
+  const amountMin = numberValue(attributes.amount_min);
+  const amountMax = numberValue(attributes.amount_max);
+  const expected = amountMax || amountMin;
+  const dueDate = new Date(rawDate);
+  if (!expected || Number.isNaN(dueDate.getTime())) {
+    return null;
+  }
+
+  const today = startOfToday();
+  const inFuture = dueDate >= today;
+  const soon = dueDate.getTime() - today.getTime() <= 45 * 86_400_000;
+  if (!soon && !/hmrc|tax|amex|council/i.test(name)) {
+    return null;
+  }
+
+  return {
+    name,
+    expected,
+    due: shortDate(rawDate),
+    status: inFuture ? 'Upcoming' : 'Known bill',
+    tone: inFuture ? 'watch' : 'neutral',
+  };
+}
+
+function expectedSort(left: ExpectedEvent, right: ExpectedEvent) {
+  const rank = { Upcoming: 0, Paid: 1, 'Known bill': 2 } as Record<string, number>;
+  const leftRank = rank[left.status] ?? 3;
+  const rightRank = rank[right.status] ?? 3;
+  if (leftRank !== rightRank) {
+    return leftRank - rightRank;
+  }
+
+  const leftDate = parseShortDue(left.due);
+  const rightDate = parseShortDue(right.due);
+  if (left.status === 'Paid' && right.status === 'Paid') {
+    return rightDate - leftDate;
+  }
+  return leftDate - rightDate;
 }
 
 function ageDays(rawDate: string) {
@@ -356,6 +563,98 @@ function ageDays(rawDate: string) {
   }
 
   return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000));
+}
+
+function transactionSplits(transactions: FireflyResource[]): FireflySplit[] {
+  return transactionSplitEntries(transactions).map(({ split }) => split);
+}
+
+function transactionSplitEntries(transactions: FireflyResource[]): Array<{ group: FireflyResource; split: FireflySplit }> {
+  const entries: Array<{ group: FireflyResource; split: FireflySplit }> = [];
+  for (const group of transactions) {
+    const splits = group.attributes?.transactions;
+    if (!Array.isArray(splits)) {
+      continue;
+    }
+
+    for (const split of splits) {
+      entries.push({ group, split: split as FireflySplit });
+    }
+  }
+  return entries;
+}
+
+function signedAmount(split: FireflySplit) {
+  const amount = Math.abs(numberValue(split.amount));
+  const type = stringValue(split.type);
+  if (type === 'withdrawal') {
+    return -amount;
+  }
+  return amount;
+}
+
+function payeeName(split: FireflySplit) {
+  const type = stringValue(split.type);
+  if (type === 'deposit') {
+    return stringValue(split.source_name) || stringValue(split.description);
+  }
+  return stringValue(split.destination_name) || stringValue(split.description);
+}
+
+function tagsFromSplit(split: FireflySplit) {
+  return Array.isArray(split.tags) ? split.tags.map(String) : [];
+}
+
+function isHouseholdCategory(category: string) {
+  return /bills|utilities|groceries|eating|leisure|shopping|personal|transport|travel|holidays|general/i.test(category);
+}
+
+function categoryBudgetSuggestion(category: string) {
+  if (/eating|leisure/i.test(category)) return 'Eating Out';
+  if (/grocer/i.test(category)) return 'Groceries';
+  if (/transport/i.test(category)) return 'Transport';
+  if (/travel|holiday/i.test(category)) return 'Travel & Holidays';
+  if (/bill|util/i.test(category)) return 'Bills & Utilities';
+  if (/shopping|personal/i.test(category)) return 'Shopping & Personal';
+  return 'General / Review';
+}
+
+function shortDate(rawDate: string) {
+  const date = new Date(rawDate);
+  if (Number.isNaN(date.getTime())) {
+    return rawDate;
+  }
+  return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' }).format(date);
+}
+
+function dateSort(left: FireflySplit, right: FireflySplit) {
+  return new Date(stringValue(left.date)).getTime() - new Date(stringValue(right.date)).getTime();
+}
+
+function startOfToday() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function isCurrentMonthDue(shortDue: string) {
+  const due = parseShortDue(shortDue);
+  if (!Number.isFinite(due)) {
+    return false;
+  }
+  const date = new Date(due);
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+function parseShortDue(value: string) {
+  const paid = value.match(/Paid (.+)$/);
+  const raw = paid?.[1] ?? value;
+  const parsed = Date.parse(`${raw} ${new Date().getFullYear()}`);
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replaceAll('&', 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 function stringValue(value: unknown) {

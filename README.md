@@ -14,7 +14,9 @@ not answer quickly enough:
 
 ## Status
 
-Early v0. The current app is fixture-backed and read-only by design.
+Early v0. The app is live-read by default when configured with a Firefly token
+file, and falls back to sanitized fixture data only when no token is present.
+It is read-only by design.
 
 ## Stack
 
