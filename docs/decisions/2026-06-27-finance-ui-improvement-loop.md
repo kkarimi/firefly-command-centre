@@ -151,3 +151,5 @@ do not merge or deploy from this branch without explicit approval.
   and watch rows.
 - `a9834d7` clarified Accounts summary labels and added Accounts visual
   evidence to the browser test flow.
+- `57e2bd6` added Month empty states for no daily spend rows and no visible
+  categories without changing the populated fixture layout.
