@@ -178,3 +178,5 @@ do not merge or deploy from this branch without explicit approval.
   threshold so overdue cleanup is visible inside the queue.
 - Accounts group headers now show whether that group is clear or has flagged
   accounts so review pressure is visible before scanning individual rows.
+- Trust rows now use distinct status icons for clear, info, watch, and risk
+  states instead of showing a check mark for every source.
