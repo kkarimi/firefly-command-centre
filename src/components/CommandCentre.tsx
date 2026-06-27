@@ -66,10 +66,11 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
   const [activeTab, setActiveTab] = useState<TabId>('month');
   const data = initialData ?? commandCentreFixture;
 
-  const activeSpend = useMemo(() => data.budgets.reduce((sum, budget) => sum + budget.spent, 0), [data.budgets]);
-  const activeLimit = useMemo(() => data.budgets.reduce((sum, budget) => sum + budget.limit, 0), [data.budgets]);
+  const monthBudgets = useMemo(() => data.budgets.filter(isVisibleMonthBudget), [data.budgets]);
+  const activeSpend = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.spent, 0), [monthBudgets]);
+  const activeLimit = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.limit, 0), [monthBudgets]);
   const reviewCount = data.reviewItems.length;
-  const atRiskBudgets = data.budgets.filter((budget) => {
+  const atRiskBudgets = monthBudgets.filter((budget) => {
     const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
     return budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue) === 'risk';
   }).length;
@@ -119,7 +120,7 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
 
           <section className="content-surface">
             {activeTab === 'month' && (
-              <MonthView activeSpend={activeSpend} activeLimit={activeLimit} budgets={data.budgets} cash={data.cash} />
+              <MonthView activeSpend={activeSpend} activeLimit={activeLimit} budgets={monthBudgets} cash={data.cash} />
             )}
             {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
             {activeTab === 'money' && <MoneyMapView groups={data.moneyMap} />}
@@ -130,6 +131,10 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
       </div>
     </main>
   );
+}
+
+function isVisibleMonthBudget(budget: BudgetCard) {
+  return !budget.reviewQueue || budget.spent > 0 || budget.merchants.length > 0 || Boolean(budget.unusual);
 }
 
 function MonthView({
