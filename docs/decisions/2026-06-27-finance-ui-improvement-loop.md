@@ -170,3 +170,5 @@ do not merge or deploy from this branch without explicit approval.
   queue pressure is visible without opening every review group.
 - Accounts summary now surfaces liabilities separately from net position so
   debt exposure is visible before opening the account map.
+- Expected cash calendar now separates open and logged dated events in the
+  header so upcoming obligations are visible without scanning every tile.
