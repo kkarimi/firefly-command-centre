@@ -10,6 +10,8 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
     .flat()
     .filter((event) => event.tone === 'watch' || event.tone === 'risk').length;
   const timeline = expectedTimeline(groups);
+  const openTimelineCount = timeline.filter(isOpenEvent).length;
+  const loggedTimelineCount = timeline.length - openTimelineCount;
   const nextOpenEvent = timeline.find(isOpenEvent);
 
   return (
@@ -25,7 +27,7 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
         <section className="expected-timeline" aria-label="Cash calendar">
           <header>
             <h3>Cash calendar</h3>
-            <span>{formatRowCount(timeline.length)}</span>
+            <span>{formatTimelineStatus({ openTimelineCount, loggedTimelineCount })}</span>
           </header>
           <div>
             {timeline.map((event) => (
@@ -86,6 +88,16 @@ function sumOutstanding(events: ExpectedEvent[]) {
 
 function formatRowCount(count: number) {
   return `${count} ${count === 1 ? 'row' : 'rows'}`;
+}
+
+function formatTimelineStatus({
+  openTimelineCount,
+  loggedTimelineCount,
+}: {
+  openTimelineCount: number;
+  loggedTimelineCount: number;
+}) {
+  return `${openTimelineCount} open / ${loggedTimelineCount} logged`;
 }
 
 function expectedTimeline(groups: Record<string, ExpectedEvent[]>) {
