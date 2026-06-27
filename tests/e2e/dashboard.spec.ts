@@ -72,7 +72,11 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
 
   await page.getByRole('button', { name: 'Expected' }).click();
   await expect(page.getByRole('heading', { name: 'Expected' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Expected summary' })).toBeVisible();
+  await expect(page.getByText('£9,300')).toBeVisible();
+  await expect(page.getByText('£3,435')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-expected-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
