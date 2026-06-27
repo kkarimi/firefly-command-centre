@@ -190,3 +190,5 @@ do not merge or deploy from this branch without explicit approval.
   amount so the coverage bar has an explicit numeric reading.
 - Trust summary now shows clear coverage as a percentage so overall data
   confidence is visible before scanning each source.
+- Expected cash calendar now includes the open due amount in its header so
+  upcoming cashflow exposure is visible before reading each item.
