@@ -188,3 +188,5 @@ do not merge or deploy from this branch without explicit approval.
   left-per-day so outlier pressure is visible without opening categories.
 - Accounts cash coverage now prints the reserved-cash percentage beside the
   amount so the coverage bar has an explicit numeric reading.
+- Trust summary now shows clear coverage as a percentage so overall data
+  confidence is visible before scanning each source.
