@@ -935,8 +935,31 @@ p {
 
 .ops-detail {
   display: flex;
+  min-height: 78px;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  min-height: 116px;
+}
+
+.ops-detail-main {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.ops-detail-main > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.ops-detail-state {
+  flex: 0 0 auto;
+  font-size: 0.74rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .tone-ok {

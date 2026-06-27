@@ -1,22 +1,39 @@
 import { Activity, CheckCircle2 } from 'lucide-react';
-import type { DashboardData } from '../data/fixtures';
-import { toneClass, ViewHeading } from './uiPrimitives';
+import type { DashboardData, Tone } from '../data/fixtures';
+import { Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
 export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
+  const clearCount = ops.filter((item) => item.tone === 'ok').length;
+  const watchCount = ops.filter((item) => item.tone === 'watch').length;
+  const riskCount = ops.filter((item) => item.tone === 'risk').length;
+  const summaryTone: Tone = riskCount > 0 ? 'risk' : watchCount > 0 ? 'watch' : 'ok';
+
   return (
     <div className="view-stack">
       <ViewHeading icon={Activity} title="Data Trust" meta="What this UI can currently verify itself" />
+      <section className="split-summary trust-summary" aria-label="Trust summary">
+        <Metric label="Clear" value={`${clearCount}/${ops.length}`} tone={summaryTone} />
+        <Metric label="Watch" value={formatSourceCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
+        <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
+      </section>
       <div className="ops-detail-grid">
         {ops.map((item) => (
           <article className="ops-detail" key={item.label}>
-            <CheckCircle2 className={toneClass(item.tone)} size={22} aria-hidden="true" />
-            <div>
-              <h3>{item.label}</h3>
-              <p>{item.value}</p>
+            <div className="ops-detail-main">
+              <CheckCircle2 className={toneClass(item.tone)} size={22} aria-hidden="true" />
+              <div>
+                <h3>{item.label}</h3>
+                <p>{item.value}</p>
+              </div>
             </div>
+            <span className={`ops-detail-state ${toneClass(item.tone)}`}>{toneLabels[item.tone]}</span>
           </article>
         ))}
       </div>
     </div>
   );
+}
+
+function formatSourceCount(count: number) {
+  return `${count} ${count === 1 ? 'source' : 'sources'}`;
 }

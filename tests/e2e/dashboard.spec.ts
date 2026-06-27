@@ -71,6 +71,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
 
   await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Trust summary' })).toBeVisible();
+  await expect(page.getByText('7/8')).toBeVisible();
+  await expect(page.getByText('1 source')).toBeVisible();
   await expect(page.getByText('Firefly')).toBeVisible();
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
