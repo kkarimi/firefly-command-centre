@@ -180,3 +180,5 @@ do not merge or deploy from this branch without explicit approval.
   accounts so review pressure is visible before scanning individual rows.
 - Trust rows now use distinct status icons for clear, info, watch, and risk
   states instead of showing a check mark for every source.
+- Expected group headers now show compact totals for income, bills and tax, and
+  known bills so each list carries its materiality without another panel.
