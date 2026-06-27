@@ -68,6 +68,8 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByText('Handle first')).toBeVisible();
   await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copy grp_9A2F' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' }).first()).toBeDisabled();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-review-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Accounts' }).click();

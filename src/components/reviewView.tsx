@@ -1,15 +1,22 @@
+import { useState } from 'react';
 import { ArrowUpRight, Clipboard, Copy } from 'lucide-react';
 import type { ReviewItem, Tone } from '../data/fixtures';
 import { formatMoney, formatSignedMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
 export function ReviewView({ items }: { items: ReviewItem[] }) {
+  const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
   const totalQueued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
   const groups = reviewGroups(items);
   const riskCount = groups.find((group) => group.tone === 'risk')?.items.length ?? 0;
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
   const actionBuckets = reviewActionBuckets(items);
+
+  async function copyFireflyGroupId(groupId: string) {
+    await navigator.clipboard.writeText(groupId);
+    setCopiedGroupId(groupId);
+  }
 
   return (
     <div className="view-stack">
@@ -64,11 +71,21 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
                           <button
                             type="button"
                             title={`Copy ${item.fireflyGroupId}`}
-                            aria-label={`Copy ${item.fireflyGroupId}`}
+                            aria-label={
+                              copiedGroupId === item.fireflyGroupId ? `Copied ${item.fireflyGroupId}` : `Copy ${item.fireflyGroupId}`
+                            }
+                            onClick={() => {
+                              void copyFireflyGroupId(item.fireflyGroupId);
+                            }}
                           >
                             <Copy size={16} />
                           </button>
-                          <button type="button" title="Open transaction in Firefly" aria-label="Open transaction in Firefly">
+                          <button
+                            type="button"
+                            title="Firefly link not configured"
+                            aria-label="Open transaction in Firefly unavailable"
+                            disabled
+                          >
                             <ArrowUpRight size={16} />
                           </button>
                         </div>
