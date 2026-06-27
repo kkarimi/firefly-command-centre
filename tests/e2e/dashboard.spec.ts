@@ -98,7 +98,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).toContainText('3 flagged');
   await expect(page.getByText('£81,930.33')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Cash coverage' })).toBeVisible();
-  await expect(page.getByText('Reserved £1,810')).toBeVisible();
+  await expect(page.getByText('Reserved £1,810 (26%)')).toBeVisible();
   await expect(page.getByText('Free after bills £5,280')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-accounts-dashboard.png`), fullPage: true });
 

@@ -36,7 +36,9 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
           <span style={{ width: `${committedPercent}%` }} />
         </span>
         <div className="cash-coverage-foot">
-          <span>Reserved {formatMoney(committedCash, true)}</span>
+          <span>
+            Reserved {formatMoney(committedCash, true)} ({Math.round(committedPercent)}%)
+          </span>
           <span>Free after bills {formatMoney(cashAfterCommitments, true)}</span>
         </div>
       </section>

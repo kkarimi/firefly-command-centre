@@ -186,3 +186,5 @@ do not merge or deploy from this branch without explicit approval.
   is visible before scanning individual transactions.
 - Month spend rhythm now shows peak daily spend beside average, daily plan, and
   left-per-day so outlier pressure is visible without opening categories.
+- Accounts cash coverage now prints the reserved-cash percentage beside the
+  amount so the coverage bar has an explicit numeric reading.
