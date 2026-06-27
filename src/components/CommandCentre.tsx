@@ -93,7 +93,7 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
 
         <section className="summary-row" aria-label="Month status">
           <Metric label="Cash accounts" value={formatMoney(data.cash.budgetableCash)} tone="ok" />
-          <Metric label="After upcoming bills" value={formatMoney(data.cash.projectedLeft)} tone="ok" />
+          <Metric label="After month bills" value={formatMoney(data.cash.projectedLeft)} tone="ok" />
           <Metric label="Review rows" value={String(reviewCount)} tone={reviewCount > 0 ? 'watch' : 'ok'} />
           <Metric label="Risk budgets" value={String(atRiskBudgets)} tone={atRiskBudgets > 0 ? 'risk' : 'ok'} />
         </section>
@@ -166,7 +166,7 @@ function MonthView({
         <div className="overview-metrics">
           <Metric label="Spent" value={formatMoney(activeSpend)} tone="neutral" />
           <Metric label="Plan" value={formatMoney(activeLimit)} tone="neutral" />
-          <Metric label="Upcoming bills" value={formatMoney(cash.committedUntilMonthEnd)} tone="watch" />
+          <Metric label="Remaining month bills" value={formatMoney(cash.committedUntilMonthEnd)} tone="watch" />
           <Metric label="Cash after bills" value={formatMoney(cash.projectedLeft)} tone="ok" />
         </div>
       </section>
