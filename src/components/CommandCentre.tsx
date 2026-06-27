@@ -94,7 +94,11 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
 
         <section className="summary-row" aria-label="Month status">
           <Metric label="Cash accounts" value={formatMoney(data.cash.budgetableCash)} tone="ok" />
-          <Metric label="After month bills" value={formatMoney(data.cash.projectedLeft)} tone="ok" />
+          <Metric
+            label={data.period.isCurrent ? 'After month bills' : 'Month-end cash'}
+            value={formatMoney(data.cash.projectedLeft)}
+            tone="ok"
+          />
           <Metric label="Review rows" value={String(reviewCount)} tone={reviewCount > 0 ? 'watch' : 'ok'} />
           <Metric label="Risk budgets" value={String(atRiskBudgets)} tone={atRiskBudgets > 0 ? 'risk' : 'ok'} />
         </section>
@@ -120,7 +124,13 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
 
           <section className="content-surface">
             {activeTab === 'month' && (
-              <MonthView activeSpend={activeSpend} activeLimit={activeLimit} budgets={monthBudgets} cash={data.cash} />
+              <MonthView
+                activeSpend={activeSpend}
+                activeLimit={activeLimit}
+                budgets={monthBudgets}
+                cash={data.cash}
+                period={data.period}
+              />
             )}
             {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
             {activeTab === 'money' && <MoneyMapView groups={data.moneyMap} />}
@@ -142,11 +152,13 @@ function MonthView({
   activeLimit,
   budgets,
   cash,
+  period,
 }: {
   activeSpend: number;
   activeLimit: number;
   budgets: BudgetCard[];
   cash: CommandCentreData['cash'];
+  period: CommandCentreData['period'];
 }) {
   const overallPercent = percentUsed(activeSpend, activeLimit);
   const sortedBudgets = [...budgets].sort((left, right) => {
@@ -165,16 +177,18 @@ function MonthView({
     <div className="view-stack">
       <section className="month-overview">
         <div>
-          <p className="eyebrow">Current month</p>
-          <h2>{overallPercent}% of household plan used</h2>
+          <p className="eyebrow">{period.isCurrent ? 'Current month' : 'Month archive'}</p>
+          <h2>{overallPercent}% of {period.shortLabel} plan used</h2>
         </div>
         <div className="overview-metrics">
           <Metric label="Spent" value={formatMoney(activeSpend)} tone="neutral" />
           <Metric label="Plan" value={formatMoney(activeLimit)} tone="neutral" />
-          <Metric label="Remaining month bills" value={formatMoney(cash.committedUntilMonthEnd)} tone="watch" />
-          <Metric label="Cash after bills" value={formatMoney(cash.projectedLeft)} tone="ok" />
+          <Metric label={period.isCurrent ? 'Remaining month bills' : 'Open bills'} value={formatMoney(cash.committedUntilMonthEnd)} tone="watch" />
+          <Metric label={period.isCurrent ? 'Cash after bills' : 'Month-end cash'} value={formatMoney(cash.projectedLeft)} tone="ok" />
         </div>
       </section>
+
+      <MonthHistory period={period} />
 
       <section className="budget-grid" aria-label="Budget cards">
         {sortedBudgets.map((budget) => (
@@ -182,6 +196,26 @@ function MonthView({
         ))}
       </section>
     </div>
+  );
+}
+
+function MonthHistory({ period }: { period: CommandCentreData['period'] }) {
+  return (
+    <nav className="month-history" aria-label="Month history">
+      <span>Past months</span>
+      <div>
+        {period.history.map((month) => (
+          <a
+            aria-current={month.key === period.key ? 'page' : undefined}
+            className={month.key === period.key ? 'active' : undefined}
+            href={month.href}
+            key={month.key}
+          >
+            {month.isCurrent ? 'This month' : month.shortLabel}
+          </a>
+        ))}
+      </div>
+    </nav>
   );
 }
 

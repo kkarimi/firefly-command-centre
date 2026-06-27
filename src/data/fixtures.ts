@@ -38,17 +38,34 @@ export type ExpectedEvent = {
   expected: number;
   actual?: number;
   due: string;
+  dateKey?: string;
   status: string;
   tone: Tone;
 };
 
+export type MonthOption = {
+  key: string;
+  label: string;
+  shortLabel: string;
+  href: string;
+  isCurrent: boolean;
+};
+
 export type CommandCentreData = {
   period: {
+    key: string;
     label: string;
+    shortLabel: string;
     range: string;
+    start: string;
+    end: string;
+    balanceDate: string;
     lastRefresh: string;
     daysElapsed: number;
     totalDays: number;
+    isCurrent: boolean;
+    previous: MonthOption | null;
+    history: MonthOption[];
   };
   cash: {
     monzoBalance: number;
@@ -66,11 +83,30 @@ export type CommandCentreData = {
 
 export const commandCentreFixture = {
   period: {
+    key: '2026-06',
     label: 'June 2026',
+    shortLabel: 'Jun 2026',
     range: '1-30 Jun',
+    start: '2026-06-01',
+    end: '2026-06-30',
+    balanceDate: '2026-06-27',
     lastRefresh: '27 Jun 2026, 18:40',
     daysElapsed: 27,
     totalDays: 30,
+    isCurrent: true,
+    previous: {
+      key: '2026-05',
+      label: 'May 2026',
+      shortLabel: 'May 2026',
+      href: '/months/2026-05',
+      isCurrent: false,
+    },
+    history: [
+      { key: '2026-06', label: 'June 2026', shortLabel: 'Jun 2026', href: '/months/2026-06', isCurrent: true },
+      { key: '2026-05', label: 'May 2026', shortLabel: 'May 2026', href: '/months/2026-05', isCurrent: false },
+      { key: '2026-04', label: 'April 2026', shortLabel: 'Apr 2026', href: '/months/2026-04', isCurrent: false },
+      { key: '2026-03', label: 'March 2026', shortLabel: 'Mar 2026', href: '/months/2026-03', isCurrent: false },
+    ],
   },
   cash: {
     monzoBalance: 5840.24,

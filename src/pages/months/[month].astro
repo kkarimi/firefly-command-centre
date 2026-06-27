@@ -1,0 +1,26 @@
+---
+import CommandCentre from '../../components/CommandCentre';
+import { isSelectableMonthKey, loadCommandCentreData } from '../../server/dashboard';
+
+const month = Astro.params.month;
+
+if (!isSelectableMonthKey(month)) {
+  return Astro.redirect('/');
+}
+
+const dashboardData = await loadCommandCentreData({ month });
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="A read-only Firefly III command centre prototype for monthly finance review." />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{dashboardData.period.label} | Finances</title>
+  </head>
+  <body>
+    <CommandCentre client:load initialData={dashboardData} />
+  </body>
+</html>

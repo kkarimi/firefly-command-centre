@@ -5,7 +5,8 @@ test('renders the command centre and all v0 sections', async ({ page }, testInfo
 
   await expect(page.getByRole('heading', { name: 'Finances' })).toBeVisible();
   await expect(page.getByText('Cash accounts')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /\d+% of household plan used/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /\d+% of .* plan used/ })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
 
@@ -26,4 +27,13 @@ test('renders the command centre and all v0 sections', async ({ page }, testInfo
   await expect(page.getByText('Firefly')).toBeVisible();
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
+});
+
+test('renders an archived month on its own URL', async ({ page }) => {
+  await page.goto('/months/2026-05');
+
+  await expect(page).toHaveURL(/\/months\/2026-05$/);
+  await expect(page.getByText('Month archive')).toBeVisible();
+  await expect(page.getByRole('heading', { name: /\d+% of May 2026 plan used/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'This month' })).toBeVisible();
 });

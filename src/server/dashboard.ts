@@ -20,6 +20,10 @@ type FireflyResource = {
 
 type FireflySplit = Record<string, unknown>;
 
+type LoadCommandCentreOptions = {
+  month?: string | null;
+};
+
 const householdBudgetNames = [
   'Bills & Utilities',
   'Groceries',
@@ -30,9 +34,15 @@ const householdBudgetNames = [
   'General / Review',
 ];
 
-export async function loadCommandCentreData(): Promise<CommandCentreData> {
+const historyMonthCount = 12;
+
+export async function loadCommandCentreData(options: LoadCommandCentreOptions = {}): Promise<CommandCentreData> {
   const data = cloneFixture();
-  applyCurrentPeriod(data);
+  const period = buildMonthPeriod(options.month ?? currentMonthKey());
+  if (!period) {
+    throw new Error(`Invalid month: ${options.month}`);
+  }
+  applyPeriod(data, period);
 
   const token = fireflyToken();
   if (!token) {
@@ -44,10 +54,10 @@ export async function loadCommandCentreData(): Promise<CommandCentreData> {
     prepareLiveData(data);
 
     const [accounts, budgets, bills, transactions] = await Promise.all([
-      loadAccounts(token),
+      loadAccounts(token, data.period),
       loadBudgets(token, data.period),
       loadBills(token),
-      loadTransactions(token),
+      loadTransactions(token, data.period),
     ]);
 
     applyAccounts(data, accounts);
@@ -129,12 +139,34 @@ function prepareLiveData(data: CommandCentreData) {
   });
 }
 
-function applyCurrentPeriod(data: CommandCentreData) {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+export function isSelectableMonthKey(value: string | null | undefined, now = new Date()) {
+  const parsed = parseMonthKey(value);
+  if (!parsed) {
+    return false;
+  }
+
+  const selected = parsed.year * 12 + parsed.monthIndex;
+  const current = now.getFullYear() * 12 + now.getMonth();
+  return selected <= current;
+}
+
+export function currentMonthKey(now = new Date()) {
+  return monthKey(now.getFullYear(), now.getMonth());
+}
+
+export function buildMonthPeriod(value: string, now = new Date()): CommandCentreData['period'] | null {
+  const parsed = parseMonthKey(value);
+  if (!parsed || !isSelectableMonthKey(value, now)) {
+    return null;
+  }
+
+  const start = new Date(parsed.year, parsed.monthIndex, 1);
+  const end = new Date(parsed.year, parsed.monthIndex + 1, 0);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const isCurrent = parsed.year === now.getFullYear() && parsed.monthIndex === now.getMonth();
   const formatDayMonth = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
   const formatMonth = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' });
+  const formatShortMonth = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric' });
   const formatRefresh = new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
@@ -145,13 +177,79 @@ function applyCurrentPeriod(data: CommandCentreData) {
     timeZone: 'Europe/London',
   });
 
-  data.period = {
-    label: formatMonth.format(now),
+  return {
+    key: monthKey(parsed.year, parsed.monthIndex),
+    label: formatMonth.format(start),
+    shortLabel: formatShortMonth.format(start),
     range: `${formatDayMonth.format(start)}-${formatDayMonth.format(end)}`,
+    start: isoDate(start),
+    end: isoDate(end),
+    balanceDate: isoDate(isCurrent ? today : end),
     lastRefresh: formatRefresh.format(now).replace(',', ''),
-    daysElapsed: Math.min(now.getDate(), end.getDate()),
+    daysElapsed: isCurrent ? Math.min(now.getDate(), end.getDate()) : end.getDate(),
     totalDays: end.getDate(),
+    isCurrent,
+    previous: monthOption(addMonths(start, -1), now),
+    history: monthHistory(now, start),
   };
+}
+
+function applyPeriod(data: CommandCentreData, period: CommandCentreData['period']) {
+  data.period = period;
+  data.budgets = data.budgets.map((budget) => ({
+    ...budget,
+    daysElapsed: period.daysElapsed,
+    totalDays: period.totalDays,
+  }));
+}
+
+function monthHistory(now: Date, selected: Date) {
+  const months = Array.from({ length: historyMonthCount }, (_, index) =>
+    monthOption(addMonths(new Date(now.getFullYear(), now.getMonth(), 1), -index), now),
+  );
+  const selectedOption = monthOption(selected, now);
+
+  if (months.some((month) => month.key === selectedOption.key)) {
+    return months;
+  }
+
+  return [...months, selectedOption];
+}
+
+function monthOption(date: Date, now: Date) {
+  const key = monthKey(date.getFullYear(), date.getMonth());
+  const label = new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(date);
+  const shortLabel = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric' }).format(date);
+  return {
+    key,
+    label,
+    shortLabel,
+    href: `/months/${key}`,
+    isCurrent: key === currentMonthKey(now),
+  };
+}
+
+function parseMonthKey(value: string | null | undefined) {
+  const match = value?.match(/^(\d{4})-(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const year = Number.parseInt(match[1] ?? '', 10);
+  const month = Number.parseInt(match[2] ?? '', 10);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || year < 2000 || month < 1 || month > 12) {
+    return null;
+  }
+
+  return { year, monthIndex: month - 1 };
+}
+
+function addMonths(date: Date, offset: number) {
+  return new Date(date.getFullYear(), date.getMonth() + offset, 1);
+}
+
+function monthKey(year: number, monthIndex: number) {
+  return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
 }
 
 function markOps(data: CommandCentreData, label: string, value: string, tone: Tone) {
@@ -205,10 +303,10 @@ async function fireflyGet<T>(token: string, path: string, params?: Record<string
   return (await response.json()) as T;
 }
 
-async function loadAccounts(token: string) {
+async function loadAccounts(token: string, period: CommandCentreData['period']) {
   const groups = await Promise.allSettled([
-    loadCollection(token, '/accounts', { type: 'asset', limit: '200' }),
-    loadCollection(token, '/accounts', { type: 'liabilities', limit: '200' }),
+    loadCollection(token, '/accounts', { type: 'asset', date: period.balanceDate, limit: '200' }),
+    loadCollection(token, '/accounts', { type: 'liabilities', date: period.balanceDate, limit: '200' }),
   ]);
   return groups.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
 }
@@ -222,10 +320,8 @@ async function loadBills(token: string) {
   return loadCollection(token, '/bills', { limit: '100' });
 }
 
-async function loadTransactions(token: string) {
-  const now = new Date();
-  const start = isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
-  const end = isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+async function loadTransactions(token: string, period: CommandCentreData['period']) {
+  const { start, end } = monthApiRange(period);
   return loadCollection(token, '/transactions', { start, end, limit: '200' });
 }
 
@@ -234,16 +330,15 @@ async function loadCollection(token: string, path: string, params: Record<string
   return response.data ?? [];
 }
 
-function monthApiRange(_period: CommandCentreData['period']) {
-  const now = new Date();
+function monthApiRange(period: CommandCentreData['period']) {
   return {
-    start: isoDate(new Date(now.getFullYear(), now.getMonth(), 1)),
-    end: isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+    start: period.start,
+    end: period.end,
   };
 }
 
 function isoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 function applyAccounts(data: CommandCentreData, accounts: FireflyResource[]) {
@@ -389,7 +484,7 @@ function applyReviewItems(data: CommandCentreData, transactions: FireflyResource
       source: stringValue(split.source_name) || 'Firefly',
       payee: payeeName(split) || 'Review transaction',
       amount: signed,
-      ageDays: ageDays(stringValue(split.date)),
+      ageDays: ageDays(stringValue(split.date), data.period.isCurrent ? new Date() : new Date(data.period.end)),
       reason: review.reason,
       suggestion: review.suggestion,
       severity: Math.abs(signed) > 100 ? 'risk' : 'watch',
@@ -442,12 +537,12 @@ function reviewReason(split: FireflySplit) {
 function applyExpected(data: CommandCentreData, transactions: FireflyResource[], bills: FireflyResource[]) {
   const splits = transactionSplits(transactions);
   data.expected.income = expectedIncome(splits);
-  data.expected.obligations = expectedObligations(splits, bills);
-  data.expected.candidates = expectedBillCandidates(bills);
+  data.expected.obligations = expectedObligations(splits, bills, data.period);
+  data.expected.candidates = expectedBillCandidates(bills, data.period);
 
   const remainingMonthBills = data.expected.obligations
     .filter((event) => event.status === 'Upcoming')
-    .filter((event) => isCurrentMonthDue(event.due))
+    .filter((event) => isPeriodDue(event, data.period))
     .reduce((sum, event) => sum + event.expected, 0);
 
   data.cash.committedUntilMonthEnd = remainingMonthBills;
@@ -468,12 +563,13 @@ function expectedIncome(splits: FireflySplit[]): ExpectedEvent[] {
       expected: signedAmount(split),
       actual: signedAmount(split),
       due: `Paid ${shortDate(stringValue(split.date))}`,
+      dateKey: isoDateFromRaw(stringValue(split.date)),
       status: tagsFromSplit(split).some((tag) => /bonus|variable-income/i.test(tag)) ? 'Variable income' : 'Matched',
       tone: 'ok' as const,
     }));
 }
 
-function expectedObligations(splits: FireflySplit[], bills: FireflyResource[]): ExpectedEvent[] {
+function expectedObligations(splits: FireflySplit[], bills: FireflyResource[], period: CommandCentreData['period']): ExpectedEvent[] {
   const paid = splits
     .filter((split) => {
       const text = `${stringValue(split.description)} ${stringValue(split.destination_name)} ${tagsFromSplit(split).join(' ')}`;
@@ -484,18 +580,23 @@ function expectedObligations(splits: FireflySplit[], bills: FireflyResource[]): 
       expected: Math.abs(signedAmount(split)),
       actual: Math.abs(signedAmount(split)),
       due: `Paid ${shortDate(stringValue(split.date))}`,
+      dateKey: isoDateFromRaw(stringValue(split.date)),
       status: 'Paid',
       tone: 'ok' as const,
     }));
 
-  const upcoming = bills.map(billFromResource).filter((bill): bill is ExpectedEvent => Boolean(bill));
+  const upcoming = period.isCurrent ? bills.map(billFromResource).filter((bill): bill is ExpectedEvent => Boolean(bill)) : [];
 
   return [...upcoming, ...paid]
     .sort((left, right) => expectedSort(left, right))
     .slice(0, 10);
 }
 
-function expectedBillCandidates(bills: FireflyResource[]): ExpectedEvent[] {
+function expectedBillCandidates(bills: FireflyResource[], period: CommandCentreData['period']): ExpectedEvent[] {
+  if (!period.isCurrent) {
+    return [];
+  }
+
   return bills
     .map(billFromResource)
     .filter((bill): bill is ExpectedEvent => Boolean(bill))
@@ -534,6 +635,7 @@ function billFromResource(resource: FireflyResource): ExpectedEvent | null {
     name,
     expected,
     due: shortDate(rawDate),
+    dateKey: isoDate(dueDate),
     status: inFuture ? 'Upcoming' : 'Known bill',
     tone: inFuture ? 'watch' : 'neutral',
   };
@@ -547,21 +649,23 @@ function expectedSort(left: ExpectedEvent, right: ExpectedEvent) {
     return leftRank - rightRank;
   }
 
-  const leftDate = parseShortDue(left.due);
-  const rightDate = parseShortDue(right.due);
+  const leftDate = eventTime(left);
+  const rightDate = eventTime(right);
   if (left.status === 'Paid' && right.status === 'Paid') {
     return rightDate - leftDate;
   }
   return leftDate - rightDate;
 }
 
-function ageDays(rawDate: string) {
+function ageDays(rawDate: string, reference = new Date()) {
   const date = rawDate ? new Date(rawDate) : null;
   if (!date || Number.isNaN(date.getTime())) {
     return 0;
   }
 
-  return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000));
+  const referenceDay = new Date(reference.getFullYear(), reference.getMonth(), reference.getDate());
+  const transactionDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.max(0, Math.floor((referenceDay.getTime() - transactionDay.getTime()) / 86_400_000));
 }
 
 function transactionSplits(transactions: FireflyResource[]): FireflySplit[] {
@@ -626,6 +730,11 @@ function shortDate(rawDate: string) {
   return new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' }).format(date);
 }
 
+function isoDateFromRaw(rawDate: string) {
+  const date = new Date(rawDate);
+  return Number.isNaN(date.getTime()) ? undefined : isoDate(date);
+}
+
 function dateSort(left: FireflySplit, right: FireflySplit) {
   return new Date(stringValue(left.date)).getTime() - new Date(stringValue(right.date)).getTime();
 }
@@ -635,21 +744,27 @@ function startOfToday() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
-function isCurrentMonthDue(shortDue: string) {
-  const due = parseShortDue(shortDue);
-  if (!Number.isFinite(due)) {
-    return false;
+function isPeriodDue(event: ExpectedEvent, period: CommandCentreData['period']) {
+  if (event.dateKey) {
+    return event.dateKey >= period.start && event.dateKey <= period.end;
   }
 
-  const date = new Date(due);
-  const now = new Date();
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  const due = parseShortDue(event.due, Number.parseInt(period.key.slice(0, 4), 10));
+  return Number.isFinite(due) && due >= Date.parse(period.start) && due <= Date.parse(period.end);
 }
 
-function parseShortDue(value: string) {
+function eventTime(event: ExpectedEvent) {
+  if (event.dateKey) {
+    return Date.parse(event.dateKey);
+  }
+
+  return parseShortDue(event.due, new Date().getFullYear());
+}
+
+function parseShortDue(value: string, year: number) {
   const paid = value.match(/Paid (.+)$/);
   const raw = paid?.[1] ?? value;
-  const parsed = Date.parse(`${raw} ${new Date().getFullYear()}`);
+  const parsed = Date.parse(`${raw} ${year}`);
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
 }
 
