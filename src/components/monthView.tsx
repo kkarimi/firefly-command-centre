@@ -36,6 +36,9 @@ export function MonthView({
   dashboardSettings,
   paidObligations,
   period,
+  pendingMonthKey,
+  onMonthPrefetch,
+  onMonthSelect,
   reviewCount,
   riskBudgets,
 }: {
@@ -48,6 +51,9 @@ export function MonthView({
   dashboardSettings: DashboardSettings;
   paidObligations: { count: number; total: number };
   period: DashboardData['period'];
+  pendingMonthKey: string | null;
+  onMonthPrefetch: (monthKey: string) => void;
+  onMonthSelect: (monthKey: string, href: string) => void;
   reviewCount: number;
   riskBudgets: number;
 }) {
@@ -116,7 +122,12 @@ export function MonthView({
         />
       )}
 
-      <MonthHistory period={period} />
+      <MonthHistory
+        onMonthPrefetch={onMonthPrefetch}
+        onMonthSelect={onMonthSelect}
+        pendingMonthKey={pendingMonthKey}
+        period={period}
+      />
 
       {showBudgetDetails && (
         <section className="budget-grid" aria-label="Spend categories">
@@ -254,7 +265,17 @@ function TrendPill({ direction, label, tone }: { direction: TrendDirection; labe
   );
 }
 
-function MonthHistory({ period }: { period: DashboardData['period'] }) {
+function MonthHistory({
+  onMonthPrefetch,
+  onMonthSelect,
+  pendingMonthKey,
+  period,
+}: {
+  onMonthPrefetch: (monthKey: string) => void;
+  onMonthSelect: (monthKey: string, href: string) => void;
+  pendingMonthKey: string | null;
+  period: DashboardData['period'];
+}) {
   return (
     <nav className="month-history" aria-label="Month history">
       <span>Past months</span>
@@ -262,9 +283,24 @@ function MonthHistory({ period }: { period: DashboardData['period'] }) {
         {period.history.map((month) => (
           <a
             aria-current={month.key === period.key ? 'page' : undefined}
-            className={month.key === period.key ? 'active' : undefined}
+            aria-disabled={pendingMonthKey === month.key ? 'true' : undefined}
+            className={[
+              month.key === period.key ? 'active' : '',
+              pendingMonthKey === month.key ? 'loading' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             href={month.href}
             key={month.key}
+            onClick={(event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+                return;
+              }
+              event.preventDefault();
+              onMonthSelect(month.key, month.href);
+            }}
+            onFocus={() => onMonthPrefetch(month.key)}
+            onMouseEnter={() => onMonthPrefetch(month.key)}
           >
             {month.isCurrent ? 'This month' : month.shortLabel}
           </a>

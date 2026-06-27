@@ -20,6 +20,20 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
 
+  await page.evaluate(() => {
+    (window as Window & { financeUiNavMarker?: string }).financeUiNavMarker = 'kept';
+  });
+  await page.getByRole('link', { name: 'May 2026' }).click();
+  await expect(page).toHaveURL(/\/months\/2026-05$/);
+  await expect(page.getByRole('heading', { name: 'May 2026' })).toBeVisible();
+  await expect(page.locator('.spend-rhythm-trigger')).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.evaluate(() => (window as Window & { financeUiNavMarker?: string }).financeUiNavMarker)).resolves.toBe(
+    'kept',
+  );
+
+  await page.getByRole('link', { name: 'This month' }).click();
+  await expect(page.getByRole('heading', { name: 'Jun 2026' })).toBeVisible();
+
   await page.locator('.spend-rhythm-trigger').click();
   await expect(page.locator('.spend-rhythm-trigger')).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByRole('region', { name: 'Spend categories' })).toBeVisible();

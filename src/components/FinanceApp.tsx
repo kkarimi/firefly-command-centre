@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarClock, Gauge, Layers3, ListChecks, Settings, ShieldCheck, type LucideIcon } from 'lucide-react';
 import { dashboardFixture, type DashboardData } from '../data/fixtures';
 import { AccountsView } from './accountsView';
@@ -29,8 +29,12 @@ const tabs: Tab[] = [
 
 export default function FinanceApp({ initialData }: { initialData?: DashboardData }) {
   const [activeTab, setActiveTab] = useState<ViewId>('month');
+  const [data, setData] = useState<DashboardData>(initialData ?? dashboardFixture);
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(defaultDashboardSettings);
-  const data = initialData ?? dashboardFixture;
+  const [pendingMonthKey, setPendingMonthKey] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const monthCache = useRef(new Map<string, DashboardData>([[data.period.key, data]]));
+  const monthRequests = useRef(new Map<string, Promise<DashboardData>>());
 
   const monthBudgets = useMemo(() => data.budgets.filter(isVisibleMonthBudget), [data.budgets]);
   const activeSpend = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.spent, 0), [monthBudgets]);
@@ -55,20 +59,125 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
     }
   }, []);
 
+  const prefetchMonth = useCallback(async (monthKey: string) => {
+    const cached = monthCache.current.get(monthKey);
+    if (cached) {
+      return cached;
+    }
+
+    const existing = monthRequests.current.get(monthKey);
+    if (existing) {
+      return existing;
+    }
+
+    const request = fetch(`/api/dashboard.json?month=${encodeURIComponent(monthKey)}`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Month ${monthKey} returned HTTP ${response.status}`);
+        }
+        return response.json() as Promise<DashboardData>;
+      })
+      .then((nextData) => {
+        monthCache.current.set(nextData.period.key, nextData);
+        return nextData;
+      })
+      .finally(() => {
+        monthRequests.current.delete(monthKey);
+      });
+
+    monthRequests.current.set(monthKey, request);
+    return request;
+  }, []);
+
+  const prefetchMonthSilently = useCallback(
+    (monthKey: string) => {
+      void prefetchMonth(monthKey).catch(() => undefined);
+    },
+    [prefetchMonth],
+  );
+
+  const navigateToMonth = useCallback(
+    async (monthKey: string, href: string, updateHistory = true) => {
+      if (monthKey === data.period.key) {
+        if (updateHistory && window.location.pathname !== href) {
+          window.history.pushState({ monthKey }, '', href);
+        }
+        return;
+      }
+
+      setPendingMonthKey(monthKey);
+      setLoadError(null);
+
+      try {
+        const nextData = await prefetchMonth(monthKey);
+        setData(nextData);
+        setActiveTab('month');
+        if (updateHistory) {
+          window.history.pushState({ monthKey }, '', href);
+        }
+      } catch (error) {
+        setLoadError(error instanceof Error ? error.message : 'Month load failed');
+      } finally {
+        setPendingMonthKey(null);
+      }
+    },
+    [data.period.key, prefetchMonth],
+  );
+
+  useEffect(() => {
+    monthCache.current.set(data.period.key, data);
+    const activeIndex = data.period.history.findIndex((month) => month.key === data.period.key);
+    const nearbyMonths = [data.period.history[activeIndex - 1], data.period.history[activeIndex + 1]].filter(
+      (month): month is DashboardData['period']['history'][number] => Boolean(month),
+    );
+
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => {
+        for (const month of nearbyMonths) {
+          prefetchMonthSilently(month.key);
+        }
+      });
+      return;
+    }
+
+    window.setTimeout(() => {
+      for (const month of nearbyMonths) {
+        prefetchMonthSilently(month.key);
+      }
+    }, 250);
+  }, [data, prefetchMonthSilently]);
+
+  useEffect(() => {
+    function handlePopState() {
+      const match = window.location.pathname.match(/^\/months\/(\d{4}-\d{2})$/);
+      const monthKey = match?.[1] ?? monthCache.current.get(data.period.key)?.period.history[0]?.key;
+      const href = match ? window.location.pathname : '/';
+      if (monthKey) {
+        void navigateToMonth(monthKey, href, false);
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [data.period.key, navigateToMonth]);
+
   function updateDashboardSettings(next: DashboardSettings) {
     setDashboardSettings(next);
     window.localStorage.setItem(dashboardSettingsKey, JSON.stringify(next));
   }
 
   return (
-    <main className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
+    <main aria-busy={pendingMonthKey !== null} className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <header className="top-bar">
           <div>
             <h1>Finances</h1>
           </div>
           <div className="top-actions">
-            <span className="period-pill">{data.period.label}</span>
+            {loadError && <span className="load-error">{loadError}</span>}
+            <span className={pendingMonthKey ? 'period-pill loading' : 'period-pill'}>
+              {pendingMonthKey ? 'Loading' : data.period.label}
+            </span>
             <button
               aria-label="Open dashboard settings"
               className={activeTab === 'settings' ? 'settings-button active' : 'settings-button'}
@@ -112,6 +221,11 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
                 dashboardSettings={dashboardSettings}
                 paidObligations={paidObligations}
                 period={data.period}
+                pendingMonthKey={pendingMonthKey}
+                onMonthPrefetch={prefetchMonthSilently}
+                onMonthSelect={(monthKey, href) => {
+                  void navigateToMonth(monthKey, href);
+                }}
                 reviewCount={reviewCount}
                 riskBudgets={atRiskBudgets}
               />

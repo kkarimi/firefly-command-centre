@@ -94,6 +94,20 @@ p {
   text-transform: uppercase;
 }
 
+.period-pill.loading {
+  color: var(--green);
+}
+
+.load-error {
+  max-width: 220px;
+  overflow: hidden;
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .top-actions {
   display: flex;
   align-items: center;
@@ -574,10 +588,15 @@ p {
 }
 
 .month-history a:hover,
-.month-history a.active {
+.month-history a.active,
+.month-history a.loading {
   border-color: var(--green);
   background: var(--green-soft);
   color: var(--green);
+}
+
+.month-history a.loading {
+  cursor: progress;
 }
 
 .overview-metrics,

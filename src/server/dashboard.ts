@@ -22,7 +22,13 @@ type FireflyResource = {
 type FireflySplit = Record<string, unknown>;
 
 type LoadDashboardOptions = {
+  bypassCache?: boolean;
   month?: string | null;
+};
+
+type DashboardCacheEntry = {
+  expiresAt: number;
+  promise: Promise<DashboardData>;
 };
 
 const householdBudgetNames = [
@@ -36,13 +42,47 @@ const householdBudgetNames = [
 ];
 
 const historyMonthCount = 12;
+const dashboardCache = new Map<string, DashboardCacheEntry>();
+
+function dashboardCacheTtlMs() {
+  const value = Number.parseInt(process.env.FIREFLY_DASHBOARD_CACHE_TTL_SECONDS ?? '90', 10);
+  return Number.isFinite(value) && value > 0 ? value * 1000 : 90_000;
+}
 
 export async function loadDashboardData(options: LoadDashboardOptions = {}): Promise<DashboardData> {
-  const data = cloneFixture();
   const period = buildMonthPeriod(options.month ?? currentMonthKey());
   if (!period) {
     throw new Error(`Invalid month: ${options.month}`);
   }
+
+  if (!options.bypassCache) {
+    return loadDashboardDataCached(period);
+  }
+
+  return buildDashboardData(period);
+}
+
+async function loadDashboardDataCached(period: DashboardData['period']) {
+  const now = Date.now();
+  const cacheKey = period.key;
+  const cached = dashboardCache.get(cacheKey);
+  if (cached && cached.expiresAt > now) {
+    return structuredClone(await cached.promise);
+  }
+
+  const promise = buildDashboardData(period);
+  dashboardCache.set(cacheKey, { expiresAt: now + dashboardCacheTtlMs(), promise });
+
+  try {
+    return structuredClone(await promise);
+  } catch (error) {
+    dashboardCache.delete(cacheKey);
+    throw error;
+  }
+}
+
+async function buildDashboardData(period: DashboardData['period']): Promise<DashboardData> {
+  const data = cloneFixture();
   applyPeriod(data, period);
 
   const token = fireflyToken();
