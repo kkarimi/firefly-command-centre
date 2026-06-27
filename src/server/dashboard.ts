@@ -611,7 +611,7 @@ function applyReviewItems(data: DashboardData, transactions: FireflyResource[]) 
   data.reviewItems = items.sort((left, right) => Math.abs(right.amount) - Math.abs(left.amount)).slice(0, 12);
 }
 
-function reviewReason(split: FireflySplit) {
+export function reviewReason(split: FireflySplit) {
   const category = stringValue(split.category_name);
   const budget = stringValue(split.budget_name);
   const tags = tagsFromSplit(split);
@@ -641,6 +641,13 @@ function reviewReason(split: FireflySplit) {
   }
 
   if (/^general$/i.test(category) && amount >= 25) {
+    if (type !== 'withdrawal') {
+      return {
+        reason: 'Generic category on material cash-in',
+        suggestion: 'Confirm income, transfer, or accounting category instead of General',
+      };
+    }
+
     return {
       reason: 'Generic category on material row',
       suggestion: 'Replace General with the smallest useful household category',
