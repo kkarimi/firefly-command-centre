@@ -174,3 +174,5 @@ do not merge or deploy from this branch without explicit approval.
   header so upcoming obligations are visible without scanning every tile.
 - Review severity group headers now include queued value as well as row count
   so the work queue shows both effort and materiality.
+- Review row ages now inherit the watch treatment once they cross the stale
+  threshold so overdue cleanup is visible inside the queue.

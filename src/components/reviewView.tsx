@@ -65,7 +65,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
                       <div className="row-detail">
                         <span>{item.source}</span>
                         <strong>{formatSignedMoney(item.amount)}</strong>
-                        <span>{item.ageDays}d</span>
+                        <span className={item.ageDays >= staleAgeDays ? toneClass('watch') : undefined}>{item.ageDays}d</span>
                       </div>
                       <div className="suggestion">
                         <span>{item.suggestion}</span>
