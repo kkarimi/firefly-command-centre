@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, Check, Minus } from 'lucide-react';
 import type { BudgetCard, DashboardData, ExpectedEvent, MonthComparison, Tone } from '../data/fixtures';
 import { budgetStatus, formatMoney, formatSignedMoney, percentUsed, projectMonthEnd, remainingBudget } from '../lib/money';
 import type { DashboardSettings } from './dashboardSettings';
-import { toneClass } from './uiPrimitives';
+import { EmptyState, toneClass } from './uiPrimitives';
 
 type TrendDirection = 'up' | 'down' | 'flat';
 
@@ -135,9 +135,13 @@ export function MonthView({
 
       {showBudgetDetails && (
         <section className="budget-grid" aria-label="Spend categories">
-          {sortedBudgets.map((budget) => (
-            <BudgetTile key={budget.id} budget={budget} />
-          ))}
+          {sortedBudgets.length === 0 ? (
+            <div className="budget-grid-empty">
+              <EmptyState title="No visible categories" detail="No budget categories matched the current month filters." compact />
+            </div>
+          ) : (
+            sortedBudgets.map((budget) => <BudgetTile key={budget.id} budget={budget} />)
+          )}
         </section>
       )}
     </div>
@@ -241,15 +245,23 @@ function SpendRhythm({
           </span>
           <span>{showDetails ? 'Hide categories' : 'Show categories'}</span>
         </span>
-        <span className="spend-bars" aria-hidden="true" style={{ '--target-pct': `${targetPercent}%` } as CSSProperties}>
-          {dailySpend.map((day) => (
-            <i
-              className={spendBarTone(day.amount, targetDaily)}
-              key={day.date}
-              style={{ height: `${Math.max(3, (day.amount / maxSpend) * 100)}%` }}
-              title={`${day.date}: ${formatMoney(day.amount)}`}
-            />
-          ))}
+        <span
+          className="spend-bars"
+          aria-hidden={dailySpend.length > 0}
+          style={{ '--target-pct': `${targetPercent}%` } as CSSProperties}
+        >
+          {dailySpend.length === 0 ? (
+            <span className="spend-bars-empty">No daily spend</span>
+          ) : (
+            dailySpend.map((day) => (
+              <i
+                className={spendBarTone(day.amount, targetDaily)}
+                key={day.date}
+                style={{ height: `${Math.max(3, (day.amount / maxSpend) * 100)}%` }}
+                title={`${day.date}: ${formatMoney(day.amount)}`}
+              />
+            ))
+          )}
         </span>
         <span className="spend-rhythm-foot">
           <span>Avg {formatMoney(averageSpend, true)}</span>
