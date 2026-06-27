@@ -23,6 +23,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
+  await expect(page.getByText(/Left\/day/)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
 
@@ -114,6 +115,7 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   await expect(page.locator('.month-status-chip')).toHaveCount(1);
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
+  await expect(page.getByText('Month closed')).toBeVisible();
   await expect(page.getByText('Open bills')).toHaveCount(0);
   await page.locator('.spend-rhythm-trigger').click();
   await expect(page.getByText('Over by')).toBeVisible();
