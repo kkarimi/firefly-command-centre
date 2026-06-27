@@ -182,3 +182,5 @@ do not merge or deploy from this branch without explicit approval.
   states instead of showing a check mark for every source.
 - Expected group headers now show compact totals for income, bills and tax, and
   known bills so each list carries its materiality without another panel.
+- Review severity group headers now include the oldest row age so cleanup order
+  is visible before scanning individual transactions.

@@ -120,7 +120,8 @@ function formatRowCount(count: number) {
 
 function formatReviewGroupSummary(items: ReviewItem[]) {
   const queued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
-  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)}`;
+  const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
+  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d`;
 }
 
 function reviewActionBuckets(items: ReviewItem[]) {
