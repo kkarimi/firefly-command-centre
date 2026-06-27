@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   Activity,
   ArrowDown,
@@ -16,6 +16,7 @@ import {
   ListChecks,
   Minus,
   PiggyBank,
+  Settings,
   ShieldCheck,
   WalletCards,
   type LucideIcon,
@@ -33,6 +34,8 @@ import {
 import { budgetStatus, formatMoney, formatSignedMoney, percentUsed, projectMonthEnd, remainingBudget } from '../lib/money';
 
 type TabId = 'month' | 'review' | 'money' | 'expected' | 'ops';
+
+type ViewId = TabId | 'settings';
 
 type Tab = {
   id: TabId;
@@ -65,6 +68,7 @@ const statusLabels = {
 type TrendDirection = 'up' | 'down' | 'flat';
 
 type LensSignalModel = {
+  kind: 'spend' | 'cash' | 'focus';
   label: string;
   value: string;
   detail: string;
@@ -75,12 +79,29 @@ type LensSignalModel = {
   previous?: number;
 };
 
+type DashboardSettings = {
+  showSpend: boolean;
+  showCash: boolean;
+  showFocus: boolean;
+  showCategories: boolean;
+};
+
+const defaultDashboardSettings: DashboardSettings = {
+  showSpend: true,
+  showCash: false,
+  showFocus: false,
+  showCategories: false,
+};
+
+const dashboardSettingsKey = 'firefly-command-centre-dashboard-settings-v1';
+
 function toneClass(tone: Tone | 'review') {
   return `tone-${tone}`;
 }
 
 export default function CommandCentre({ initialData }: { initialData?: CommandCentreData }) {
-  const [activeTab, setActiveTab] = useState<TabId>('month');
+  const [activeTab, setActiveTab] = useState<ViewId>('month');
+  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>(defaultDashboardSettings);
   const data = initialData ?? commandCentreFixture;
 
   const monthBudgets = useMemo(() => data.budgets.filter(isVisibleMonthBudget), [data.budgets]);
@@ -93,6 +114,24 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
     return budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue) === 'risk';
   }).length;
 
+  useEffect(() => {
+    const stored = window.localStorage.getItem(dashboardSettingsKey);
+    if (!stored) {
+      return;
+    }
+
+    try {
+      setDashboardSettings({ ...defaultDashboardSettings, ...JSON.parse(stored) });
+    } catch {
+      window.localStorage.removeItem(dashboardSettingsKey);
+    }
+  }, []);
+
+  function updateDashboardSettings(next: DashboardSettings) {
+    setDashboardSettings(next);
+    window.localStorage.setItem(dashboardSettingsKey, JSON.stringify(next));
+  }
+
   return (
     <main className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -100,7 +139,18 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
           <div>
             <h1>Finances</h1>
           </div>
-          <span className="period-pill">{data.period.label}</span>
+          <div className="top-actions">
+            <span className="period-pill">{data.period.label}</span>
+            <button
+              aria-label="Open dashboard settings"
+              className={activeTab === 'settings' ? 'settings-button active' : 'settings-button'}
+              onClick={() => setActiveTab('settings')}
+              title="Dashboard settings"
+              type="button"
+            >
+              <Settings size={18} aria-hidden="true" />
+            </button>
+          </div>
         </header>
 
         <div className="workspace">
@@ -130,6 +180,8 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
                 budgets={monthBudgets}
                 cash={data.cash}
                 comparison={data.comparison}
+                dailySpend={data.dailySpend}
+                dashboardSettings={dashboardSettings}
                 paidObligations={paidObligations}
                 period={data.period}
                 reviewCount={reviewCount}
@@ -140,6 +192,9 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
             {activeTab === 'money' && <MoneyMapView groups={data.moneyMap} />}
             {activeTab === 'expected' && <ExpectedView groups={data.expected} />}
             {activeTab === 'ops' && <OpsView ops={data.ops} />}
+            {activeTab === 'settings' && (
+              <SettingsView settings={dashboardSettings} onChange={updateDashboardSettings} />
+            )}
           </section>
         </div>
       </div>
@@ -157,6 +212,8 @@ function MonthView({
   budgets,
   cash,
   comparison,
+  dailySpend,
+  dashboardSettings,
   paidObligations,
   period,
   reviewCount,
@@ -167,11 +224,14 @@ function MonthView({
   budgets: BudgetCard[];
   cash: CommandCentreData['cash'];
   comparison?: MonthComparison;
+  dailySpend: CommandCentreData['dailySpend'];
+  dashboardSettings: DashboardSettings;
   paidObligations: { count: number; total: number };
   period: CommandCentreData['period'];
   reviewCount: number;
   riskBudgets: number;
 }) {
+  const [showBudgetDetails, setShowBudgetDetails] = useState(dashboardSettings.showCategories);
   const overallPercent = percentUsed(activeSpend, activeLimit);
   const planTone = planToneFor(overallPercent);
   const lensSignals = monthLensSignals({
@@ -183,6 +243,11 @@ function MonthView({
     period,
     reviewCount,
     riskBudgets,
+  });
+  const visibleSignals = lensSignals.filter((signal) => {
+    if (signal.kind === 'cash') return dashboardSettings.showCash;
+    if (signal.kind === 'focus') return dashboardSettings.showFocus;
+    return false;
   });
   const sortedBudgets = [...budgets].sort((left, right) => {
     const leftStatus = budgetStatus(left.spent, left.limit, projectMonthEnd(left.spent, left.daysElapsed, left.totalDays), left.reviewQueue);
@@ -196,9 +261,13 @@ function MonthView({
     return order[leftStatus] - order[rightStatus] || percentUsed(right.spent, right.limit) - percentUsed(left.spent, left.limit);
   });
 
+  useEffect(() => {
+    setShowBudgetDetails(dashboardSettings.showCategories);
+  }, [dashboardSettings.showCategories]);
+
   return (
     <div className="view-stack">
-      <section className="month-lens" aria-label="Month overview">
+      <section className={visibleSignals.length > 0 ? 'month-lens' : 'month-lens solo'} aria-label="Month overview">
         <div className="lens-primary">
           <PlanGauge percent={overallPercent} tone={planTone} spent={activeSpend} plan={activeLimit} />
           <div>
@@ -208,20 +277,34 @@ function MonthView({
           </div>
         </div>
 
-        <div className="lens-signals" aria-label="Key month signals">
-          {lensSignals.map((signal) => (
-            <LensSignal key={signal.label} signal={signal} />
-          ))}
-        </div>
+        {visibleSignals.length > 0 && (
+          <div className="lens-signals compact" aria-label="Key month signals">
+            {visibleSignals.map((signal) => (
+              <LensSignal key={signal.label} signal={signal} />
+            ))}
+          </div>
+        )}
       </section>
+
+      {dashboardSettings.showSpend && (
+        <SpendRhythm
+          activeLimit={activeLimit}
+          activeSpend={activeSpend}
+          dailySpend={dailySpend}
+          onToggleDetails={() => setShowBudgetDetails((value) => !value)}
+          showDetails={showBudgetDetails}
+        />
+      )}
 
       <MonthHistory period={period} />
 
-      <section className="budget-grid" aria-label="Budget cards">
-        {sortedBudgets.map((budget) => (
-          <BudgetTile key={budget.id} budget={budget} />
-        ))}
-      </section>
+      {showBudgetDetails && (
+        <section className="budget-grid" aria-label="Spend categories">
+          {sortedBudgets.map((budget) => (
+            <BudgetTile key={budget.id} budget={budget} />
+          ))}
+        </section>
+      )}
     </div>
   );
 }
@@ -262,12 +345,114 @@ function LensSignal({ signal }: { signal: LensSignalModel }) {
   );
 }
 
+function SpendRhythm({
+  activeLimit,
+  activeSpend,
+  dailySpend,
+  onToggleDetails,
+  showDetails,
+}: {
+  activeLimit: number;
+  activeSpend: number;
+  dailySpend: CommandCentreData['dailySpend'];
+  onToggleDetails: () => void;
+  showDetails: boolean;
+}) {
+  const maxSpend = Math.max(...dailySpend.map((day) => day.amount), 1);
+  const averageSpend = dailySpend.length > 0 ? activeSpend / dailySpend.length : 0;
+  const targetDaily = dailySpend.length > 0 ? activeLimit / dailySpend.length : 0;
+  const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day.`;
+
+  return (
+    <section className="spend-rhythm" aria-label="Monthly spend rhythm">
+      <button
+        aria-label={`${title} ${showDetails ? 'Hide' : 'Show'} categories.`}
+        aria-expanded={showDetails}
+        className="spend-rhythm-trigger"
+        onClick={onToggleDetails}
+        title={`${title} Click for categories.`}
+        type="button"
+      >
+        <span className="spend-rhythm-head">
+          <span>
+            <span className="eyebrow">Spend</span>
+            <strong>{formatCompactMoney(activeSpend)}</strong>
+          </span>
+          <span>{showDetails ? 'Hide categories' : 'Show categories'}</span>
+        </span>
+        <span
+          className="spend-bars"
+          aria-hidden="true"
+          style={{ '--target-pct': `${targetPercent}%` } as CSSProperties}
+        >
+          {dailySpend.map((day) => (
+            <i
+              className={spendBarTone(day.amount, targetDaily)}
+              key={day.date}
+              style={{ height: `${Math.max(3, (day.amount / maxSpend) * 100)}%` }}
+              title={`${day.date}: ${formatMoney(day.amount)}`}
+            />
+          ))}
+        </span>
+        <span className="spend-rhythm-foot">
+          <span>Avg {formatMoney(averageSpend, true)}</span>
+          <span>Daily plan {formatMoney(targetDaily, true)}</span>
+        </span>
+      </button>
+    </section>
+  );
+}
+
+function spendBarTone(amount: number, targetDaily: number) {
+  if (targetDaily <= 0 || amount <= targetDaily) {
+    return 'tone-ok';
+  }
+  if (amount >= targetDaily * 1.6) {
+    return 'tone-risk';
+  }
+  return 'tone-watch';
+}
+
 function TrendPill({ direction, label, tone }: { direction: TrendDirection; label: string; tone: Tone }) {
   const Icon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : Minus;
   return (
     <span className={`trend-pill ${toneClass(tone)}`} aria-label={label}>
       <Icon size={12} aria-hidden="true" />
     </span>
+  );
+}
+
+function SettingsView({
+  settings,
+  onChange,
+}: {
+  settings: DashboardSettings;
+  onChange: (settings: DashboardSettings) => void;
+}) {
+  const rows: Array<{ key: keyof DashboardSettings; label: string; value: boolean }> = [
+    { key: 'showSpend', label: 'Spend chart', value: settings.showSpend },
+    { key: 'showCash', label: 'Cash signal', value: settings.showCash },
+    { key: 'showFocus', label: 'Focus signal', value: settings.showFocus },
+    { key: 'showCategories', label: 'Categories by default', value: settings.showCategories },
+  ];
+
+  return (
+    <div className="view-stack">
+      <ViewHeading icon={Settings} title="Settings" meta="First page" />
+      <section className="settings-grid" aria-label="First page settings">
+        {rows.map((row) => (
+          <label className="setting-row" key={row.key}>
+            <span>{row.label}</span>
+            <input
+              checked={row.value}
+              onChange={(event) => onChange({ ...settings, [row.key]: event.currentTarget.checked })}
+              type="checkbox"
+            />
+          </label>
+        ))}
+      </section>
+    </div>
   );
 }
 
@@ -599,6 +784,7 @@ function monthLensSignals({
 
   return [
     {
+      kind: 'spend',
       label: 'Spend',
       value: formatCompactMoney(activeSpend),
       detail: comparison
@@ -611,6 +797,7 @@ function monthLensSignals({
       previous: comparison?.spend,
     },
     {
+      kind: 'cash',
       label: period.isCurrent ? 'Cash' : 'End cash',
       value: formatCompactMoney(cash.projectedLeft),
       detail: comparison
@@ -623,6 +810,7 @@ function monthLensSignals({
       previous: comparison?.cash,
     },
     {
+      kind: 'focus',
       label: 'Focus',
       value: String(focusCount),
       detail: comparison

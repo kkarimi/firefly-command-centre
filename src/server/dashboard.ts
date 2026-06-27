@@ -65,6 +65,7 @@ export async function loadCommandCentreData(options: LoadCommandCentreOptions = 
     applyBudgets(data, budgets, transactions);
     applyReviewItems(data, transactions);
     applyExpected(data, transactions, bills);
+    applyDailySpend(data, transactions);
     await applyPreviousMonthComparison(data, token);
     markOps(data, 'Firefly', 'Live', 'ok');
     markOps(data, 'Repo', 'Live app', 'ok');
@@ -119,6 +120,7 @@ function prepareLiveData(data: CommandCentreData) {
     committedUntilMonthEnd: 0,
     projectedLeft: 0,
   };
+  data.dailySpend = [];
   data.budgets = [];
   data.reviewItems = [];
   data.moneyMap = {
@@ -202,6 +204,7 @@ function applyPeriod(data: CommandCentreData, period: CommandCentreData['period'
   if (data.comparison && data.comparison.previous.key >= period.key) {
     data.comparison = undefined;
   }
+  data.dailySpend = remapDailySpend(data.dailySpend, period);
   data.budgets = data.budgets.map((budget) => ({
     ...budget,
     daysElapsed: period.daysElapsed,
@@ -252,6 +255,7 @@ function monthSnapshot(
   applyBudgets(snapshot, budgets, transactions);
   applyReviewItems(snapshot, transactions);
   applyExpected(snapshot, transactions, []);
+  applyDailySpend(snapshot, transactions);
 
   const visibleBudgets = snapshot.budgets.filter(isVisibleSnapshotBudget);
   const spend = visibleBudgets.reduce((sum, budget) => sum + budget.spent, 0);
@@ -621,6 +625,26 @@ function applyExpected(data: CommandCentreData, transactions: FireflyResource[],
   data.cash.projectedLeft = data.cash.budgetableCash - remainingMonthBills;
 }
 
+function applyDailySpend(data: CommandCentreData, transactions: FireflyResource[]) {
+  const totals = new Map<string, number>();
+  for (const split of transactionSplits(transactions)) {
+    const type = stringValue(split.type);
+    const budget = stringValue(split.budget_name);
+    const date = isoDateFromRaw(stringValue(split.date));
+    if (type !== 'withdrawal' || !date || !isTrackedHouseholdBudget(budget)) {
+      continue;
+    }
+
+    totals.set(date, (totals.get(date) ?? 0) + Math.abs(signedAmount(split)));
+  }
+
+  data.dailySpend = daysInPeriod(data.period).map((date, index) => ({
+    date,
+    day: index + 1,
+    amount: totals.get(date) ?? 0,
+  }));
+}
+
 function expectedIncome(splits: FireflySplit[]): ExpectedEvent[] {
   const rows = splits.filter((split) => {
     const tags = tagsFromSplit(split).join(' ');
@@ -784,6 +808,10 @@ function isHouseholdCategory(category: string) {
   return /bills|utilities|groceries|eating|leisure|shopping|personal|transport|travel|holidays|general/i.test(category);
 }
 
+function isTrackedHouseholdBudget(budget: string) {
+  return householdBudgetNames.some((name) => name.toLowerCase() === budget.toLowerCase());
+}
+
 function categoryBudgetSuggestion(category: string) {
   if (/eating|leisure/i.test(category)) return 'Eating Out';
   if (/grocer/i.test(category)) return 'Groceries';
@@ -805,6 +833,28 @@ function shortDate(rawDate: string) {
 function isoDateFromRaw(rawDate: string) {
   const date = new Date(rawDate);
   return Number.isNaN(date.getTime()) ? undefined : isoDate(date);
+}
+
+function remapDailySpend(days: CommandCentreData['dailySpend'], period: CommandCentreData['period']) {
+  if (days.length === 0) {
+    return days;
+  }
+
+  const amounts = days.map((day) => day.amount);
+  return daysInPeriod(period).map((date, index) => ({
+    date,
+    day: index + 1,
+    amount: amounts[index] ?? 0,
+  }));
+}
+
+function daysInPeriod(period: CommandCentreData['period']) {
+  const start = new Date(`${period.start}T00:00:00`);
+  return Array.from({ length: period.daysElapsed }, (_, index) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + index);
+    return isoDate(date);
+  });
 }
 
 function dateSort(left: FireflySplit, right: FireflySplit) {

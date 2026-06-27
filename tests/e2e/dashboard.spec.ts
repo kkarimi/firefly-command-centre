@@ -1,5 +1,9 @@
 import { expect, test } from '@playwright/test';
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.clear());
+});
+
 test('renders the command centre and all v0 sections', async ({ page }, testInfo) => {
   await page.goto('/');
 
@@ -10,14 +14,28 @@ test('renders the command centre and all v0 sections', async ({ page }, testInfo
   await expect(page.getByText('18:40')).toHaveCount(0);
   await expect(page.locator('.month-lens')).toBeVisible();
   await expect(page.getByRole('img', { name: /Plan used: \d+%/ })).toBeVisible();
-  await expect(page.locator('.lens-signal')).toHaveCount(3);
-  const spendSignal = page.locator('.lens-signal').filter({ hasText: 'Spend' });
-  await spendSignal.locator('summary').click();
-  await expect(spendSignal.getByText(/spent of/)).toBeVisible();
-  await spendSignal.locator('summary').click();
+  await expect(page.locator('.lens-signal')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
+
+  await page.locator('.spend-rhythm-trigger').click();
+  await expect(page.locator('.spend-rhythm-trigger')).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.getByRole('region', { name: 'Spend categories' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
+
+  await page.getByRole('button', { name: 'Open dashboard settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: 'Cash signal' })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Focus signal' })).not.toBeChecked();
+  await page.getByRole('checkbox', { name: 'Cash signal' }).check();
+  await page.getByRole('checkbox', { name: 'Focus signal' }).check();
+  await page.getByRole('button', { name: 'Month' }).click();
+  await expect(page.locator('.lens-signal')).toHaveCount(2);
+  await expect(page.locator('.lens-signal').filter({ hasText: 'Cash' })).toBeVisible();
+  await expect(page.locator('.lens-signal').filter({ hasText: 'Focus' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Review' }).click();
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
@@ -45,12 +63,10 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   await expect(page.getByText('Month archive')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'May 2026' })).toBeVisible();
   await expect(page.getByRole('img', { name: /Plan used: \d+%/ })).toBeVisible();
-  await expect(page.locator('.lens-signal')).toHaveCount(3);
-  const cashSignal = page.locator('.lens-signal').filter({ hasText: 'End cash' });
-  await cashSignal.locator('summary').click();
-  await expect(cashSignal.getByText(/Bills paid/)).toBeVisible();
-  await cashSignal.locator('summary').click();
+  await expect(page.locator('.lens-signal')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
   await expect(page.getByText('Open bills')).toHaveCount(0);
+  await page.locator('.spend-rhythm-trigger').click();
   await expect(page.getByText('Over by')).toBeVisible();
   await expect(page.getByRole('link', { name: 'This month' })).toBeVisible();
   await expect(page.locator('.top-bar')).toHaveCSS('display', 'flex');

@@ -43,6 +43,12 @@ export type ExpectedEvent = {
   tone: Tone;
 };
 
+export type DailySpend = {
+  date: string;
+  day: number;
+  amount: number;
+};
+
 export type MonthOption = {
   key: string;
   label: string;
@@ -84,6 +90,7 @@ export type CommandCentreData = {
     committedUntilMonthEnd: number;
     projectedLeft: number;
   };
+  dailySpend: DailySpend[];
   ops: Array<{ label: string; value: string; tone: Tone }>;
   budgets: BudgetCard[];
   reviewItems: ReviewItem[];
@@ -126,6 +133,11 @@ export const commandCentreFixture = {
     committedUntilMonthEnd: 1810,
     projectedLeft: 3120.24,
   },
+  dailySpend: dailySpendFromAmounts('2026-06', [
+    84.2, 132.4, 28.8, 214, 45.7, 96.1, 182.3, 64.5, 52.9, 310.2,
+    25.4, 74.8, 143.6, 58.1, 420.7, 90.2, 112.4, 38.5, 215.2, 61.3,
+    72.6, 104.8, 318.9, 44.2, 52.1, 188.4, 124.6,
+  ]),
   ops: [
     { label: 'Repo', value: 'Aligned', tone: 'ok' },
     { label: 'Firefly', value: 'Online', tone: 'ok' },
@@ -308,3 +320,11 @@ export const commandCentreFixture = {
     riskBudgets: 2,
   },
 } satisfies CommandCentreData;
+
+function dailySpendFromAmounts(monthKey: string, amounts: number[]): DailySpend[] {
+  return amounts.map((amount, index) => ({
+    date: `${monthKey}-${String(index + 1).padStart(2, '0')}`,
+    day: index + 1,
+    amount,
+  }));
+}
