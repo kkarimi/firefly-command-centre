@@ -4,8 +4,17 @@ test('renders the command centre and all v0 sections', async ({ page }, testInfo
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'Finances' })).toBeVisible();
-  await expect(page.getByText('Cash accounts')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /\d+% of .* plan used/ })).toBeVisible();
+  await expect(page.getByText('June 2026')).toBeVisible();
+  await expect(page.locator('.top-meta')).toHaveCount(0);
+  await expect(page.getByText('Fixture')).toHaveCount(0);
+  await expect(page.getByText('18:40')).toHaveCount(0);
+  await expect(page.locator('.month-lens')).toBeVisible();
+  await expect(page.getByRole('img', { name: /Plan used: \d+%/ })).toBeVisible();
+  await expect(page.locator('.lens-signal')).toHaveCount(3);
+  const spendSignal = page.locator('.lens-signal').filter({ hasText: 'Spend' });
+  await spendSignal.locator('summary').click();
+  await expect(spendSignal.getByText(/spent of/)).toBeVisible();
+  await spendSignal.locator('summary').click();
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
@@ -34,9 +43,13 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
 
   await expect(page).toHaveURL(/\/months\/2026-05$/);
   await expect(page.getByText('Month archive')).toBeVisible();
-  await expect(page.getByRole('heading', { name: /\d+% of May 2026 plan used/ })).toBeVisible();
-  await expect(page.getByText('Month spend')).toBeVisible();
-  await expect(page.getByText('Bills paid')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'May 2026' })).toBeVisible();
+  await expect(page.getByRole('img', { name: /Plan used: \d+%/ })).toBeVisible();
+  await expect(page.locator('.lens-signal')).toHaveCount(3);
+  const cashSignal = page.locator('.lens-signal').filter({ hasText: 'End cash' });
+  await cashSignal.locator('summary').click();
+  await expect(cashSignal.getByText(/Bills paid/)).toBeVisible();
+  await cashSignal.locator('summary').click();
   await expect(page.getByText('Open bills')).toHaveCount(0);
   await expect(page.getByText('Over by')).toBeVisible();
   await expect(page.getByRole('link', { name: 'This month' })).toBeVisible();

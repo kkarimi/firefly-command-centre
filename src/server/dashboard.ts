@@ -8,6 +8,7 @@ import {
   type ReviewItem,
   type Tone,
 } from '../data/fixtures';
+import { budgetStatus, percentUsed, projectMonthEnd } from '../lib/money';
 
 type FireflyDocument<T> = {
   data: T[];
@@ -64,6 +65,7 @@ export async function loadCommandCentreData(options: LoadCommandCentreOptions = 
     applyBudgets(data, budgets, transactions);
     applyReviewItems(data, transactions);
     applyExpected(data, transactions, bills);
+    await applyPreviousMonthComparison(data, token);
     markOps(data, 'Firefly', 'Live', 'ok');
     markOps(data, 'Repo', 'Live app', 'ok');
   } catch (error) {
@@ -130,6 +132,7 @@ function prepareLiveData(data: CommandCentreData) {
     obligations: [],
     candidates: [],
   };
+  data.comparison = undefined;
   data.ops = data.ops.map((item) => {
     if (item.label === 'Repo' || item.label === 'Firefly') {
       return { ...item, value: 'Checking', tone: 'watch' };
@@ -196,11 +199,80 @@ export function buildMonthPeriod(value: string, now = new Date()): CommandCentre
 
 function applyPeriod(data: CommandCentreData, period: CommandCentreData['period']) {
   data.period = period;
+  if (data.comparison && data.comparison.previous.key >= period.key) {
+    data.comparison = undefined;
+  }
   data.budgets = data.budgets.map((budget) => ({
     ...budget,
     daysElapsed: period.daysElapsed,
     totalDays: period.totalDays,
   }));
+}
+
+async function applyPreviousMonthComparison(data: CommandCentreData, token: string) {
+  if (!data.period.previous) {
+    return;
+  }
+
+  try {
+    const previousPeriod = buildMonthPeriod(data.period.previous.key);
+    if (!previousPeriod) {
+      return;
+    }
+
+    const [accounts, budgets, transactions] = await Promise.all([
+      loadAccounts(token, previousPeriod),
+      loadBudgets(token, previousPeriod),
+      loadTransactions(token, previousPeriod),
+    ]);
+    data.comparison = {
+      previous: {
+        key: data.period.previous.key,
+        label: data.period.previous.label,
+        shortLabel: data.period.previous.shortLabel,
+        href: data.period.previous.href,
+      },
+      ...monthSnapshot(previousPeriod, accounts, budgets, transactions),
+    };
+  } catch {
+    data.comparison = undefined;
+  }
+}
+
+function monthSnapshot(
+  period: CommandCentreData['period'],
+  accounts: FireflyResource[],
+  budgets: FireflyResource[],
+  transactions: FireflyResource[],
+) {
+  const snapshot = cloneFixture();
+  applyPeriod(snapshot, period);
+  prepareLiveData(snapshot);
+  applyAccounts(snapshot, accounts);
+  applyBudgets(snapshot, budgets, transactions);
+  applyReviewItems(snapshot, transactions);
+  applyExpected(snapshot, transactions, []);
+
+  const visibleBudgets = snapshot.budgets.filter(isVisibleSnapshotBudget);
+  const spend = visibleBudgets.reduce((sum, budget) => sum + budget.spent, 0);
+  const plan = visibleBudgets.reduce((sum, budget) => sum + budget.limit, 0);
+  const riskBudgets = visibleBudgets.filter((budget) => {
+    const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
+    return budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue) === 'risk';
+  }).length;
+
+  return {
+    spend,
+    plan,
+    planUsed: percentUsed(spend, plan),
+    cash: snapshot.cash.projectedLeft,
+    reviewRows: snapshot.reviewItems.length,
+    riskBudgets,
+  };
+}
+
+function isVisibleSnapshotBudget(budget: BudgetCard) {
+  return !budget.reviewQueue || budget.spent > 0 || budget.merchants.length > 0 || Boolean(budget.unusual);
 }
 
 function monthHistory(now: Date, selected: Date) {

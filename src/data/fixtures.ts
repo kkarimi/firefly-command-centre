@@ -51,6 +51,16 @@ export type MonthOption = {
   isCurrent: boolean;
 };
 
+export type MonthComparison = {
+  previous: Pick<MonthOption, 'key' | 'label' | 'shortLabel' | 'href'>;
+  spend: number;
+  plan: number;
+  planUsed: number;
+  cash: number;
+  reviewRows: number;
+  riskBudgets: number;
+};
+
 export type CommandCentreData = {
   period: {
     key: string;
@@ -79,6 +89,7 @@ export type CommandCentreData = {
   reviewItems: ReviewItem[];
   moneyMap: Record<string, Account[]>;
   expected: Record<string, ExpectedEvent[]>;
+  comparison?: MonthComparison;
 };
 
 export const commandCentreFixture = {
@@ -287,4 +298,13 @@ export const commandCentreFixture = {
       { name: 'Private health provider', expected: 0, due: 'No longer recurring', status: 'Do not create bill', tone: 'neutral' },
     ],
   } satisfies Record<string, ExpectedEvent[]>,
+  comparison: {
+    previous: { key: '2026-05', label: 'May 2026', shortLabel: 'May 2026', href: '/months/2026-05' },
+    spend: 4561.64,
+    plan: 4670,
+    planUsed: 98,
+    cash: 2860.1,
+    reviewRows: 6,
+    riskBudgets: 2,
+  },
 } satisfies CommandCentreData;

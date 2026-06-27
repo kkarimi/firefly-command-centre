@@ -66,39 +66,32 @@ p {
 
 .top-bar {
   display: flex;
-  min-height: 58px;
+  min-height: 36px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
-  padding: 10px 14px;
+  padding: 0 2px;
 }
 
 .top-bar h1 {
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
   font-weight: 780;
   line-height: 1;
 }
 
-.top-meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.top-meta span {
+.period-pill {
   display: inline-flex;
   min-height: 28px;
   align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel-2);
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 720;
-  padding: 0 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .eyebrow {
@@ -201,21 +194,194 @@ p {
   gap: 14px;
 }
 
-.month-overview {
+.month-lens {
   display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(420px, 1.2fr);
-  gap: 12px;
-  align-items: stretch;
+  grid-template-columns: minmax(260px, 0.76fr) minmax(430px, 1.24fr);
+  gap: 20px;
+  align-items: center;
   border-bottom: 1px solid var(--line);
-  padding-bottom: 14px;
+  padding-bottom: 16px;
 }
 
-.month-overview h2,
+.lens-primary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 16px;
+}
+
+.month-lens h2,
 .view-heading h2 {
   font-size: clamp(1.5rem, 2vw, 2.2rem);
   font-weight: 760;
   letter-spacing: 0;
   line-height: 1;
+}
+
+.lens-caption {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 680;
+}
+
+.plan-gauge {
+  --gauge-color: var(--green);
+  display: grid;
+  position: relative;
+  width: 98px;
+  height: 98px;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: conic-gradient(var(--gauge-color) var(--gauge-degrees), var(--surface-strong) 0);
+  color: var(--gauge-color);
+  isolation: isolate;
+}
+
+.plan-gauge::after {
+  position: absolute;
+  inset: 9px;
+  border: 1px solid color-mix(in srgb, var(--gauge-color) 20%, var(--line));
+  border-radius: inherit;
+  background: var(--panel);
+  content: "";
+  z-index: -1;
+}
+
+.plan-gauge strong {
+  align-self: end;
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 840;
+  line-height: 1;
+}
+
+.plan-gauge span {
+  align-self: start;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.plan-gauge.tone-watch {
+  --gauge-color: var(--amber);
+}
+
+.plan-gauge.tone-risk {
+  --gauge-color: var(--red);
+}
+
+.lens-signals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lens-signal {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--green);
+  min-width: 0;
+  padding: 10px;
+}
+
+.lens-signal summary {
+  display: grid;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.lens-signal summary::-webkit-details-marker {
+  display: none;
+}
+
+.lens-signal strong {
+  color: var(--ink);
+  font-size: clamp(1.18rem, 1.8vw, 1.55rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.lens-signal p {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin-top: 9px;
+  padding-top: 9px;
+}
+
+.signal-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.signal-row > span:first-child {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.trend-pill {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.signal-rail {
+  display: block;
+  position: relative;
+  height: 6px;
+  overflow: visible;
+  border-radius: 999px;
+  background: var(--surface-strong);
+}
+
+.signal-rail span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+
+.signal-rail i {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--ink);
+  opacity: 0.38;
+}
+
+.lens-signal.tone-watch {
+  color: var(--amber);
+}
+
+.lens-signal.tone-risk {
+  color: var(--red);
+}
+
+.lens-signal.tone-neutral {
+  color: var(--blue);
 }
 
 .month-history {
@@ -645,7 +811,7 @@ p {
 }
 
 @media (max-width: 1180px) {
-  .month-overview,
+  .month-lens,
   .workspace {
     grid-template-columns: 1fr;
   }
@@ -667,7 +833,7 @@ p {
 
 @media (max-width: 760px) {
   .top-bar {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .summary-row,
@@ -676,6 +842,7 @@ p {
   }
 
   .split-summary,
+  .lens-signals,
   .budget-grid,
   .map-grid,
   .expected-grid,
@@ -693,9 +860,22 @@ p {
     font-size: 1.15rem;
   }
 
-  .month-overview h2,
+  .month-lens h2,
   .view-heading h2 {
     font-size: 1.55rem;
+  }
+
+  .lens-primary {
+    align-items: center;
+  }
+
+  .plan-gauge {
+    width: 84px;
+    height: 84px;
+  }
+
+  .plan-gauge strong {
+    font-size: 1.12rem;
   }
 
   .tab-rail {

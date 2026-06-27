@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import {
   Activity,
+  ArrowDown,
   ArrowUpRight,
+  ArrowUp,
   Banknote,
   CalendarClock,
   CheckCircle2,
@@ -12,6 +14,7 @@ import {
   Landmark,
   Layers3,
   ListChecks,
+  Minus,
   PiggyBank,
   ShieldCheck,
   WalletCards,
@@ -23,6 +26,7 @@ import {
   type BudgetCard,
   type CommandCentreData,
   type ExpectedEvent,
+  type MonthComparison,
   type ReviewItem,
   type Tone,
 } from '../data/fixtures';
@@ -58,6 +62,19 @@ const statusLabels = {
   review: 'Review',
 };
 
+type TrendDirection = 'up' | 'down' | 'flat';
+
+type LensSignalModel = {
+  label: string;
+  value: string;
+  detail: string;
+  deltaLabel: string;
+  tone: Tone;
+  trend: TrendDirection;
+  current: number;
+  previous?: number;
+};
+
 function toneClass(tone: Tone | 'review') {
   return `tone-${tone}`;
 }
@@ -75,38 +92,16 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
     const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
     return budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue) === 'risk';
   }).length;
-  const fireflyStatus = data.ops.find((item) => item.label === 'Firefly');
 
   return (
     <main className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <header className="top-bar">
           <div>
-            <p className="eyebrow">{data.period.range}</p>
             <h1>Finances</h1>
           </div>
-          <div className="top-meta" aria-label="Data status">
-            <span className={fireflyStatus ? toneClass(fireflyStatus.tone) : 'tone-neutral'}>
-              {fireflyStatus?.value ?? 'Unknown'}
-            </span>
-            <span>{data.period.lastRefresh}</span>
-          </div>
+          <span className="period-pill">{data.period.label}</span>
         </header>
-
-        <section className="summary-row" aria-label="Month status">
-          <Metric
-            label={data.period.isCurrent ? 'Cash accounts' : 'Month spend'}
-            value={formatMoney(data.period.isCurrent ? data.cash.budgetableCash : activeSpend)}
-            tone={data.period.isCurrent ? 'ok' : 'neutral'}
-          />
-          <Metric
-            label={data.period.isCurrent ? 'After month bills' : 'Month-end cash'}
-            value={formatMoney(data.cash.projectedLeft)}
-            tone="ok"
-          />
-          <Metric label="Review rows" value={String(reviewCount)} tone={reviewCount > 0 ? 'watch' : 'ok'} />
-          <Metric label="Risk budgets" value={String(atRiskBudgets)} tone={atRiskBudgets > 0 ? 'risk' : 'ok'} />
-        </section>
 
         <div className="workspace">
           <nav className="tab-rail" aria-label="Dashboard sections">
@@ -134,8 +129,11 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
                 activeLimit={activeLimit}
                 budgets={monthBudgets}
                 cash={data.cash}
+                comparison={data.comparison}
                 paidObligations={paidObligations}
                 period={data.period}
+                reviewCount={reviewCount}
+                riskBudgets={atRiskBudgets}
               />
             )}
             {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
@@ -158,28 +156,34 @@ function MonthView({
   activeLimit,
   budgets,
   cash,
+  comparison,
   paidObligations,
   period,
+  reviewCount,
+  riskBudgets,
 }: {
   activeSpend: number;
   activeLimit: number;
   budgets: BudgetCard[];
   cash: CommandCentreData['cash'];
+  comparison?: MonthComparison;
   paidObligations: { count: number; total: number };
   period: CommandCentreData['period'];
+  reviewCount: number;
+  riskBudgets: number;
 }) {
   const overallPercent = percentUsed(activeSpend, activeLimit);
-  const billsMetric = period.isCurrent
-    ? {
-        label: 'Remaining month bills',
-        value: formatMoney(cash.committedUntilMonthEnd),
-        tone: 'watch' as const,
-      }
-    : {
-        label: paidObligations.count > 0 ? 'Bills paid' : 'Bills checked',
-        value: paidObligations.count > 0 ? formatMoney(paidObligations.total) : 'None found',
-        tone: paidObligations.count > 0 ? ('ok' as const) : ('neutral' as const),
-      };
+  const planTone = planToneFor(overallPercent);
+  const lensSignals = monthLensSignals({
+    activeSpend,
+    activeLimit,
+    cash,
+    comparison,
+    paidObligations,
+    period,
+    reviewCount,
+    riskBudgets,
+  });
   const sortedBudgets = [...budgets].sort((left, right) => {
     const leftStatus = budgetStatus(left.spent, left.limit, projectMonthEnd(left.spent, left.daysElapsed, left.totalDays), left.reviewQueue);
     const rightStatus = budgetStatus(
@@ -194,16 +198,20 @@ function MonthView({
 
   return (
     <div className="view-stack">
-      <section className="month-overview">
-        <div>
-          <p className="eyebrow">{period.isCurrent ? 'Current month' : 'Month archive'}</p>
-          <h2>{overallPercent}% of {period.shortLabel} plan used</h2>
+      <section className="month-lens" aria-label="Month overview">
+        <div className="lens-primary">
+          <PlanGauge percent={overallPercent} tone={planTone} spent={activeSpend} plan={activeLimit} />
+          <div>
+            <p className="eyebrow">{period.isCurrent ? 'Current month' : 'Month archive'}</p>
+            <h2>{period.shortLabel}</h2>
+            <p className="lens-caption">{monthLensCaption(overallPercent, comparison)}</p>
+          </div>
         </div>
-        <div className="overview-metrics">
-          <Metric label="Spent" value={formatMoney(activeSpend)} tone="neutral" />
-          <Metric label="Plan" value={formatMoney(activeLimit)} tone="neutral" />
-          <Metric label={billsMetric.label} value={billsMetric.value} tone={billsMetric.tone} />
-          <Metric label={period.isCurrent ? 'Cash after bills' : 'Month-end cash'} value={formatMoney(cash.projectedLeft)} tone="ok" />
+
+        <div className="lens-signals" aria-label="Key month signals">
+          {lensSignals.map((signal) => (
+            <LensSignal key={signal.label} signal={signal} />
+          ))}
         </div>
       </section>
 
@@ -215,6 +223,51 @@ function MonthView({
         ))}
       </section>
     </div>
+  );
+}
+
+function PlanGauge({ percent, tone, spent, plan }: { percent: number; tone: Tone; spent: number; plan: number }) {
+  const degrees = Math.min(140, Math.max(0, percent)) * 3.6;
+  const style = { '--gauge-degrees': `${degrees}deg` } as CSSProperties;
+  const title = `Plan used: ${percent}%. Spent ${formatMoney(spent)} of ${formatMoney(plan)}.`;
+
+  return (
+    <div className={`plan-gauge ${toneClass(tone)}`} style={style} title={title} aria-label={title} role="img">
+      <strong>{percent}%</strong>
+      <span>Plan</span>
+    </div>
+  );
+}
+
+function LensSignal({ signal }: { signal: LensSignalModel }) {
+  const max = Math.max(Math.abs(signal.current), Math.abs(signal.previous ?? 0), 1);
+  const currentWidth = Math.max(6, Math.min(100, (Math.abs(signal.current) / max) * 100));
+  const previousPosition = signal.previous === undefined ? null : Math.min(100, (Math.abs(signal.previous) / max) * 100);
+
+  return (
+    <details className={`lens-signal ${toneClass(signal.tone)}`} title={signal.detail}>
+      <summary>
+        <span className="signal-row">
+          <span>{signal.label}</span>
+          <TrendPill direction={signal.trend} label={signal.deltaLabel} tone={signal.tone} />
+        </span>
+        <strong>{signal.value}</strong>
+        <span className="signal-rail" aria-hidden="true">
+          <span style={{ width: `${currentWidth}%` }} />
+          {previousPosition !== null && <i style={{ left: `${previousPosition}%` }} />}
+        </span>
+      </summary>
+      <p>{signal.detail}</p>
+    </details>
+  );
+}
+
+function TrendPill({ direction, label, tone }: { direction: TrendDirection; label: string; tone: Tone }) {
+  const Icon = direction === 'up' ? ArrowUp : direction === 'down' ? ArrowDown : Minus;
+  return (
+    <span className={`trend-pill ${toneClass(tone)}`} aria-label={label}>
+      <Icon size={12} aria-hidden="true" />
+    </span>
   );
 }
 
@@ -496,6 +549,147 @@ function EmptyState({ title, detail, compact = false }: { title: string; detail:
 
 function sumAccounts(accounts: Account[]) {
   return accounts.reduce((sum, account) => sum + account.balance, 0);
+}
+
+function planToneFor(percent: number): Tone {
+  if (percent > 105) return 'risk';
+  if (percent > 92) return 'watch';
+  return 'ok';
+}
+
+function monthLensCaption(percent: number, comparison?: MonthComparison) {
+  if (!comparison) {
+    return 'Tap a signal for exact values.';
+  }
+
+  const delta = percent - comparison.planUsed;
+  if (Math.abs(delta) <= 2) {
+    return `In line with ${comparison.previous.shortLabel}.`;
+  }
+
+  return `${Math.abs(delta)} pts ${delta > 0 ? 'heavier' : 'lighter'} than ${comparison.previous.shortLabel}.`;
+}
+
+function monthLensSignals({
+  activeSpend,
+  activeLimit,
+  cash,
+  comparison,
+  paidObligations,
+  period,
+  reviewCount,
+  riskBudgets,
+}: {
+  activeSpend: number;
+  activeLimit: number;
+  cash: CommandCentreData['cash'];
+  comparison?: MonthComparison;
+  paidObligations: { count: number; total: number };
+  period: CommandCentreData['period'];
+  reviewCount: number;
+  riskBudgets: number;
+}): LensSignalModel[] {
+  const focusCount = reviewCount + riskBudgets;
+  const previousFocusCount = comparison ? comparison.reviewRows + comparison.riskBudgets : undefined;
+  const billLabel = period.isCurrent
+    ? `Remaining bills ${formatMoney(cash.committedUntilMonthEnd)}`
+    : paidObligations.count > 0
+      ? `Bills paid ${formatMoney(paidObligations.total)}`
+      : 'No paid bills found';
+
+  return [
+    {
+      label: 'Spend',
+      value: formatCompactMoney(activeSpend),
+      detail: comparison
+        ? `${formatMoney(activeSpend)} spent of ${formatMoney(activeLimit)} planned. ${formatSignedMoney(activeSpend - comparison.spend)} vs ${comparison.previous.shortLabel}.`
+        : `${formatMoney(activeSpend)} spent of ${formatMoney(activeLimit)} planned.`,
+      deltaLabel: moneyDeltaLabel(activeSpend, comparison?.spend),
+      tone: comparisonTone(activeSpend, comparison?.spend, true),
+      trend: trendDirection(activeSpend, comparison?.spend),
+      current: activeSpend,
+      previous: comparison?.spend,
+    },
+    {
+      label: period.isCurrent ? 'Cash' : 'End cash',
+      value: formatCompactMoney(cash.projectedLeft),
+      detail: comparison
+        ? `${period.isCurrent ? 'Cash after bills' : 'Month-end cash'} ${formatMoney(cash.projectedLeft)}. ${billLabel}. ${formatSignedMoney(cash.projectedLeft - comparison.cash)} vs ${comparison.previous.shortLabel}.`
+        : `${period.isCurrent ? 'Cash after bills' : 'Month-end cash'} ${formatMoney(cash.projectedLeft)}. ${billLabel}.`,
+      deltaLabel: moneyDeltaLabel(cash.projectedLeft, comparison?.cash),
+      tone: comparisonTone(cash.projectedLeft, comparison?.cash, false),
+      trend: trendDirection(cash.projectedLeft, comparison?.cash),
+      current: cash.projectedLeft,
+      previous: comparison?.cash,
+    },
+    {
+      label: 'Focus',
+      value: String(focusCount),
+      detail: comparison
+        ? `${riskBudgets} risk budgets and ${reviewCount} review rows. ${signedCount(focusCount - previousFocusCount!)} vs ${comparison.previous.shortLabel}.`
+        : `${riskBudgets} risk budgets and ${reviewCount} review rows need attention.`,
+      deltaLabel: countDeltaLabel(focusCount, previousFocusCount),
+      tone: focusCount === 0 ? 'ok' : comparisonTone(focusCount, previousFocusCount, true),
+      trend: trendDirection(focusCount, previousFocusCount),
+      current: focusCount,
+      previous: previousFocusCount,
+    },
+  ];
+}
+
+function comparisonTone(current: number, previous: number | undefined, lowerIsBetter: boolean): Tone {
+  if (previous === undefined) {
+    return 'neutral';
+  }
+
+  const delta = current - previous;
+  if (Math.abs(delta) < 0.01) {
+    return 'ok';
+  }
+
+  const improved = lowerIsBetter ? delta < 0 : delta > 0;
+  return improved ? 'ok' : 'risk';
+}
+
+function trendDirection(current: number, previous: number | undefined): TrendDirection {
+  if (previous === undefined || Math.abs(current - previous) < 0.01) {
+    return 'flat';
+  }
+
+  return current > previous ? 'up' : 'down';
+}
+
+function moneyDeltaLabel(current: number, previous: number | undefined) {
+  if (previous === undefined) {
+    return 'No previous month comparison';
+  }
+
+  return `${formatSignedMoney(current - previous)} vs previous month`;
+}
+
+function countDeltaLabel(current: number, previous: number | undefined) {
+  if (previous === undefined) {
+    return 'No previous month comparison';
+  }
+
+  return `${signedCount(current - previous)} vs previous month`;
+}
+
+function signedCount(value: number) {
+  if (value === 0) {
+    return '0';
+  }
+
+  return `${value > 0 ? '+' : ''}${value}`;
+}
+
+function formatCompactMoney(value: number) {
+  const abs = Math.abs(value);
+  if (abs >= 1000) {
+    return `${value < 0 ? '-' : ''}£${(abs / 1000).toFixed(abs >= 10000 ? 0 : 1)}k`;
+  }
+
+  return formatMoney(value, true);
 }
 
 function paidObligationSummary(events: ExpectedEvent[]) {
