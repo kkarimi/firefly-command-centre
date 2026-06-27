@@ -253,6 +253,17 @@ p {
   gap: 16px;
 }
 
+.lens-heading {
+  min-width: 0;
+}
+
+.lens-title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
 .month-lens h2,
 .view-heading h2 {
   font-size: clamp(1.5rem, 2vw, 2.2rem);
@@ -261,11 +272,35 @@ p {
   line-height: 1;
 }
 
-.lens-caption {
-  margin-top: 7px;
+.month-status-chip {
+  display: inline-flex;
+  height: 28px;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: var(--surface-soft);
   color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 680;
+  font-size: 0.78rem;
+  font-weight: 780;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.month-status-chip.ok {
+  border-color: color-mix(in oklab, var(--green) 20%, var(--line));
+  color: var(--green);
+}
+
+.month-status-chip.watch {
+  border-color: color-mix(in oklab, var(--amber) 24%, var(--line));
+  color: var(--amber);
+}
+
+.month-status-chip.risk {
+  border-color: color-mix(in oklab, var(--red) 24%, var(--line));
+  color: var(--red);
 }
 
 .plan-gauge {

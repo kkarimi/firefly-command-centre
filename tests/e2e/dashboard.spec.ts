@@ -8,12 +8,18 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'Finances' })).toBeVisible();
-  await expect(page.getByText('June 2026')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Jun 2026' })).toBeVisible();
+  await expect(page.locator('.period-pill')).toHaveCount(0);
   await expect(page.locator('.top-meta')).toHaveCount(0);
   await expect(page.getByText('Fixture')).toHaveCount(0);
   await expect(page.getByText('18:40')).toHaveCount(0);
   await expect(page.locator('.month-lens')).toBeVisible();
   await expect(page.getByRole('meter', { name: /Plan used: \d+%/ })).toBeVisible();
+  await expect(page.getByText('Current month')).toHaveCount(0);
+  await expect(page.locator('.month-status-chip')).toHaveCount(1);
+  await expect(page.locator('.month-status-chip')).toHaveText('On track');
+  await expect(page.locator('.month-status-chip')).toHaveAccessibleName(/On track\. \d+% of the monthly plan is used\./);
+  await expect(page.getByText(/heavier|lighter/)).toHaveCount(0);
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
@@ -74,9 +80,10 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   await page.goto('/months/2026-05');
 
   await expect(page).toHaveURL(/\/months\/2026-05$/);
-  await expect(page.getByText('Month archive')).toBeVisible();
+  await expect(page.getByText('Month archive')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'May 2026' })).toBeVisible();
   await expect(page.getByRole('meter', { name: /Plan used: \d+%/ })).toBeVisible();
+  await expect(page.locator('.month-status-chip')).toHaveCount(1);
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
   await expect(page.getByText('Open bills')).toHaveCount(0);

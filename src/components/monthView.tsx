@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Minus } from 'lucide-react';
 import type { BudgetCard, DashboardData, ExpectedEvent, MonthComparison, Tone } from '../data/fixtures';
 import { budgetStatus, formatMoney, formatSignedMoney, percentUsed, projectMonthEnd, remainingBudget } from '../lib/money';
 import type { DashboardSettings } from './dashboardSettings';
@@ -93,13 +93,17 @@ export function MonthView({
 
   return (
     <div className="view-stack">
-      <section className={visibleSignals.length > 0 ? 'month-lens' : 'month-lens solo'} aria-label="Month overview">
+      <section
+        className={visibleSignals.length > 0 ? 'month-lens' : 'month-lens solo'}
+        aria-label={`Month overview for ${period.label}${period.isCurrent ? ', current month' : ', archived month'}`}
+      >
         <div className="lens-primary">
           <PlanGauge percent={overallPercent} tone={planTone} spent={activeSpend} plan={activeLimit} />
-          <div>
-            <p className="eyebrow">{period.isCurrent ? 'Current month' : 'Month archive'}</p>
-            <h2>{period.shortLabel}</h2>
-            <p className="lens-caption">{monthLensCaption(overallPercent, comparison)}</p>
+          <div className="lens-heading">
+            <div className="lens-title-row">
+              <h2>{period.shortLabel}</h2>
+              <MonthStatusChip percent={overallPercent} tone={planTone} />
+            </div>
           </div>
         </div>
 
@@ -265,6 +269,18 @@ function TrendPill({ direction, label, tone }: { direction: TrendDirection; labe
   );
 }
 
+function MonthStatusChip({ percent, tone }: { percent: number; tone: Tone }) {
+  const displayTone = tone === 'risk' ? 'risk' : 'ok';
+  const detail = `${monthStatusLabel(tone)}. ${percent}% of the monthly plan is used.`;
+
+  return (
+    <span aria-label={detail} className={`month-status-chip ${toneClass(displayTone)}`} title={detail}>
+      {displayTone === 'ok' && <Check size={13} aria-hidden="true" />}
+      <span>{monthStatusLabel(tone)}</span>
+    </span>
+  );
+}
+
 function MonthHistory({
   onMonthPrefetch,
   onMonthSelect,
@@ -367,22 +383,13 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
 }
 
 function planToneFor(percent: number): Tone {
-  if (percent > 105) return 'risk';
-  if (percent > 92) return 'watch';
+  if (percent > 100) return 'risk';
   return 'ok';
 }
 
-function monthLensCaption(percent: number, comparison?: MonthComparison) {
-  if (!comparison) {
-    return 'Tap a signal for exact values.';
-  }
-
-  const delta = percent - comparison.planUsed;
-  if (Math.abs(delta) <= 2) {
-    return `In line with ${comparison.previous.shortLabel}.`;
-  }
-
-  return `${Math.abs(delta)} pts ${delta > 0 ? 'heavier' : 'lighter'} than ${comparison.previous.shortLabel}.`;
+function monthStatusLabel(tone: Tone) {
+  if (tone === 'risk') return 'Over plan';
+  return 'On track';
 }
 
 function monthLensSignals({

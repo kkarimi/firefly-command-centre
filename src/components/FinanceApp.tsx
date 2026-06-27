@@ -187,9 +187,11 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
           </div>
           <div className="top-actions">
             {loadError && <span className="load-error">{loadError}</span>}
-            <span className={pendingMonthKey ? 'period-pill loading' : 'period-pill'}>
-              {pendingMonthKey ? 'Loading' : data.period.label}
-            </span>
+            {(pendingMonthKey || activeTab !== 'month') && (
+              <span className={pendingMonthKey ? 'period-pill loading' : 'period-pill'}>
+                {pendingMonthKey ? 'Loading' : data.period.label}
+              </span>
+            )}
             <button
               aria-label="Open dashboard settings"
               className={activeTab === 'settings' ? 'settings-button active' : 'settings-button'}
