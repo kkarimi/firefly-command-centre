@@ -27,6 +27,9 @@ const tabs: Tab[] = [
   { id: 'ops', label: 'Trust', icon: ShieldCheck },
 ];
 
+const preloadedHistoryMonthCount = 3;
+const preloadedHistoryMonthConcurrency = 2;
+
 export default function FinanceApp({ initialData }: { initialData?: DashboardData }) {
   const [activeTab, setActiveTab] = useState<ViewId>('month');
   const [data, setData] = useState<DashboardData>(initialData ?? dashboardFixture);
@@ -96,6 +99,18 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
     [prefetchMonth],
   );
 
+  const prefetchMonthsSilently = useCallback(
+    async (monthKeys: string[]) => {
+      const uniqueMonthKeys = [...new Set(monthKeys)].filter((monthKey) => !monthCache.current.has(monthKey));
+
+      for (let index = 0; index < uniqueMonthKeys.length; index += preloadedHistoryMonthConcurrency) {
+        const chunk = uniqueMonthKeys.slice(index, index + preloadedHistoryMonthConcurrency);
+        await Promise.all(chunk.map((monthKey) => prefetchMonth(monthKey).catch(() => undefined)));
+      }
+    },
+    [prefetchMonth],
+  );
+
   const navigateToMonth = useCallback(
     async (monthKey: string, href: string, updateHistory = true) => {
       if (monthKey === data.period.key) {
@@ -126,26 +141,23 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
 
   useEffect(() => {
     monthCache.current.set(data.period.key, data);
-    const activeIndex = data.period.history.findIndex((month) => month.key === data.period.key);
-    const nearbyMonths = [data.period.history[activeIndex - 1], data.period.history[activeIndex + 1]].filter(
-      (month): month is DashboardData['period']['history'][number] => Boolean(month),
+    const preloadMonthKeys = nearbyHistoryMonthKeys(
+      data.period.history,
+      data.period.key,
+      preloadedHistoryMonthCount,
     );
 
     if (window.requestIdleCallback) {
       window.requestIdleCallback(() => {
-        for (const month of nearbyMonths) {
-          prefetchMonthSilently(month.key);
-        }
+        void prefetchMonthsSilently(preloadMonthKeys);
       });
       return;
     }
 
     window.setTimeout(() => {
-      for (const month of nearbyMonths) {
-        prefetchMonthSilently(month.key);
-      }
+      void prefetchMonthsSilently(preloadMonthKeys);
     }, 250);
-  }, [data, prefetchMonthSilently]);
+  }, [data, prefetchMonthsSilently]);
 
   useEffect(() => {
     function handlePopState() {
@@ -240,4 +252,22 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
       </div>
     </main>
   );
+}
+
+export function nearbyHistoryMonthKeys(
+  history: DashboardData['period']['history'],
+  activeMonthKey: string,
+  count: number,
+) {
+  const activeIndex = history.findIndex((month) => month.key === activeMonthKey);
+  const monthDistances = history
+    .map((month, index) => ({
+      distance: activeIndex >= 0 ? Math.abs(index - activeIndex) : index + 1,
+      index,
+      key: month.key,
+    }))
+    .filter((month) => month.key !== activeMonthKey)
+    .sort((left, right) => left.distance - right.distance || left.index - right.index);
+
+  return monthDistances.slice(0, count).map((month) => month.key);
 }

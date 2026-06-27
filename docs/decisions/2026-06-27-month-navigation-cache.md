@@ -8,7 +8,9 @@ Use a smaller read-only cache path first:
 
 - server-side in-memory cache for monthly aggregate payloads;
 - `/api/dashboard.json?month=YYYY-MM` for client-side month data;
-- client-side month navigation with hover/focus and adjacent-month prefetch.
+- client-side month navigation with hover/focus prefetch;
+- idle preloading of the three nearest history months, capped at two concurrent
+  aggregate fetches.
 
 ## Rationale
 
@@ -21,6 +23,9 @@ queries, optimistic writes, and local-first sync. This app is currently
 read-only and passes aggregated dashboard data to the browser, not raw Firefly
 records. Adding a sync database would increase architecture and privacy surface
 before the simpler bottleneck is exhausted.
+
+The app preloads only the closest likely month switches so the common first tap
+is usually warm without turning page load into a broad historical data sync.
 
 ## Revisit When
 
