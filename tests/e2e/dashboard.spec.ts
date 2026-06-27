@@ -98,6 +98,12 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
   await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
+  const firstExpectedGroupGap = await page.locator('.expected-group').first().evaluate((group) => {
+    const heading = group.querySelector('h3')?.getBoundingClientRect();
+    const row = group.querySelector('.expected-row')?.getBoundingClientRect();
+    return heading && row ? row.top - heading.bottom : 0;
+  });
+  expect(firstExpectedGroupGap).toBeLessThanOrEqual(24);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-expected-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Trust' }).click();
