@@ -184,3 +184,5 @@ do not merge or deploy from this branch without explicit approval.
   known bills so each list carries its materiality without another panel.
 - Review severity group headers now include the oldest row age so cleanup order
   is visible before scanning individual transactions.
+- Month spend rhythm now shows peak daily spend beside average, daily plan, and
+  left-per-day so outlier pressure is visible without opening categories.
