@@ -1,9 +1,9 @@
 ---
-import CommandCentre from '../components/CommandCentre';
-import { loadCommandCentreData } from '../server/dashboard';
+import FinanceApp from '../components/FinanceApp';
+import { loadDashboardData } from '../server/dashboard';
 import '../styles/global.css';
 
-const dashboardData = await loadCommandCentreData();
+const dashboardData = await loadDashboardData();
 ---
 
 <html lang="en">
@@ -15,11 +15,11 @@ const dashboardData = await loadCommandCentreData();
 		<meta name="generator" content={Astro.generator} />
 		<meta
 			name="description"
-			content="A read-only Firefly III command centre prototype for monthly finance review."
+			content="A read-only Firefly III finance review UI."
 		/>
 		<title>Finances</title>
 	</head>
 	<body>
-		<CommandCentre client:load initialData={dashboardData} />
+		<FinanceApp client:load initialData={dashboardData} />
 	</body>
 </html>

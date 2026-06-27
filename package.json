@@ -1,5 +1,5 @@
 {
-  "name": "firefly-command-centre",
+  "name": "firefly-finance-ui",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -7,6 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "lint": "oxlint . --max-warnings 0",
+    "lint:react": "react-doctor . --yes --no-telemetry --blocking error --no-warnings",
+    "doctor": "react-doctor . --yes --no-telemetry --blocking warning",
     "build": "astro build",
     "check": "astro check",
     "preview": "astro preview",
@@ -14,7 +17,8 @@
     "astro": "astro",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "verify": "bun run lint && bun run lint:react && bun run check && bun run test && bun run build && bun run test:e2e"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.0",
@@ -32,6 +36,8 @@
     "@astrojs/check": "^0.9.9",
     "@playwright/test": "^1.61.1",
     "@types/node": "^26.0.1",
+    "oxlint": "^1.71.0",
+    "react-doctor": "^0.5.8",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   }

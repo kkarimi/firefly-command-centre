@@ -67,7 +67,7 @@ export type MonthComparison = {
   riskBudgets: number;
 };
 
-export type CommandCentreData = {
+export type DashboardData = {
   period: {
     key: string;
     label: string;
@@ -99,7 +99,7 @@ export type CommandCentreData = {
   comparison?: MonthComparison;
 };
 
-export const commandCentreFixture = {
+export const dashboardFixture = {
   period: {
     key: '2026-06',
     label: 'June 2026',
@@ -319,7 +319,7 @@ export const commandCentreFixture = {
     reviewRows: 6,
     riskBudgets: 2,
   },
-} satisfies CommandCentreData;
+} satisfies DashboardData;
 
 function dailySpendFromAmounts(monthKey: string, amounts: number[]): DailySpend[] {
   return amounts.map((amount, index) => ({

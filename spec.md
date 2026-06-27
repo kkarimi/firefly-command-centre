@@ -1,4 +1,4 @@
-# Firefly Command Centre Spec
+# Firefly Finance UI Spec
 
 ## Summary
 
@@ -13,8 +13,8 @@ decision-oriented as Actual Budget for the workflows that matter here:
 - AMEX, Monzo, Kraken, Prosper, loans, and manual asset visibility;
 - operational confidence that syncs, backups, and health checks are working.
 
-Firefly remains the source of truth. The new UI is a read-first command centre
-over Firefly and the existing repo/runtime checks.
+Firefly remains the source of truth. The new UI is a read-first finance review
+surface over Firefly and the existing repo/runtime checks.
 
 ## Product Thesis
 
@@ -86,7 +86,7 @@ state before proposing changes.
 
 ## MVP Views
 
-### 1. Monthly Command Centre
+### 1. Monthly Review
 
 Purpose: answer "are we okay this month?"
 
@@ -291,7 +291,7 @@ performance-bound.
 Proposed service path:
 
 ```text
-services/firefly-command-centre/
+services/finance-ui/
 ```
 
 Runtime:
@@ -311,20 +311,20 @@ Browser
   |
   | HTTPS
   v
-Command Centre Astro App
+Finance UI Astro App
   |
   | server-side API calls only
   v
 Firefly API
 
-Command Centre Astro App
+Finance UI Astro App
   |
   | reads sanitized JSON/status outputs
   v
 firefly-home-ops runtime checks
 ```
 
-Core rule: the browser talks to the command-centre server, never directly to
+Core rule: the browser talks to the finance UI server, never directly to
 Firefly with a personal access token.
 
 ## API Shape
@@ -332,7 +332,7 @@ Firefly with a personal access token.
 Initial internal endpoints:
 
 - `GET /api/summary/month?month=YYYY-MM`
-  - command-centre aggregate for budgets, spend, review counts, and cash status.
+  - monthly aggregate for budgets, spend, review counts, and cash status.
 - `GET /api/review-inbox?month=YYYY-MM`
   - all review queue items with suggested reason codes.
 - `GET /api/money-map`
@@ -380,7 +380,7 @@ Visual style:
 
 Layout:
 
-- desktop-first command centre with a strong mobile companion layout;
+- desktop-first finance review surface with a strong mobile companion layout;
 - top ops strip;
 - left or top time-period control;
 - primary monthly dashboard above the fold;
@@ -416,7 +416,7 @@ this household's Firefly operating model.
 
 Deliver:
 
-- app scaffold under `services/firefly-command-centre/`;
+- app scaffold under `services/finance-ui/`;
 - mocked/sanitized local fixture data;
 - static screens for the five MVP views;
 - no Firefly token required;
@@ -433,7 +433,7 @@ Exit criteria:
 Deliver:
 
 - server-side Firefly API proxy;
-- live monthly command centre;
+- live monthly review;
 - live review inbox;
 - live money map;
 - ops strip from health/backup status;
@@ -488,7 +488,7 @@ Exit criteria:
 - Mutations require explicit user approval and existing repo safeguards.
 - Log summaries, not raw transaction payloads, unless logs are explicitly local
   runtime files excluded from git.
-- Add command-centre runtime data to backup checks if any persistent state is
+- Add finance UI runtime data to backup checks if any persistent state is
   introduced.
 - Add health checks before treating the app as part of the operational system.
 
@@ -554,6 +554,6 @@ The project should be stopped or narrowed if:
 Proceed with Phase 0 only.
 
 Do not migrate to Actual Budget and do not start by building a full alternative
-frontend. First prove that a focused read-only command centre can make the
+frontend. First prove that a focused read-only finance review UI can make the
 current Firefly setup easier to understand. If Phase 0 does not feel obviously
 better than Firefly/Pico for monthly review, stop there.

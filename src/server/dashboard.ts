@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import {
-  commandCentreFixture,
+  dashboardFixture,
   type Account,
   type BudgetCard,
-  type CommandCentreData,
+  type DashboardData,
   type ExpectedEvent,
   type ReviewItem,
   type Tone,
@@ -21,7 +21,7 @@ type FireflyResource = {
 
 type FireflySplit = Record<string, unknown>;
 
-type LoadCommandCentreOptions = {
+type LoadDashboardOptions = {
   month?: string | null;
 };
 
@@ -37,7 +37,7 @@ const householdBudgetNames = [
 
 const historyMonthCount = 12;
 
-export async function loadCommandCentreData(options: LoadCommandCentreOptions = {}): Promise<CommandCentreData> {
+export async function loadDashboardData(options: LoadDashboardOptions = {}): Promise<DashboardData> {
   const data = cloneFixture();
   const period = buildMonthPeriod(options.month ?? currentMonthKey());
   if (!period) {
@@ -74,7 +74,7 @@ export async function loadCommandCentreData(options: LoadCommandCentreOptions = 
     data.reviewItems = [
       {
         id: 'firefly-api-error',
-        source: 'Command Centre',
+        source: 'Finance UI',
         payee: 'Firefly API',
         amount: 0,
         ageDays: 0,
@@ -108,11 +108,11 @@ export async function loadHealthStatus() {
   }
 }
 
-function cloneFixture(): CommandCentreData {
-  return structuredClone(commandCentreFixture);
+function cloneFixture(): DashboardData {
+  return structuredClone(dashboardFixture);
 }
 
-function prepareLiveData(data: CommandCentreData) {
+function prepareLiveData(data: DashboardData) {
   data.cash = {
     monzoBalance: 0,
     fireflyDrift: 0,
@@ -159,7 +159,7 @@ export function currentMonthKey(now = new Date()) {
   return monthKey(now.getFullYear(), now.getMonth());
 }
 
-export function buildMonthPeriod(value: string, now = new Date()): CommandCentreData['period'] | null {
+export function buildMonthPeriod(value: string, now = new Date()): DashboardData['period'] | null {
   const parsed = parseMonthKey(value);
   if (!parsed || !isSelectableMonthKey(value, now)) {
     return null;
@@ -199,7 +199,7 @@ export function buildMonthPeriod(value: string, now = new Date()): CommandCentre
   };
 }
 
-function applyPeriod(data: CommandCentreData, period: CommandCentreData['period']) {
+function applyPeriod(data: DashboardData, period: DashboardData['period']) {
   data.period = period;
   if (data.comparison && data.comparison.previous.key >= period.key) {
     data.comparison = undefined;
@@ -212,7 +212,7 @@ function applyPeriod(data: CommandCentreData, period: CommandCentreData['period'
   }));
 }
 
-async function applyPreviousMonthComparison(data: CommandCentreData, token: string) {
+async function applyPreviousMonthComparison(data: DashboardData, token: string) {
   if (!data.period.previous) {
     return;
   }
@@ -243,7 +243,7 @@ async function applyPreviousMonthComparison(data: CommandCentreData, token: stri
 }
 
 function monthSnapshot(
-  period: CommandCentreData['period'],
+  period: DashboardData['period'],
   accounts: FireflyResource[],
   budgets: FireflyResource[],
   transactions: FireflyResource[],
@@ -328,7 +328,7 @@ function monthKey(year: number, monthIndex: number) {
   return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
 }
 
-function markOps(data: CommandCentreData, label: string, value: string, tone: Tone) {
+function markOps(data: DashboardData, label: string, value: string, tone: Tone) {
   const item = data.ops.find((entry) => entry.label === label);
   if (item) {
     item.value = value;
@@ -379,7 +379,7 @@ async function fireflyGet<T>(token: string, path: string, params?: Record<string
   return (await response.json()) as T;
 }
 
-async function loadAccounts(token: string, period: CommandCentreData['period']) {
+async function loadAccounts(token: string, period: DashboardData['period']) {
   const groups = await Promise.allSettled([
     loadCollection(token, '/accounts', { type: 'asset', date: period.balanceDate, limit: '200' }),
     loadCollection(token, '/accounts', { type: 'liabilities', date: period.balanceDate, limit: '200' }),
@@ -387,7 +387,7 @@ async function loadAccounts(token: string, period: CommandCentreData['period']) 
   return groups.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
 }
 
-async function loadBudgets(token: string, period: CommandCentreData['period']) {
+async function loadBudgets(token: string, period: DashboardData['period']) {
   const { start, end } = monthApiRange(period);
   return loadCollection(token, '/budgets', { start, end, limit: '100' });
 }
@@ -396,7 +396,7 @@ async function loadBills(token: string) {
   return loadCollection(token, '/bills', { limit: '100' });
 }
 
-async function loadTransactions(token: string, period: CommandCentreData['period']) {
+async function loadTransactions(token: string, period: DashboardData['period']) {
   const { start, end } = monthApiRange(period);
   return loadCollection(token, '/transactions', { start, end, limit: '200' });
 }
@@ -406,7 +406,7 @@ async function loadCollection(token: string, path: string, params: Record<string
   return response.data ?? [];
 }
 
-function monthApiRange(period: CommandCentreData['period']) {
+function monthApiRange(period: DashboardData['period']) {
   return {
     start: period.start,
     end: period.end,
@@ -417,7 +417,7 @@ function isoDate(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function applyAccounts(data: CommandCentreData, accounts: FireflyResource[]) {
+function applyAccounts(data: DashboardData, accounts: FireflyResource[]) {
   const mapped = accounts.map(accountFromResource).filter((account): account is Account => account !== null);
   if (mapped.length === 0) {
     return;
@@ -461,7 +461,7 @@ function accountFromResource(resource: FireflyResource): Account | null {
   };
 }
 
-function applyBudgets(data: CommandCentreData, budgets: FireflyResource[], transactions: FireflyResource[]) {
+function applyBudgets(data: DashboardData, budgets: FireflyResource[], transactions: FireflyResource[]) {
   if (budgets.length === 0) {
     return;
   }
@@ -545,7 +545,7 @@ function limitFromBudget(attributes: Record<string, unknown>) {
   return 0;
 }
 
-function applyReviewItems(data: CommandCentreData, transactions: FireflyResource[]) {
+function applyReviewItems(data: DashboardData, transactions: FireflyResource[]) {
   const items: ReviewItem[] = [];
 
   for (const { group, split } of transactionSplitEntries(transactions)) {
@@ -610,7 +610,7 @@ function reviewReason(split: FireflySplit) {
   return null;
 }
 
-function applyExpected(data: CommandCentreData, transactions: FireflyResource[], bills: FireflyResource[]) {
+function applyExpected(data: DashboardData, transactions: FireflyResource[], bills: FireflyResource[]) {
   const splits = transactionSplits(transactions);
   data.expected.income = expectedIncome(splits);
   data.expected.obligations = expectedObligations(splits, bills, data.period);
@@ -625,7 +625,7 @@ function applyExpected(data: CommandCentreData, transactions: FireflyResource[],
   data.cash.projectedLeft = data.cash.budgetableCash - remainingMonthBills;
 }
 
-function applyDailySpend(data: CommandCentreData, transactions: FireflyResource[]) {
+function applyDailySpend(data: DashboardData, transactions: FireflyResource[]) {
   const totals = new Map<string, number>();
   for (const split of transactionSplits(transactions)) {
     const type = stringValue(split.type);
@@ -665,7 +665,7 @@ function expectedIncome(splits: FireflySplit[]): ExpectedEvent[] {
     }));
 }
 
-function expectedObligations(splits: FireflySplit[], bills: FireflyResource[], period: CommandCentreData['period']): ExpectedEvent[] {
+function expectedObligations(splits: FireflySplit[], bills: FireflyResource[], period: DashboardData['period']): ExpectedEvent[] {
   const paid = splits
     .filter((split) => {
       const text = `${stringValue(split.description)} ${stringValue(split.destination_name)} ${tagsFromSplit(split).join(' ')}`;
@@ -688,7 +688,7 @@ function expectedObligations(splits: FireflySplit[], bills: FireflyResource[], p
     .slice(0, 10);
 }
 
-function expectedBillCandidates(bills: FireflyResource[], period: CommandCentreData['period']): ExpectedEvent[] {
+function expectedBillCandidates(bills: FireflyResource[], period: DashboardData['period']): ExpectedEvent[] {
   if (!period.isCurrent) {
     return [];
   }
@@ -835,7 +835,7 @@ function isoDateFromRaw(rawDate: string) {
   return Number.isNaN(date.getTime()) ? undefined : isoDate(date);
 }
 
-function remapDailySpend(days: CommandCentreData['dailySpend'], period: CommandCentreData['period']) {
+function remapDailySpend(days: DashboardData['dailySpend'], period: DashboardData['period']) {
   if (days.length === 0) {
     return days;
   }
@@ -848,7 +848,7 @@ function remapDailySpend(days: CommandCentreData['dailySpend'], period: CommandC
   }));
 }
 
-function daysInPeriod(period: CommandCentreData['period']) {
+function daysInPeriod(period: DashboardData['period']) {
   const start = new Date(`${period.start}T00:00:00`);
   return Array.from({ length: period.daysElapsed }, (_, index) => {
     const date = new Date(start);
@@ -866,7 +866,7 @@ function startOfToday() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
-function isPeriodDue(event: ExpectedEvent, period: CommandCentreData['period']) {
+function isPeriodDue(event: ExpectedEvent, period: DashboardData['period']) {
   if (event.dateKey) {
     return event.dateKey >= period.start && event.dateKey <= period.end;
   }

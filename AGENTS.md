@@ -4,7 +4,7 @@ This repository is a public, source-only project for a Firefly III companion UI.
 
 ## Project Intent
 
-- Build a tasteful, elegant, modern command-centre UI over Firefly III.
+- Build a tasteful, elegant, modern finance review UI over Firefly III.
 - Keep Firefly as the source-of-truth ledger.
 - Keep v0 read-only and fixture-backed unless a later decision explicitly adds
   live Firefly API access.
@@ -40,7 +40,9 @@ This repository is a public, source-only project for a Firefly III companion UI.
 - No landing page as the primary experience.
 - No decorative gradients, blobs, or generic dashboard filler.
 - Dense, calm, highly scannable UI.
-- Mobile usable, desktop command-centre first.
+- Mobile usable, desktop-first for finance review.
+- Use domain or role names in source modules. Avoid placeholder product names
+  such as "Command Centre" in code because the project name may change.
 - Text should explain decisions and state, not implementation details.
 - Use stable dimensions for cards, counters, charts, and tables.
 
@@ -51,11 +53,16 @@ This repository is a public, source-only project for a Firefly III companion UI.
 - Run checks before pushing:
 
 ```bash
+bun run lint
+bun run lint:react
 bun run check
 bun run test
 bun run build
 bun run test:e2e
 ```
+
+- `bun run doctor` runs React Doctor in stricter advisory mode for deeper
+  React architecture review before larger UI changes.
 
 ## GitHub
 

@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript", "react", "jsx-a11y", "react-perf", "vitest"],
+  "env": {
+    "astro": true,
+    "browser": true,
+    "node": true,
+    "vitest": true
+  },
+  "settings": {
+    "react": {
+      "version": "19.2"
+    }
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**", ".astro/**", "test-results/**"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "rules": {
+    "import/no-unassigned-import": "off",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/anchor-has-content": "error",
+    "jsx-a11y/aria-role": "error",
+    "jsx-a11y/label-has-associated-control": "error",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "react/jsx-key": "error",
+    "react/react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error"
+  },
+  "overrides": [
+    {
+      "files": ["*.astro"],
+      "rules": {
+        "typescript/no-unused-vars": "off"
+      }
+    }
+  ]
+}
