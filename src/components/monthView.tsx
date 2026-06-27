@@ -225,8 +225,10 @@ function SpendRhythm({
   period: DashboardData['period'];
   showDetails: boolean;
 }) {
-  const maxSpend = Math.max(...dailySpend.map((day) => day.amount), 1);
+  const dailySpendAmounts = dailySpend.map((day) => day.amount);
+  const maxSpend = Math.max(...dailySpendAmounts, 1);
   const averageSpend = dailySpend.length > 0 ? activeSpend / dailySpend.length : 0;
+  const peakSpend = dailySpendAmounts.length > 0 ? Math.max(...dailySpendAmounts) : 0;
   const targetDaily = dailySpend.length > 0 ? activeLimit / dailySpend.length : 0;
   const remainingDays = Math.max(1, period.totalDays - period.daysElapsed);
   const remainingDaily = Math.max(0, (activeLimit - activeSpend) / remainingDays);
@@ -235,7 +237,7 @@ function SpendRhythm({
     ? `Remaining daily allowance ${formatMoney(remainingDaily)}.`
     : 'This archived month is closed.';
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. ${allowanceDetail}`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${allowanceDetail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -274,6 +276,7 @@ function SpendRhythm({
         </span>
         <span className="spend-rhythm-foot">
           <span>Avg {formatMoney(averageSpend, true)}</span>
+          {dailySpend.length > 0 && <span>Peak {formatMoney(peakSpend, true)}</span>}
           <span>Daily plan {formatMoney(targetDaily, true)}</span>
           <span>{allowanceLabel}</span>
         </span>
