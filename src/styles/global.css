@@ -1120,6 +1120,7 @@ p {
 
 .account-list,
 .expected-group {
+  align-content: start;
   display: grid;
   gap: 10px;
 }
