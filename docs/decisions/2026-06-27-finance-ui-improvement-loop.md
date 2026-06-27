@@ -1,0 +1,141 @@
+# Finance UI Improvement Loop
+
+## Decision
+
+Use an iterative improvement loop for the finance UI, with each iteration
+limited to one meaningful product or code-quality change.
+
+The loop runs on a branch, starts from the current product thesis, and must pass
+design, safety, and verification gates before a change is accepted. It may
+continue for a long unattended session, but it must stop when a decision needs
+human judgement, live infrastructure changes, secrets, or any Firefly mutation.
+
+## Current State
+
+The app is a read-first Firefly III companion UI. Firefly remains the source of
+truth, and this app should make monthly household finance review feel calmer,
+faster, and more decision-oriented than the default Firefly UI.
+
+Recent accepted design direction:
+
+- The first page should be minimal and reassuring.
+- The top month hero should read as month status, not a report sentence.
+- The current hero shape is a circular plan gauge, month title, and calm status
+  chip such as `On track`.
+- Cash is optional first-page material, not default first-page material.
+- Spend rhythm is the primary first-page visual.
+- Spend categories are behind click-through detail by default.
+- Optional panels live behind the settings gear and persist locally.
+- Month navigation should feel instant after preload and should not expose raw
+  Firefly data to the browser.
+
+Recent implementation guardrails:
+
+- Use neutral code names such as `finance`, `dashboard`, `month`, `review`, and
+  `accounts`. Avoid temporary product names in modules, storage keys, and data
+  labels.
+- Keep live Firefly reads server-side.
+- Do not add Firefly write features.
+- Do not commit secrets, raw exports, raw transactions, or private runtime
+  files.
+- Prefer small source-controlled config over hidden local state.
+
+## Loop Contract
+
+Each iteration follows this shape:
+
+1. Re-read `AGENTS.md`, `README.md`, `spec.md`, this decision note, and the
+   latest relevant component files.
+2. Inspect the current desktop and mobile screenshots or generate fresh ones.
+3. Pick one improvement from the backlog or from an observed flaw.
+4. State the intended user-visible outcome in one sentence before editing.
+5. Make the smallest coherent code change that achieves that outcome.
+6. Run the local verification gate.
+7. Inspect desktop and mobile screenshots.
+8. Accept the iteration only if it passes all gates below.
+9. Commit with a semantic message and push the branch as a checkpoint.
+10. Continue with another iteration only if there is a clear next safe change.
+
+## Design Gate
+
+Reject a change if it:
+
+- adds a generic dashboard panel without a specific review decision it supports;
+- promotes too many exact values to the first page;
+- duplicates the same meaning in two places;
+- uses decorative gradients, blobs, or ornamental widgets;
+- makes the first page feel like a marketing landing page;
+- uses accounting or implementation language where household decision language
+  would be clearer;
+- makes mobile feel like a compressed desktop report;
+- hides important risk states so thoroughly that the page becomes falsely calm.
+
+Prefer changes that:
+
+- make the first screen easier to scan in under five seconds;
+- use visual indicators for state and trend while keeping exact values available
+  through hover, click, title, or drill-down;
+- reduce always-visible text;
+- preserve the current quiet surface, restrained color, and stable card layout;
+- make uncertainty visibly actionable through review queues rather than noise.
+
+## Safety Gate
+
+The loop must stop for user approval before:
+
+- deploying to live infrastructure;
+- changing router, DNS, Caddy, Docker, secrets, tokens, permissions, or backups;
+- adding or using a Firefly mutation path;
+- committing private data, runtime paths, raw exports, or raw transactions;
+- introducing a browser-visible Firefly token or raw Firefly payload;
+- changing product policy, for example category taxonomy or account treatment.
+
+## Verification Gate
+
+A code iteration must pass:
+
+```bash
+bun run verify
+```
+
+This includes linting, React Doctor, type checking, unit tests, production
+build, and Playwright browser checks. Screenshot output should be inspected for
+desktop and mobile before accepting UI work.
+
+For UI iterations, also check:
+
+- no horizontal overflow;
+- text does not wrap awkwardly inside compact values;
+- the first page has only one primary status surface;
+- optional panels remain optional after reload;
+- archived month pages still load CSS and maintain layout;
+- month switching remains client-side after warm/preloaded data.
+
+## Safe Backlog
+
+Good candidates for unattended iterations:
+
+- Improve the Review tab so it is a focused work queue, not a list dump.
+- Make the Accounts view better separate budgetable cash, liabilities, wealth,
+  and excluded accounting movement.
+- Improve Expected so salaries, bills, AMEX statement state, and upcoming tax
+  obligations are clearer at a glance.
+- Add better empty states for months with no review queue or no visible budget
+  issue.
+- Add more visual regression assertions around first-page clutter.
+- Split any remaining large component if it improves human readability without
+  creating indirection.
+- Add small derived indicators that explain whether a month is healthy, tight,
+  or risky without adding more visible copy.
+
+Stop candidates:
+
+- Any change requiring a new live data source.
+- Any change requiring a new dependency with architectural consequences.
+- Any request to write back to Firefly.
+- Any visual direction that conflicts with the calm, spend-first first page.
+
+## Current Branch Plan
+
+Use branch `improve/finance-ui-loop` for this loop. Keep `main` deployable and
+do not merge or deploy from this branch without explicit approval.
