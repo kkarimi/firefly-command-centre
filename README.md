@@ -43,6 +43,18 @@ bun run test:e2e
 `test:e2e` runs the built app through Playwright and writes ignored desktop and
 mobile screenshots under `test-results/`.
 
+## Runtime
+
+Live Firefly mode is server-side only. Configure the container with:
+
+```bash
+FIREFLY_BASE_URL=http://firefly-iii_server_1:8080
+FIREFLY_TOKEN_FILE=/run/secrets/firefly_token
+```
+
+The browser receives only aggregated dashboard data, never the Firefly token.
+Without a token, the app uses sanitized fixture data.
+
 ## Safety
 
 Do not commit Firefly tokens, exports, raw transactions, `.env` files, or

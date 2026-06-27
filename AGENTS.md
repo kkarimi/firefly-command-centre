@@ -29,6 +29,8 @@ This repository is a public, source-only project for a Firefly III companion UI.
   transaction data.
 - Do not add live Firefly write/mutation features without an explicit decision.
 - Browser code must never receive a Firefly personal access token.
+- Live Firefly reads must happen server-side through `FIREFLY_TOKEN_FILE` or
+  another runtime-only secret.
 - Use fixture or sanitized data for public examples and tests.
 - Keep any future live API integration server-side.
 

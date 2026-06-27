@@ -42,6 +42,28 @@ export type ExpectedEvent = {
   tone: Tone;
 };
 
+export type CommandCentreData = {
+  period: {
+    label: string;
+    range: string;
+    lastRefresh: string;
+    daysElapsed: number;
+    totalDays: number;
+  };
+  cash: {
+    monzoBalance: number;
+    fireflyDrift: number;
+    budgetableCash: number;
+    committedUntilMonthEnd: number;
+    projectedLeft: number;
+  };
+  ops: Array<{ label: string; value: string; tone: Tone }>;
+  budgets: BudgetCard[];
+  reviewItems: ReviewItem[];
+  moneyMap: Record<string, Account[]>;
+  expected: Record<string, ExpectedEvent[]>;
+};
+
 export const commandCentreFixture = {
   period: {
     label: 'June 2026',
@@ -229,4 +251,4 @@ export const commandCentreFixture = {
       { name: 'Private health provider', expected: 0, due: 'No longer recurring', status: 'Do not create bill', tone: 'neutral' },
     ],
   } satisfies Record<string, ExpectedEvent[]>,
-};
+} satisfies CommandCentreData;

@@ -1,6 +1,9 @@
 ---
 import CommandCentre from '../components/CommandCentre';
+import { loadCommandCentreData } from '../server/dashboard';
 import '../styles/global.css';
+
+const dashboardData = await loadCommandCentreData();
 ---
 
 <html lang="en">
@@ -17,6 +20,6 @@ import '../styles/global.css';
 		<title>Firefly Command Centre</title>
 	</head>
 	<body>
-		<CommandCentre client:load />
+		<CommandCentre client:load initialData={dashboardData} />
 	</body>
 </html>

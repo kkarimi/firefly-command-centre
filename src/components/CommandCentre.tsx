@@ -22,6 +22,7 @@ import {
   commandCentreFixture,
   type Account,
   type BudgetCard,
+  type CommandCentreData,
   type ExpectedEvent,
   type ReviewItem,
   type Tone,
@@ -62,9 +63,9 @@ function toneClass(tone: Tone | 'review') {
   return `tone-${tone}`;
 }
 
-export default function CommandCentre() {
+export default function CommandCentre({ initialData }: { initialData?: CommandCentreData }) {
   const [activeTab, setActiveTab] = useState<TabId>('month');
-  const data = commandCentreFixture;
+  const data = initialData ?? commandCentreFixture;
 
   const activeSpend = useMemo(() => data.budgets.reduce((sum, budget) => sum + budget.spent, 0), [data.budgets]);
   const activeLimit = useMemo(() => data.budgets.reduce((sum, budget) => sum + budget.limit, 0), [data.budgets]);
@@ -97,7 +98,7 @@ export default function CommandCentre() {
           </section>
         </header>
 
-        <OpsStrip />
+        <OpsStrip ops={data.ops} />
 
         <div className="workspace">
           <nav className="tab-rail" aria-label="Dashboard sections">
@@ -120,7 +121,7 @@ export default function CommandCentre() {
 
           <section className="content-surface">
             {activeTab === 'month' && (
-              <MonthView activeSpend={activeSpend} activeLimit={activeLimit} budgets={data.budgets} />
+              <MonthView activeSpend={activeSpend} activeLimit={activeLimit} budgets={data.budgets} cash={data.cash} />
             )}
             {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
             {activeTab === 'money' && <MoneyMapView groups={data.moneyMap} />}
@@ -133,10 +134,10 @@ export default function CommandCentre() {
   );
 }
 
-function OpsStrip() {
+function OpsStrip({ ops }: { ops: CommandCentreData['ops'] }) {
   return (
     <section className="ops-strip" aria-label="Operational health">
-      {commandCentreFixture.ops.map((item) => (
+      {ops.map((item) => (
         <div className="ops-cell" key={item.label}>
           <span className={`status-dot ${toneClass(item.tone)}`} aria-hidden="true" />
           <span className="ops-label">{item.label}</span>
@@ -151,10 +152,12 @@ function MonthView({
   activeSpend,
   activeLimit,
   budgets,
+  cash,
 }: {
   activeSpend: number;
   activeLimit: number;
   budgets: BudgetCard[];
+  cash: CommandCentreData['cash'];
 }) {
   const overallPercent = percentUsed(activeSpend, activeLimit);
 
@@ -168,8 +171,8 @@ function MonthView({
         <div className="overview-metrics">
           <Metric label="Spent" value={formatMoney(activeSpend)} tone="neutral" />
           <Metric label="Plan" value={formatMoney(activeLimit)} tone="neutral" />
-          <Metric label="Monzo drift" value={formatSignedMoney(commandCentreFixture.cash.fireflyDrift)} tone="ok" />
-          <Metric label="Committed" value={formatMoney(commandCentreFixture.cash.committedUntilMonthEnd)} tone="watch" />
+          <Metric label="Monzo drift" value={formatSignedMoney(cash.fireflyDrift)} tone="ok" />
+          <Metric label="Committed" value={formatMoney(cash.committedUntilMonthEnd)} tone="watch" />
         </div>
       </section>
 
