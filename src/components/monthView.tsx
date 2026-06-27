@@ -122,6 +122,7 @@ export function MonthView({
           activeSpend={activeSpend}
           dailySpend={dailySpend}
           onToggleDetails={() => setShowBudgetDetails((value) => !value)}
+          period={period}
           showDetails={showBudgetDetails}
         />
       )}
@@ -214,19 +215,27 @@ function SpendRhythm({
   activeSpend,
   dailySpend,
   onToggleDetails,
+  period,
   showDetails,
 }: {
   activeLimit: number;
   activeSpend: number;
   dailySpend: DashboardData['dailySpend'];
   onToggleDetails: () => void;
+  period: DashboardData['period'];
   showDetails: boolean;
 }) {
   const maxSpend = Math.max(...dailySpend.map((day) => day.amount), 1);
   const averageSpend = dailySpend.length > 0 ? activeSpend / dailySpend.length : 0;
   const targetDaily = dailySpend.length > 0 ? activeLimit / dailySpend.length : 0;
+  const remainingDays = Math.max(1, period.totalDays - period.daysElapsed);
+  const remainingDaily = Math.max(0, (activeLimit - activeSpend) / remainingDays);
+  const allowanceLabel = period.isCurrent ? `Left/day ${formatMoney(remainingDaily, true)}` : 'Month closed';
+  const allowanceDetail = period.isCurrent
+    ? `Remaining daily allowance ${formatMoney(remainingDaily)}.`
+    : 'This archived month is closed.';
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day.`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. ${allowanceDetail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -266,6 +275,7 @@ function SpendRhythm({
         <span className="spend-rhythm-foot">
           <span>Avg {formatMoney(averageSpend, true)}</span>
           <span>Daily plan {formatMoney(targetDaily, true)}</span>
+          <span>{allowanceLabel}</span>
         </span>
       </button>
     </section>

@@ -23,6 +23,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
+  await expect(page.getByText(/Left\/day/)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
 
@@ -79,13 +80,19 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByText('Needs review')).toBeVisible();
   await expect(page.getByText('-£9,864.98')).toBeVisible();
   await expect(page.getByText('£81,930.33')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Cash coverage' })).toBeVisible();
+  await expect(page.getByText('Reserved £1,810')).toBeVisible();
+  await expect(page.getByText('Free after bills £5,280')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-accounts-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Expected' }).click();
   await expect(page.getByRole('heading', { name: 'Expected' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Expected summary' })).toBeVisible();
+  const expectedSummary = page.getByRole('region', { name: 'Expected summary' });
+  await expect(expectedSummary).toBeVisible();
   await expect(page.getByText('£9,300')).toBeVisible();
   await expect(page.getByText('£3,435')).toBeVisible();
+  await expect(expectedSummary.getByText('Due next')).toBeVisible();
+  await expect(expectedSummary.getByText('4 Jul')).toBeVisible();
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
   await expect(cashCalendar).toBeVisible();
   await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
@@ -114,6 +121,7 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   await expect(page.locator('.month-status-chip')).toHaveCount(1);
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
+  await expect(page.getByText('Month closed')).toBeVisible();
   await expect(page.getByText('Open bills')).toHaveCount(0);
   await page.locator('.spend-rhythm-trigger').click();
   await expect(page.getByText('Over by')).toBeVisible();

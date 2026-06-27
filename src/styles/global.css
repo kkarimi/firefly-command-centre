@@ -659,6 +659,10 @@ p {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.expected-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .budget-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
@@ -967,6 +971,69 @@ p {
   gap: 12px;
 }
 
+.cash-coverage {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--green);
+  padding: 14px;
+}
+
+.cash-coverage header,
+.cash-coverage-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cash-coverage h3 {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 780;
+  line-height: 1.15;
+}
+
+.cash-coverage p,
+.cash-coverage-foot {
+  color: var(--muted);
+}
+
+.cash-coverage p {
+  font-size: 0.82rem;
+  margin-top: 4px;
+}
+
+.cash-coverage header > strong {
+  color: currentColor;
+  flex: 0 0 auto;
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.cash-coverage-track {
+  display: block;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-strong);
+}
+
+.cash-coverage-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+
+.cash-coverage-foot {
+  font-size: 0.78rem;
+  font-weight: 780;
+}
+
 .expected-timeline {
   display: grid;
   gap: 1px;
@@ -1186,6 +1253,14 @@ p {
   color: var(--blue);
 }
 
+.cash-coverage.tone-watch {
+  color: var(--amber);
+}
+
+.cash-coverage.tone-risk {
+  color: var(--red);
+}
+
 @media (max-width: 1180px) {
   .month-lens,
   .workspace {
@@ -1235,6 +1310,10 @@ p {
 
   .metric strong {
     font-size: 1.15rem;
+  }
+
+  .split-summary.expected-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .month-lens h2,
@@ -1299,5 +1378,12 @@ p {
 
   .row-detail {
     justify-items: start;
+  }
+
+  .cash-coverage header,
+  .cash-coverage-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 }

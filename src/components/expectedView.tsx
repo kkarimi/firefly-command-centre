@@ -10,6 +10,7 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
     .flat()
     .filter((event) => event.tone === 'watch' || event.tone === 'risk').length;
   const timeline = expectedTimeline(groups);
+  const nextOpenEvent = timeline.find(isOpenEvent);
 
   return (
     <div className="view-stack">
@@ -17,6 +18,7 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
       <section className="split-summary expected-summary" aria-label="Expected summary">
         <Metric label="Income seen" value={formatMoney(incomeSeen, true)} tone="ok" />
         <Metric label="Still expected" value={formatMoney(stillExpected, true)} tone={stillExpected > 0 ? 'watch' : 'ok'} />
+        <Metric label="Due next" value={nextOpenEvent?.due ?? 'Clear'} tone={nextOpenEvent ? nextOpenEvent.tone : 'ok'} />
         <Metric label="Watch" value={formatRowCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
       </section>
       {timeline.length > 0 && (
