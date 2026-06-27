@@ -69,6 +69,7 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
   const monthBudgets = useMemo(() => data.budgets.filter(isVisibleMonthBudget), [data.budgets]);
   const activeSpend = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.spent, 0), [monthBudgets]);
   const activeLimit = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.limit, 0), [monthBudgets]);
+  const paidObligations = useMemo(() => paidObligationSummary(data.expected.obligations), [data.expected.obligations]);
   const reviewCount = data.reviewItems.length;
   const atRiskBudgets = monthBudgets.filter((budget) => {
     const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
@@ -93,7 +94,11 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
         </header>
 
         <section className="summary-row" aria-label="Month status">
-          <Metric label="Cash accounts" value={formatMoney(data.cash.budgetableCash)} tone="ok" />
+          <Metric
+            label={data.period.isCurrent ? 'Cash accounts' : 'Month spend'}
+            value={formatMoney(data.period.isCurrent ? data.cash.budgetableCash : activeSpend)}
+            tone={data.period.isCurrent ? 'ok' : 'neutral'}
+          />
           <Metric
             label={data.period.isCurrent ? 'After month bills' : 'Month-end cash'}
             value={formatMoney(data.cash.projectedLeft)}
@@ -129,6 +134,7 @@ export default function CommandCentre({ initialData }: { initialData?: CommandCe
                 activeLimit={activeLimit}
                 budgets={monthBudgets}
                 cash={data.cash}
+                paidObligations={paidObligations}
                 period={data.period}
               />
             )}
@@ -152,15 +158,28 @@ function MonthView({
   activeLimit,
   budgets,
   cash,
+  paidObligations,
   period,
 }: {
   activeSpend: number;
   activeLimit: number;
   budgets: BudgetCard[];
   cash: CommandCentreData['cash'];
+  paidObligations: { count: number; total: number };
   period: CommandCentreData['period'];
 }) {
   const overallPercent = percentUsed(activeSpend, activeLimit);
+  const billsMetric = period.isCurrent
+    ? {
+        label: 'Remaining month bills',
+        value: formatMoney(cash.committedUntilMonthEnd),
+        tone: 'watch' as const,
+      }
+    : {
+        label: paidObligations.count > 0 ? 'Bills paid' : 'Bills checked',
+        value: paidObligations.count > 0 ? formatMoney(paidObligations.total) : 'None found',
+        tone: paidObligations.count > 0 ? ('ok' as const) : ('neutral' as const),
+      };
   const sortedBudgets = [...budgets].sort((left, right) => {
     const leftStatus = budgetStatus(left.spent, left.limit, projectMonthEnd(left.spent, left.daysElapsed, left.totalDays), left.reviewQueue);
     const rightStatus = budgetStatus(
@@ -183,7 +202,7 @@ function MonthView({
         <div className="overview-metrics">
           <Metric label="Spent" value={formatMoney(activeSpend)} tone="neutral" />
           <Metric label="Plan" value={formatMoney(activeLimit)} tone="neutral" />
-          <Metric label={period.isCurrent ? 'Remaining month bills' : 'Open bills'} value={formatMoney(cash.committedUntilMonthEnd)} tone="watch" />
+          <Metric label={billsMetric.label} value={billsMetric.value} tone={billsMetric.tone} />
           <Metric label={period.isCurrent ? 'Cash after bills' : 'Month-end cash'} value={formatMoney(cash.projectedLeft)} tone="ok" />
         </div>
       </section>
@@ -224,6 +243,11 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
   const status = budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue);
   const used = percentUsed(budget.spent, budget.limit);
   const remaining = remainingBudget(budget.limit, budget.spent);
+  const variance = budget.reviewQueue
+    ? { label: 'Queue', value: 'Open' }
+    : remaining < 0
+      ? { label: 'Over by', value: formatMoney(Math.abs(remaining)) }
+      : { label: 'Left', value: formatMoney(remaining) };
   const progressWidth = budget.reviewQueue ? 100 : Math.min(100, used);
 
   return (
@@ -239,15 +263,15 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
       <div className="budget-values">
         <span>
           <small>Spent</small>
-          {formatMoney(budget.spent)}
+          <strong>{formatMoney(budget.spent)}</strong>
         </span>
         <span>
-          <small>{budget.reviewQueue ? 'Target' : 'Left'}</small>
-          {budget.reviewQueue ? formatMoney(0) : formatMoney(remaining)}
+          <small>{variance.label}</small>
+          <strong>{variance.value}</strong>
         </span>
         <span>
           <small>Projected</small>
-          {formatMoney(projected)}
+          <strong>{formatMoney(projected)}</strong>
         </span>
       </div>
 
@@ -258,7 +282,7 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
       {budget.merchants.length > 0 && (
         <div className="merchant-line">
           {budget.merchants.map((merchant) => (
-            <span key={merchant}>{merchant}</span>
+            <span key={merchant} title={merchant}>{displayMerchantName(merchant)}</span>
           ))}
         </div>
       )}
@@ -472,4 +496,35 @@ function EmptyState({ title, detail, compact = false }: { title: string; detail:
 
 function sumAccounts(accounts: Account[]) {
   return accounts.reduce((sum, account) => sum + account.balance, 0);
+}
+
+function paidObligationSummary(events: ExpectedEvent[]) {
+  return events
+    .filter(isSettledObligation)
+    .reduce(
+      (summary, event) => ({
+        count: summary.count + 1,
+        total: summary.total + Math.abs(event.actual ?? event.expected),
+      }),
+      { count: 0, total: 0 },
+    );
+}
+
+function isSettledObligation(event: ExpectedEvent) {
+  return event.status === 'Paid' || (event.actual !== undefined && /paid|matched/i.test(`${event.status} ${event.due}`));
+}
+
+function displayMerchantName(value: string) {
+  const cleaned = value
+    .replace(/\s+/g, ' ')
+    .replace(/^AMAZON\.CO\.UK\*.*/i, 'Amazon')
+    .replace(/^TFL TRAVEL CHARGE.*/i, 'TfL')
+    .replace(/\s+LONDON$/i, '')
+    .trim();
+
+  if (cleaned.length <= 34) {
+    return cleaned;
+  }
+
+  return `${cleaned.slice(0, 31)}...`;
 }

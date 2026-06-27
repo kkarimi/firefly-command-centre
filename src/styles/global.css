@@ -379,6 +379,14 @@ p {
   display: block;
 }
 
+.budget-values strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.98rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
 .progress-track {
   height: 10px;
   overflow: hidden;
@@ -400,6 +408,9 @@ p {
 }
 
 .merchant-line span {
+  display: inline-block;
+  max-width: min(100%, 210px);
+  overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--panel-2);
@@ -407,6 +418,8 @@ p {
   font-size: 0.78rem;
   min-height: 25px;
   padding: 4px 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tile-note {

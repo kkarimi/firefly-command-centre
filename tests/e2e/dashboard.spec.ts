@@ -35,7 +35,14 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   await expect(page).toHaveURL(/\/months\/2026-05$/);
   await expect(page.getByText('Month archive')).toBeVisible();
   await expect(page.getByRole('heading', { name: /\d+% of May 2026 plan used/ })).toBeVisible();
+  await expect(page.getByText('Month spend')).toBeVisible();
+  await expect(page.getByText('Bills paid')).toBeVisible();
+  await expect(page.getByText('Open bills')).toHaveCount(0);
+  await expect(page.getByText('Over by')).toBeVisible();
   await expect(page.getByRole('link', { name: 'This month' })).toBeVisible();
   await expect(page.locator('.top-bar')).toHaveCSS('display', 'flex');
+  await expect(page.locator('.merchant-line span').first()).toHaveCSS('overflow', 'hidden');
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-archive.png`), fullPage: true });
 });
