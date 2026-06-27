@@ -1356,6 +1356,15 @@ p {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .expected-timeline header {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .expected-timeline header span {
+    justify-self: start;
+  }
+
   .month-lens h2,
   .view-heading h2 {
     font-size: 1.55rem;
