@@ -1,14 +1,18 @@
 import { Banknote, GitBranch, Landmark, PiggyBank, WalletCards, type LucideIcon } from 'lucide-react';
-import type { Account } from '../data/fixtures';
+import type { Account, DashboardData, Tone } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 
-export function AccountsView({ groups }: { groups: Record<string, Account[]> }) {
+export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; groups: Record<string, Account[]> }) {
   const budgetableCash = sumAccounts(groups.budgetableCash);
   const netWorth = Object.values(groups).flat().reduce((sum, account) => sum + account.balance, 0);
   const flagged = Object.values(groups)
     .flat()
     .filter((account) => account.tone === 'watch').length;
+  const committedCash = Math.max(0, cash.committedUntilMonthEnd);
+  const cashAfterCommitments = budgetableCash - committedCash;
+  const committedPercent = budgetableCash > 0 ? Math.min(100, Math.max(0, (committedCash / budgetableCash) * 100)) : 0;
+  const coverageTone: Tone = cashAfterCommitments < 0 ? 'risk' : committedPercent >= 75 ? 'watch' : 'ok';
 
   return (
     <div className="view-stack">
@@ -17,6 +21,22 @@ export function AccountsView({ groups }: { groups: Record<string, Account[]> }) 
         <Metric label="Budgetable cash" value={formatMoney(budgetableCash)} tone="ok" />
         <Metric label="Net position" value={formatMoney(netWorth)} tone="neutral" />
         <Metric label="Needs review" value={`${flagged} flagged`} tone={flagged > 0 ? 'watch' : 'ok'} />
+      </section>
+      <section className={`cash-coverage ${toneClass(coverageTone)}`} aria-label="Cash coverage">
+        <header>
+          <div>
+            <h3>Cash coverage</h3>
+            <p>Known obligations reserved against cash accounts</p>
+          </div>
+          <strong>{formatMoney(cashAfterCommitments)}</strong>
+        </header>
+        <span className="cash-coverage-track" aria-hidden="true">
+          <span style={{ width: `${committedPercent}%` }} />
+        </span>
+        <div className="cash-coverage-foot">
+          <span>Reserved {formatMoney(committedCash, true)}</span>
+          <span>Free after bills {formatMoney(cashAfterCommitments, true)}</span>
+        </div>
       </section>
       <div className="map-grid">
         <AccountGroup title="Cash accounts" icon={PiggyBank} accounts={groups.budgetableCash} />
