@@ -29,11 +29,16 @@ export function AccountsView({ groups }: { groups: Record<string, Account[]> }) 
 }
 
 function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: LucideIcon; accounts: Account[] }) {
+  const total = sumAccounts(accounts);
+
   return (
     <article className="account-group">
       <header>
-        <Icon size={18} aria-hidden="true" />
-        <h3>{title}</h3>
+        <div>
+          <Icon size={18} aria-hidden="true" />
+          <h3>{title}</h3>
+        </div>
+        <strong>{formatMoney(total)}</strong>
       </header>
       <div className="account-list">
         {accounts.length === 0 ? (
