@@ -194,3 +194,6 @@ do not merge or deploy from this branch without explicit approval.
   upcoming cashflow exposure is visible before reading each item.
 - Review suggested-fix chips now include queued value as well as row count so
   cleanup action types show materiality before opening the rows.
+- Accounts group headers now include flagged balance value as well as count so
+  manual asset and liability review pressure shows materiality before opening
+  each group.

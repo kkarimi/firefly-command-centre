@@ -94,8 +94,12 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(accountsSummary.getByText('Needs review')).toBeVisible();
   await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' })).toContainText('-£9,864.98');
   await expect(page.locator('.account-group').filter({ hasText: 'Cash accounts' }).locator('header')).toContainText('Clear');
-  await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).toContainText('1 flagged');
-  await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).toContainText('3 flagged');
+  await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).toContainText(
+    '1 flagged / £1,435',
+  );
+  await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).toContainText(
+    '3 flagged / £68,990',
+  );
   await expect(page.getByText('£81,930.33')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Cash coverage' })).toBeVisible();
   await expect(page.getByText('Reserved £1,810 (26%)')).toBeVisible();
