@@ -211,3 +211,5 @@ do not merge or deploy from this branch without explicit approval.
   so the Money Map reads as allocation as well as balances.
 - Review severity group headers now show the dominant source so cleanup can be
   routed to the right import path before opening individual rows.
+- Accounts cash coverage now shows a runway estimate from current spend pace so
+  free cash after bills translates into time.

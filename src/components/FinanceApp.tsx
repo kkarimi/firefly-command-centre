@@ -245,7 +245,9 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
               />
             )}
             {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
-            {activeTab === 'money' && <AccountsView cash={data.cash} groups={data.moneyMap} />}
+            {activeTab === 'money' && (
+              <AccountsView activeSpend={activeSpend} cash={data.cash} groups={data.moneyMap} period={data.period} />
+            )}
             {activeTab === 'expected' && <ExpectedView balanceDate={data.period.balanceDate} groups={data.expected} />}
             {activeTab === 'ops' && <TrustView ops={data.ops} />}
             {activeTab === 'settings' && <SettingsView settings={dashboardSettings} onChange={updateDashboardSettings} />}
