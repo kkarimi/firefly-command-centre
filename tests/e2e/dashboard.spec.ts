@@ -81,11 +81,13 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   const reviewSummary = page.getByRole('region', { name: 'Review summary' });
   await expect(reviewSummary).toBeVisible();
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Risk' })).toContainText('1 / £184');
-  await expect(page.getByText('£2,246')).toBeVisible();
+  await expect(reviewSummary.locator('.metric').filter({ hasText: 'Queued' })).toContainText('£2,246');
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 / £19');
   const suggestedFixes = page.getByRole('region', { name: 'Suggested fixes' });
   await expect(suggestedFixes).toBeVisible();
-  await expect(suggestedFixes.locator('header')).toContainText('4 rows / source Monzo lead / affects 49% spend');
+  await expect(suggestedFixes.locator('header')).toContainText(
+    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend',
+  );
   await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
   await expect(page.getByText('Rule candidate 1 / £43')).toBeVisible();
   await expect(page.getByText('Clean payee 1 / £19')).toBeVisible();
