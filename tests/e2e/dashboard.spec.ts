@@ -148,6 +148,13 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(expectedSummary.getByText('Due next')).toBeVisible();
   await expect(expectedSummary.getByText('4 Jul')).toBeVisible();
   await expect(expectedSummary.locator('.metric').filter({ hasText: 'Next 7d' })).toContainText('1 / £1,435');
+  const nearTermCover = page.getByRole('region', { name: /Near-term cover/ });
+  await expect(nearTermCover).toBeVisible();
+  await expect(nearTermCover).toContainText('£3,495.42');
+  await expect(nearTermCover).toContainText('Due 1 / £1,435');
+  await expect(nearTermCover).toContainText('After 7d £3,495');
+  await expect(nearTermCover).toContainText('Cash base £4,930');
+  await expect(nearTermCover).toContainText('Next 4 Jul');
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
   await expect(cashCalendar).toBeVisible();
   await expect(cashCalendar.locator('header')).toContainText('2 open / £3,435 due / 3 logged');
