@@ -155,7 +155,7 @@ function formatReviewValueSummary({ count, total }: { count: number; total: numb
   return `${count} / ${formatMoney(total, true)}`;
 }
 
-function reviewSpendImpact({ activeSpend, reviewTotal }: { activeSpend: number; reviewTotal: number }) {
+export function reviewSpendImpact({ activeSpend, reviewTotal }: { activeSpend: number; reviewTotal: number }) {
   if (activeSpend <= 0) {
     return {
       label: 'affects n/a',
@@ -163,10 +163,11 @@ function reviewSpendImpact({ activeSpend, reviewTotal }: { activeSpend: number; 
     };
   }
 
-  const percent = Math.round((reviewTotal / activeSpend) * 100);
+  const roundedPercent = Math.round((reviewTotal / activeSpend) * 100);
+  const percentLabel = reviewTotal > 0 && roundedPercent === 0 ? '<1' : String(roundedPercent);
 
   return {
-    label: `affects ${percent}% spend`,
+    label: `affects ${percentLabel}% spend`,
     detail: `${formatMoney(reviewTotal)} in review against ${formatMoney(activeSpend)} visible month spend.`,
   };
 }
