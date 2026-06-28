@@ -1,0 +1,127 @@
+---
+import type { DashboardData, Tone } from '../../../data/fixtures';
+import { fireflyHomeHref, loadDashboardData } from '../../../server/dashboard';
+import '../../../styles/global.css';
+
+const requestUrl = new URL(Astro.request.url);
+const month = requestUrl.searchParams.get('month');
+const fireflyHref = fireflyHomeHref();
+let dashboardData: DashboardData | null = null;
+let loadError: string | null = null;
+
+try {
+  dashboardData = await loadDashboardData({ month });
+} catch (error) {
+  Astro.response.status = 400;
+  loadError = error instanceof Error ? error.message : 'Firefly status could not be loaded';
+}
+
+const dashboardHref = month ? `/months/${encodeURIComponent(month)}` : '/';
+const fireflyOp = dashboardData?.ops.find((item) => item.label === 'Firefly');
+const nonClearOps = dashboardData?.ops.filter((item) => item.tone !== 'ok') ?? [];
+const statusItems = nonClearOps.length > 0 ? nonClearOps : fireflyOp ? [fireflyOp] : [];
+const statusTone: Tone = fireflyOp?.tone ?? 'watch';
+const statusLabel = fireflyOp ? `${fireflyOp.label}: ${fireflyOp.value}` : (loadError ?? 'Firefly status unavailable');
+const sourceLabel = dashboardData ? `${dashboardData.ops.filter((item) => item.tone === 'ok').length}/${dashboardData.ops.length} clear` : 'Unknown';
+const copyText = [
+  `Firefly status: ${fireflyOp?.value ?? statusLabel}`,
+  dashboardData ? `Period: ${dashboardData.period.label}` : null,
+  dashboardData ? `Sources clear: ${sourceLabel}` : null,
+  nonClearOps.length > 0 ? `Open items: ${nonClearOps.map((item) => `${item.label} ${item.value}`).join(', ')}` : 'Open items: none',
+  `Open: ${fireflyHref}`,
+]
+  .filter(Boolean)
+  .join('\n');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Firefly status handoff for Firefly III." />
+    <title>Firefly status · Command Centre</title>
+  </head>
+  <body>
+    <main class="action-shell">
+      <section class="action-panel" aria-labelledby="action-title">
+        <a class="action-back" href={dashboardHref}>Back to dashboard</a>
+        <header class="action-header">
+          <span class={`status-chip tone-${statusTone}`}>{statusLabel}</span>
+          <h1 id="action-title">Firefly status</h1>
+          <p>{dashboardData?.period.label ?? 'Command Centre'} · Data Trust</p>
+        </header>
+
+        <section class="action-summary-grid" aria-label="Firefly status summary">
+          <div>
+            <span>Firefly</span>
+            <strong>{fireflyOp?.value ?? 'Unavailable'}</strong>
+          </div>
+          <div>
+            <span>Sources</span>
+            <strong>{sourceLabel}</strong>
+          </div>
+          <div>
+            <span>Open</span>
+            <strong>{nonClearOps.length}</strong>
+          </div>
+        </section>
+
+        <section class="action-fix-stack" aria-label="Firefly status checklist">
+          <div>
+            <span>Resolution path</span>
+            <strong>{statusTone === 'ok' ? 'Firefly is clear in Command Centre.' : 'Check Firefly availability and imports.'}</strong>
+          </div>
+          <div class="action-fix-brief">
+            {statusItems.map((item) => (
+              <span>
+                <strong>{item.label}</strong>
+                {item.value}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section class="action-copy-block" aria-label="Firefly status note">
+          <pre>{copyText}</pre>
+        </section>
+
+        <section class="action-category-panel" aria-label="Firefly resolution">
+          <header>
+            <span>External app</span>
+            <h2>Continue to Firefly</h2>
+            <p>Use Firefly to inspect ledger data, imports, and app availability.</p>
+          </header>
+          <div class={`action-notice ${statusTone === 'risk' ? 'tone-risk' : statusTone === 'watch' ? 'tone-watch' : 'tone-ok'}`}>
+            <strong>{statusTone === 'ok' ? 'No active warning' : 'Review needed'}</strong>
+            <span>{statusTone === 'ok' ? 'Command Centre currently sees Firefly as clear.' : statusLabel}</span>
+          </div>
+        </section>
+
+        <div class="action-buttons">
+          <a class="primary-action" href={fireflyHref}>Continue in Firefly</a>
+          <button type="button" data-copy-fix={copyText} aria-label="Copy Firefly status note">Copy status note</button>
+          <a href={dashboardHref}>Dashboard</a>
+          <span class="action-copy-feedback" data-copy-feedback aria-live="polite"></span>
+        </div>
+      </section>
+    </main>
+    <script>
+      const copyButton = document.querySelector('button[data-copy-fix]');
+      const copyFeedback = document.querySelector('[data-copy-feedback]');
+
+      if (copyButton instanceof HTMLButtonElement && copyFeedback instanceof HTMLElement) {
+        copyButton.addEventListener('click', async () => {
+          const copyText = copyButton.getAttribute('data-copy-fix') ?? '';
+
+          try {
+            await navigator.clipboard.writeText(copyText);
+            copyFeedback.textContent = 'Copied';
+            copyButton.setAttribute('aria-label', 'Copied Firefly status note');
+          } catch {
+            copyFeedback.textContent = 'Copy unavailable';
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

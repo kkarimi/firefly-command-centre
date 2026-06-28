@@ -355,6 +355,30 @@ test('renders an internal transaction handoff page before the Firefly editor', a
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-transaction-handoff.png`), fullPage: true });
 });
 
+test('renders an internal Firefly status handoff page', async ({ page }, testInfo) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/actions/firefly');
+
+  await expect(page.getByRole('heading', { name: 'Firefly status' })).toBeVisible();
+  await expect(page.locator('.action-header .status-chip')).toContainText('Firefly');
+  await expect(page.getByRole('region', { name: 'Firefly status summary' })).toContainText('Firefly');
+  await expect(page.getByRole('region', { name: 'Firefly status checklist' })).toContainText('Firefly');
+  await expect(page.getByRole('region', { name: 'Firefly status note' })).toContainText('Open: https://firefly.home');
+  await expect(page.getByRole('region', { name: 'Firefly resolution' })).toContainText('Continue to Firefly');
+  await expect(page.locator('.action-buttons').getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home',
+  );
+  await page.getByRole('button', { name: 'Copy Firefly status note' }).click();
+  await expect(page.getByText('Copied')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copied Firefly status note' })).toBeVisible();
+  const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboardText).toContain('Open: https://firefly.home');
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-firefly-status-handoff.png`), fullPage: true });
+});
+
 test('renders an internal account review page before Firefly handoff', async ({ page }, testInfo) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/actions/firefly/accounts/show?accountId=amex');
