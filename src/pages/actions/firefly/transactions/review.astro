@@ -182,6 +182,7 @@ const copyText = reviewItem
                 <div class="action-notice tone-watch">
                   <strong>Category save unavailable</strong>
                   <span>{categoryLoadError ?? 'Use Firefly for this edit until categories load here.'}</span>
+                  {fireflyEditHref && <a href={fireflyEditHref}>Open transaction editor</a>}
                 </div>
               )}
             </section>

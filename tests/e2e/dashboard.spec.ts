@@ -310,7 +310,13 @@ test('renders an internal transaction fix prep page before Firefly handoff', asy
   await expect(page.getByRole('region', { name: 'Review fix note' })).toContainText('Open: /actions/firefly/transactions/edit?groupId=grp_9A2F');
   await expect(page.getByRole('region', { name: 'Set category in Firefly' })).toContainText('Set category here');
   await expect(page.getByRole('region', { name: 'Set category in Firefly' })).toContainText('Category save unavailable');
-  await expect(page.getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+  await expect(
+    page.getByRole('region', { name: 'Set category in Firefly' }).getByRole('link', { name: 'Open transaction editor' }),
+  ).toHaveAttribute(
+    'href',
+    '/actions/firefly/transactions/edit?groupId=grp_9A2F',
+  );
+  await expect(page.locator('.action-buttons').getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
     'href',
     '/actions/firefly/transactions/edit?groupId=grp_9A2F',
   );

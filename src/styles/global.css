@@ -1358,6 +1358,14 @@ button.month-status-chip {
   font-weight: 680;
 }
 
+.action-notice a {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 820;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .action-buttons {
   display: flex;
   flex-wrap: wrap;
