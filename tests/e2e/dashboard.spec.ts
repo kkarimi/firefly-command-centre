@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => window.localStorage.clear());
 });
 
-test('renders the finance review UI and all v0 sections', async ({ page }, testInfo) => {
+test('renders the minimal finance review UI and opt-in detail signals', async ({ page }, testInfo) => {
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'Finances' })).toBeVisible();
@@ -26,15 +26,15 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
   await expect(page.getByText('Peak £421')).toBeVisible();
-  await expect(page.getByText('7d spend £833')).toBeVisible();
-  await expect(page.getByText('Pace over £109/d')).toBeVisible();
+  await expect(page.getByText('7d spend £833')).toHaveCount(0);
+  await expect(page.getByText('Pace over £109/d')).toHaveCount(0);
   await expect(page.locator('.spend-rhythm-foot')).toContainText(/Projected £[\d,]+/);
-  await expect(page.locator('.spend-rhythm-foot')).toContainText('Forecast over £217');
+  await expect(page.locator('.spend-rhythm-foot')).not.toContainText('Forecast over £217');
   await expect(page.getByText(/Left\/day/)).toBeVisible();
-  await expect(page.getByText('Bills left £1,810')).toBeVisible();
-  await expect(page.getByText('Net flow £4,738')).toBeVisible();
-  await expect(page.getByText('Cash trend +£260')).toBeVisible();
-  await expect(page.getByText('Focus Review queue')).toBeVisible();
+  await expect(page.getByText('Bills left £1,810')).toHaveCount(0);
+  await expect(page.getByText('Net flow £4,738')).toHaveCount(0);
+  await expect(page.getByText('Cash trend +£260')).toHaveCount(0);
+  await expect(page.getByText('Focus Review queue')).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
 
@@ -71,6 +71,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   await expect(page.getByRole('checkbox', { name: 'Cash signal' })).not.toBeChecked();
   await expect(page.getByRole('checkbox', { name: 'Focus signal' })).not.toBeChecked();
+  await expect(page.getByRole('checkbox', { name: 'Detail signals' })).not.toBeChecked();
   await page.getByRole('checkbox', { name: 'Cash signal' }).check();
   await page.getByRole('checkbox', { name: 'Focus signal' }).check();
   await page.getByRole('button', { name: 'Month' }).click();
@@ -84,22 +85,21 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(reviewSummary).toBeVisible();
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Risk' })).toContainText('1 / £184');
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Queued' })).toContainText('£2,246');
-  await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 / £19');
+  await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toHaveCount(0);
   const suggestedFixes = page.getByRole('region', { name: 'Suggested fixes' });
   await expect(suggestedFixes).toBeVisible();
-  await expect(suggestedFixes.locator('header')).toContainText(
-    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend / stale 25%',
-  );
-  await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
-  await expect(page.getByText('Rule candidate 1 / £43')).toBeVisible();
-  await expect(page.getByText('Clean payee 1 / £19')).toBeVisible();
+  await expect(suggestedFixes.locator('header')).toContainText('4 rows');
+  await expect(suggestedFixes.locator('header')).not.toContainText('source Monzo lead');
+  await expect(page.getByText('Classify movement 1 / £2,000')).toHaveCount(0);
+  await expect(page.getByText('Rule candidate 1 / £43')).toHaveCount(0);
+  await expect(page.getByText('Clean payee 1 / £19')).toHaveCount(0);
   await expect(page.getByText('Handle first')).toBeVisible();
   await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Handle first review rows' }).locator('header')).toContainText(
-    '1 row / £184 / oldest 2d / source AMEX',
+    '1 row / £184 / oldest 2d',
   );
   await expect(page.getByRole('region', { name: 'Watch next review rows' }).locator('header')).toContainText(
-    '2 rows / £2,043 / oldest 5d / source Monzo',
+    '2 rows / £2,043 / oldest 5d',
   );
   await expect(page.getByRole('region', { name: 'Watch next review rows' }).locator('.review-row').first()).toContainText(
     'Cash movement',
@@ -120,16 +120,14 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(accountsSummary.locator('.metric').filter({ hasText: 'Liabilities' })).toContainText('-£9,864.98');
   await expect(accountsSummary.locator('.metric').filter({ hasText: 'Needs review' })).toContainText('4 / £70,425');
   await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' })).toContainText('-£9,864.98');
-  await expect(page.locator('.account-group').filter({ hasText: 'Cash accounts' }).locator('header')).toContainText(
-    '6% of map / Clear',
-  );
-  await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).toContainText(
+  await expect(page.locator('.account-group').filter({ hasText: 'Cash accounts' }).locator('header')).toContainText('Clear');
+  await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).not.toContainText(
     '8% of map',
   );
   await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).toContainText(
     '1 flagged / £1,435',
   );
-  await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).toContainText(
+  await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).not.toContainText(
     '69% of map',
   );
   await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).toContainText(
@@ -143,10 +141,10 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByText('Reserved £1,810 (26%)')).toBeVisible();
   await expect(page.getByText('Free after bills £5,280')).toBeVisible();
   await expect(page.getByText(/Runway \d+d at this pace/)).toBeVisible();
-  await expect(page.getByText('Debt cover 72%')).toBeVisible();
-  await expect(page.getByText('After debt -£2,775')).toBeVisible();
-  await expect(page.getByText('Liquidity 6%')).toBeVisible();
-  await expect(page.getByText('Largest exposure 41%')).toBeVisible();
+  await expect(page.getByText('Debt cover 72%')).toHaveCount(0);
+  await expect(page.getByText('After debt -£2,775')).toHaveCount(0);
+  await expect(page.getByText('Liquidity 6%')).toHaveCount(0);
+  await expect(page.getByText('Largest exposure 41%')).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-accounts-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Expected' }).click();
@@ -162,12 +160,12 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(nearTermCover).toBeVisible();
   await expect(nearTermCover).toContainText('£3,495.42');
   await expect(nearTermCover).toContainText('Due 1 / £1,435');
-  await expect(nearTermCover).toContainText('Later 1 / £2,000');
   await expect(nearTermCover).toContainText('After 7d £3,495');
-  await expect(nearTermCover).toContainText('After all £1,495');
-  await expect(nearTermCover).toContainText('Open reserve 70%');
-  await expect(nearTermCover).toContainText('Month net £5,865');
   await expect(nearTermCover).toContainText('Next 4 Jul');
+  await expect(nearTermCover).not.toContainText('Later 1 / £2,000');
+  await expect(nearTermCover).not.toContainText('After all £1,495');
+  await expect(nearTermCover).not.toContainText('Open reserve 70%');
+  await expect(nearTermCover).not.toContainText('Month net £5,865');
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
   await expect(cashCalendar).toBeVisible();
   await expect(cashCalendar.locator('header')).toContainText('2 open / £3,435 due / 3 logged');
@@ -193,16 +191,47 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
 
   await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
-  await expect(page.getByText('8 sources observed')).toBeVisible();
+  await expect(page.getByText('Read-only checks')).toBeVisible();
+  await expect(page.getByText('8 sources observed')).toHaveCount(0);
   const trustSummary = page.getByRole('region', { name: 'Trust summary' });
   await expect(trustSummary).toBeVisible();
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Verified' })).toContainText('88%');
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Lead issue' })).toContainText('Firefly');
-  await expect(trustSummary.locator('.metric').filter({ hasText: 'Watch' })).toContainText('1 source');
-  await expect(trustSummary.locator('.metric').filter({ hasText: 'Risk' })).toContainText('0 sources');
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Watch' })).toHaveCount(0);
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Risk' })).toHaveCount(0);
   await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
+
+  await page.getByRole('button', { name: 'Open dashboard settings' }).click();
+  await page.getByRole('checkbox', { name: 'Detail signals' }).check();
+  await page.getByRole('button', { name: 'Month' }).click();
+  await expect(page.getByText('7d spend £833')).toBeVisible();
+  await expect(page.getByText('Pace over £109/d')).toBeVisible();
+  await expect(page.getByText('Forecast over £217')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Review', exact: true }).click();
+  await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 / £19');
+  await expect(suggestedFixes.locator('header')).toContainText(
+    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend / stale 25%',
+  );
+  await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Accounts' }).click();
+  await expect(page.getByText('Debt cover 72%')).toBeVisible();
+  await expect(page.getByText('Largest exposure 41%')).toBeVisible();
+  await expect(page.locator('.account-group').filter({ hasText: 'Cash accounts' }).locator('header')).toContainText(
+    '6% of map / Clear',
+  );
+
+  await page.getByRole('button', { name: 'Expected' }).click();
+  await expect(page.getByRole('region', { name: /Near-term cover/ })).toContainText('Open reserve 70%');
+
+  await page.getByRole('button', { name: 'Trust' }).click();
+  await expect(page.getByText('8 sources observed')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Trust summary' }).locator('.metric').filter({ hasText: 'Watch' })).toContainText(
+    '1 source',
+  );
 });
 
 test('renders an archived month on its own URL', async ({ page }, testInfo) => {
@@ -216,7 +245,7 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
   await expect(page.getByText('Month closed')).toBeVisible();
-  await expect(page.getByText(/Bills paid £[\d,]+/)).toBeVisible();
+  await expect(page.getByText(/Bills paid £[\d,]+/)).toHaveCount(0);
   await expect(page.getByText('Open bills')).toHaveCount(0);
   await page.locator('.spend-rhythm-trigger').click();
   await expect(page.getByText('Over by')).toBeVisible();

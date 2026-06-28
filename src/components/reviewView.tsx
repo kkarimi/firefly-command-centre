@@ -4,7 +4,15 @@ import type { ReviewItem, Tone } from '../data/fixtures';
 import { formatMoney, formatSignedMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
-export function ReviewView({ activeSpend, items }: { activeSpend: number; items: ReviewItem[] }) {
+export function ReviewView({
+  activeSpend,
+  items,
+  showDetailSignals,
+}: {
+  activeSpend: number;
+  items: ReviewItem[];
+  showDetailSignals: boolean;
+}) {
   const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
   const totalQueued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
@@ -23,13 +31,15 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
   });
   const netImpact = reviewNetImpact(items);
   const staleShare = reviewStaleShare({ itemCount: items.length, staleCount: staleItems.length });
-  const actionSummary = [
+  const reviewSummaryClass = showDetailSignals ? 'split-summary review-summary' : 'split-summary review-summary minimal';
+  const detailActionSummary = [
     formatRowCount(items.length),
     primaryReviewOrigin(items),
     netImpact.label,
     spendImpact.label,
     staleShare.label,
   ].join(' / ');
+  const actionSummary = showDetailSignals ? detailActionSummary : formatRowCount(items.length);
 
   async function copyFireflyGroupId(groupId: string) {
     await navigator.clipboard.writeText(groupId);
@@ -43,7 +53,7 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
         <EmptyState title="No review rows found" detail="Live Firefly returned no rows matching the current review rules." />
       ) : (
         <>
-          <section className="split-summary review-summary" aria-label="Review summary">
+          <section className={reviewSummaryClass} aria-label="Review summary">
             <Metric
               label="Risk"
               value={formatReviewValueSummary({ count: riskCount, total: riskTotal })}
@@ -51,31 +61,35 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
             />
             <Metric label="Queued" value={formatMoney(totalQueued, true)} tone={summaryTone} />
             <Metric label="Oldest" value={`${oldestAgeDays}d`} tone={oldestAgeDays >= 7 ? 'watch' : 'ok'} />
-            <Metric
-              label="Stale"
-              value={formatStaleSummary({ count: staleItems.length, total: staleTotal })}
-              tone={staleItems.length > 0 ? 'watch' : 'ok'}
-            />
+            {showDetailSignals && (
+              <Metric
+                label="Stale"
+                value={formatStaleSummary({ count: staleItems.length, total: staleTotal })}
+                tone={staleItems.length > 0 ? 'watch' : 'ok'}
+              />
+            )}
           </section>
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
               <h3>Suggested fixes</h3>
               <span title={`${netImpact.detail} ${spendImpact.detail} ${staleShare.detail}`}>{actionSummary}</span>
             </header>
-            <div>
-              {actionBuckets.map((bucket) => (
-                <span className={`status-chip ${toneClass(bucket.tone)}`} key={bucket.label}>
-                  {bucket.label} {bucket.count} / {formatMoney(bucket.total, true)}
-                </span>
-              ))}
-            </div>
+            {showDetailSignals && (
+              <div>
+                {actionBuckets.map((bucket) => (
+                  <span className={`status-chip ${toneClass(bucket.tone)}`} key={bucket.label}>
+                    {bucket.label} {bucket.count} / {formatMoney(bucket.total, true)}
+                  </span>
+                ))}
+              </div>
+            )}
           </section>
           <div className="review-groups">
             {groups.map((group) => (
               <section className="review-group" key={group.label} aria-label={`${group.label} review rows`}>
                 <header>
                   <span className={`status-chip ${toneClass(group.tone)}`}>{group.label}</span>
-                  <span>{formatReviewGroupSummary(group.items)}</span>
+                  <span>{formatReviewGroupSummary({ items: group.items, showDetailSignals })}</span>
                 </header>
                 <div className="review-list">
                   {group.items.map((item) => (
@@ -236,10 +250,11 @@ function reviewStaleShare({ itemCount, staleCount }: { itemCount: number; staleC
   };
 }
 
-function formatReviewGroupSummary(items: ReviewItem[]) {
+function formatReviewGroupSummary({ items, showDetailSignals }: { items: ReviewItem[]; showDetailSignals: boolean }) {
   const queued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
-  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d / ${primaryReviewOrigin(items)}`;
+  const core = `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d`;
+  return showDetailSignals ? `${core} / ${primaryReviewOrigin(items)}` : core;
 }
 
 function primaryReviewOrigin(items: ReviewItem[]) {
