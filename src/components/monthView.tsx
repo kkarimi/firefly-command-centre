@@ -121,8 +121,10 @@ export function MonthView({
         <SpendRhythm
           activeLimit={activeLimit}
           activeSpend={activeSpend}
+          cash={cash}
           dailySpend={dailySpend}
           onToggleDetails={() => setShowBudgetDetails((value) => !value)}
+          paidObligations={paidObligations}
           period={period}
           showDetails={showBudgetDetails}
         />
@@ -214,15 +216,19 @@ function LensSignal({ signal }: { signal: LensSignalModel }) {
 function SpendRhythm({
   activeLimit,
   activeSpend,
+  cash,
   dailySpend,
   onToggleDetails,
+  paidObligations,
   period,
   showDetails,
 }: {
   activeLimit: number;
   activeSpend: number;
+  cash: DashboardData['cash'];
   dailySpend: DashboardData['dailySpend'];
   onToggleDetails: () => void;
+  paidObligations: { count: number; total: number };
   period: DashboardData['period'];
   showDetails: boolean;
 }) {
@@ -242,8 +248,9 @@ function SpendRhythm({
   const projectedDetail = period.isCurrent
     ? `Projected month-end spend is ${formatMoney(projectedSpend)}.`
     : `Closed month spend was ${formatMoney(activeSpend)}.`;
+  const billPosition = formatBillPosition({ cash, paidObligations, period });
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${allowanceDetail}`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${allowanceDetail} ${billPosition.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -285,10 +292,47 @@ function SpendRhythm({
           {dailySpend.length > 0 && <span>Peak {formatMoney(peakSpend, true)}</span>}
           <span>{projectedLabel}</span>
           <span>{allowanceLabel}</span>
+          <span>{billPosition.label}</span>
         </span>
       </button>
     </section>
   );
+}
+
+function formatBillPosition({
+  cash,
+  paidObligations,
+  period,
+}: {
+  cash: DashboardData['cash'];
+  paidObligations: { count: number; total: number };
+  period: DashboardData['period'];
+}) {
+  if (period.isCurrent) {
+    if (cash.committedUntilMonthEnd <= 0) {
+      return {
+        label: 'Bills clear',
+        detail: 'No known obligations are still reserved for the rest of this month.',
+      };
+    }
+
+    return {
+      label: `Bills left ${formatMoney(cash.committedUntilMonthEnd, true)}`,
+      detail: `Known obligations still reserved for this month total ${formatMoney(cash.committedUntilMonthEnd)}.`,
+    };
+  }
+
+  if (paidObligations.count === 0) {
+    return {
+      label: `Bills paid ${formatMoney(0, true)}`,
+      detail: 'No settled bill obligations were found for this archived month.',
+    };
+  }
+
+  return {
+    label: `Bills paid ${formatMoney(paidObligations.total, true)}`,
+    detail: `${paidObligations.count} settled ${paidObligations.count === 1 ? 'bill' : 'bills'} found for this archived month.`,
+  };
 }
 
 function TrendPill({ direction, label, tone }: { direction: TrendDirection; label: string; tone: Tone }) {
