@@ -56,6 +56,7 @@ function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: Lu
   const total = sumAccounts(accounts);
   const flaggedCount = flaggedAccountCount(accounts);
   const flaggedTotal = flaggedAccountTotal(accounts);
+  const visibleAccounts = prioritySortedAccounts(accounts);
 
   return (
     <article className="account-group">
@@ -75,7 +76,7 @@ function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: Lu
         {accounts.length === 0 ? (
           <EmptyState title="No live accounts" detail="No matching Firefly accounts were returned for this group." compact />
         ) : (
-          accounts.map((account) => (
+          visibleAccounts.map((account) => (
             <div className="account-row" key={account.name}>
               <div>
                 <strong>{account.name}</strong>
@@ -105,6 +106,24 @@ function flaggedAccountTotal(accounts: Account[]) {
   return accounts.filter((account) => account.tone === 'watch').reduce((sum, account) => sum + Math.abs(account.balance), 0);
 }
 
+function prioritySortedAccounts(accounts: Account[]) {
+  return [...accounts].sort((left, right) => {
+    const toneDelta = accountToneRank[left.tone] - accountToneRank[right.tone];
+    if (toneDelta !== 0) {
+      return toneDelta;
+    }
+
+    return Math.abs(right.balance) - Math.abs(left.balance);
+  });
+}
+
 function formatFlaggedSummary({ count, total }: { count: number; total: number }) {
   return count === 0 ? 'Clear' : `${count} flagged / ${formatMoney(total, true)}`;
 }
+
+const accountToneRank: Record<Tone, number> = {
+  risk: 0,
+  watch: 1,
+  ok: 2,
+  neutral: 3,
+};

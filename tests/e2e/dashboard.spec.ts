@@ -103,6 +103,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).toContainText(
     '3 flagged / £68,990',
   );
+  const wealthRows = page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('.account-row');
+  await expect(wealthRows.nth(2)).toContainText('Gold holdings');
+  await expect(wealthRows.nth(3)).toContainText('Fixed-term deposit');
   await expect(page.getByText('£81,930.33')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Cash coverage' })).toBeVisible();
   await expect(page.getByText('Reserved £1,810 (26%)')).toBeVisible();
