@@ -52,7 +52,7 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
             <header>
               <h3>Suggested fixes</h3>
               <span title={spendImpact.detail}>
-                {formatRowCount(items.length)} / source {primaryReviewSource(items)} / {spendImpact.label}
+                {formatRowCount(items.length)} / {primaryReviewOrigin(items)} / {spendImpact.label}
               </span>
             </header>
             <div>
@@ -207,10 +207,10 @@ function cashInReviewTotal(items: ReviewItem[]) {
 function formatReviewGroupSummary(items: ReviewItem[]) {
   const queued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
-  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d / source ${primaryReviewSource(items)}`;
+  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d / ${primaryReviewOrigin(items)}`;
 }
 
-function primaryReviewSource(items: ReviewItem[]) {
+function primaryReviewOrigin(items: ReviewItem[]) {
   const sources = new Map<string, { count: number; total: number }>();
 
   for (const item of items) {
@@ -236,10 +236,12 @@ function primaryReviewSource(items: ReviewItem[]) {
   });
 
   if (!primary) {
-    return 'None';
+    return 'source none';
   }
 
-  return rest.length === 0 ? primary[0] : `${primary[0]} lead`;
+  const prefix = items.every((item) => item.amount > 0) ? 'from' : 'source';
+
+  return rest.length === 0 ? `${prefix} ${primary[0]}` : `${prefix} ${primary[0]} lead`;
 }
 
 function reviewActionBuckets(items: ReviewItem[]) {
