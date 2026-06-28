@@ -46,6 +46,12 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.spend-rhythm-trigger')).toHaveAttribute('aria-expanded', 'true');
   await expect(page.getByRole('region', { name: 'Spend categories' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toBeVisible();
+  await expect(page.locator('.budget-tile').filter({ hasText: 'Groceries' }).locator('.budget-pace')).toContainText(
+    /£\d+\/day/,
+  );
+  await expect(page.locator('.budget-tile').filter({ hasText: 'Eating Out' }).locator('.budget-pace')).toContainText(
+    'No room',
+  );
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Open dashboard settings' }).click();
