@@ -192,3 +192,5 @@ do not merge or deploy from this branch without explicit approval.
   confidence is visible before scanning each source.
 - Expected cash calendar now includes the open due amount in its header so
   upcoming cashflow exposure is visible before reading each item.
+- Review suggested-fix chips now include queued value as well as row count so
+  cleanup action types show materiality before opening the rows.

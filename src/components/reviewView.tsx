@@ -40,7 +40,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
             <div>
               {actionBuckets.map((bucket) => (
                 <span className={`status-chip ${toneClass(bucket.tone)}`} key={bucket.label}>
-                  {bucket.label} {bucket.count}
+                  {bucket.label} {bucket.count} / {formatMoney(bucket.total, true)}
                 </span>
               ))}
             </div>
@@ -125,10 +125,11 @@ function formatReviewGroupSummary(items: ReviewItem[]) {
 }
 
 function reviewActionBuckets(items: ReviewItem[]) {
-  const buckets: Array<{ label: string; tone: Tone; count: number }> = reviewActionMatchers.map((matcher) => ({
+  const buckets: Array<{ label: string; tone: Tone; count: number; total: number }> = reviewActionMatchers.map((matcher) => ({
     label: matcher.label,
     tone: matcher.tone,
     count: 0,
+    total: 0,
   }));
 
   for (const item of items) {
@@ -136,6 +137,7 @@ function reviewActionBuckets(items: ReviewItem[]) {
     const bucket = buckets.find((entry) => entry.label === (match?.label ?? 'Clean payee'));
     if (bucket) {
       bucket.count += 1;
+      bucket.total += Math.abs(item.amount);
     }
   }
 
