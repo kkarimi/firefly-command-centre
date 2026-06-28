@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMonthPeriod, currentMonthKey, isSelectableMonthKey, reviewReason } from './dashboard';
+import { accountTone, buildMonthPeriod, currentMonthKey, isSelectableMonthKey, reviewReason } from './dashboard';
 
 describe('dashboard period helpers', () => {
   const now = new Date(2026, 5, 27, 14, 30);
@@ -73,5 +73,24 @@ describe('dashboard review suggestions', () => {
       reason: 'Household spend has no budget',
       suggestion: 'Attach to General / Review or confirm it stays outside budgets',
     });
+  });
+});
+
+describe('account review tone', () => {
+  const now = new Date(2026, 5, 28, 12, 0);
+
+  it('keeps live cash accounts clear when the Firefly type is asset', () => {
+    expect(accountTone({ kind: 'asset', name: 'Monzo', now, updatedAt: '2026-06-22T10:00:00+00:00' })).toBe('ok');
+  });
+
+  it('keeps AMEX and manual wealth sources in the review set', () => {
+    expect(accountTone({ kind: 'asset', name: 'AMEX', now, updatedAt: '2026-06-22T10:00:00+00:00' })).toBe('watch');
+    expect(accountTone({ kind: 'asset', name: 'Prosper SIPP', now, updatedAt: '2026-06-22T10:00:00+00:00' })).toBe('watch');
+  });
+
+  it('flags otherwise generic accounts when their balance update is stale', () => {
+    expect(accountTone({ kind: 'liabilities', name: 'Loan balance', now, updatedAt: '2026-06-19T10:00:00+00:00' })).toBe(
+      'watch',
+    );
   });
 });

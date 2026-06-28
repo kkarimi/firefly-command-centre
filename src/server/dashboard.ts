@@ -497,8 +497,47 @@ function accountFromResource(resource: FireflyResource): Account | null {
     kind: titleCase(kind.replaceAll('_', ' ')),
     balance,
     freshness: updated ? `Updated ${updated.slice(0, 10)}` : 'Live Firefly',
-    tone: /manual|asset/i.test(kind) ? 'watch' : 'ok',
+    tone: accountTone({ kind, name, updatedAt: updated }),
   };
+}
+
+export function accountTone({
+  kind,
+  name,
+  now = new Date(),
+  updatedAt,
+}: {
+  kind: string;
+  name: string;
+  now?: Date;
+  updatedAt?: string;
+}): Tone {
+  const text = `${name} ${kind}`;
+
+  if (/amex|prosper|gold|fixed|manual|house|company|cost basis|contribution/i.test(text)) {
+    return 'watch';
+  }
+
+  return isStaleAccountUpdate({ now, updatedAt }) ? 'watch' : 'ok';
+}
+
+function isStaleAccountUpdate({ now, updatedAt }: { now: Date; updatedAt?: string }) {
+  const updatedTime = utcTimeFromDateKey(updatedAt?.slice(0, 10) ?? '');
+  if (!Number.isFinite(updatedTime)) {
+    return false;
+  }
+
+  const nowTime = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.floor((nowTime - updatedTime) / 86_400_000) > 7;
+}
+
+function utcTimeFromDateKey(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return Number.NaN;
+  }
+
+  return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
 }
 
 function applyBudgets(data: DashboardData, budgets: FireflyResource[], transactions: FireflyResource[]) {
