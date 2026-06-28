@@ -30,6 +30,7 @@ export function AccountsView({
   const coverageTone: Tone = cashAfterCommitments < 0 ? 'risk' : committedPercent >= 75 ? 'watch' : 'ok';
   const runwayDays = cashRunwayDays({ activeSpend, cashAfterCommitments, daysElapsed: period.daysElapsed });
   const debtCover = accountDebtCover({ budgetableCash, liabilities });
+  const liquidity = accountLiquidity({ budgetableCash, totalExposure });
 
   return (
     <div className="view-stack">
@@ -63,6 +64,7 @@ export function AccountsView({
           <span>{formatRunwayDays(runwayDays)}</span>
           <span title={debtCover.detail}>{debtCover.label}</span>
           <span title={debtCover.detail}>After debt {formatMoney(debtCover.cashAfterDebt, true)}</span>
+          <span title={liquidity.detail}>{liquidity.label}</span>
         </div>
       </section>
       <div className="map-grid">
@@ -190,6 +192,15 @@ function accountDebtCover({ budgetableCash, liabilities }: { budgetableCash: num
     cashAfterDebt,
     label: `Debt cover ${coverPercent}%`,
     detail: `Cash after liabilities ${formatMoney(cashAfterDebt)}.`,
+  };
+}
+
+function accountLiquidity({ budgetableCash, totalExposure }: { budgetableCash: number; totalExposure: number }) {
+  const share = totalExposure > 0 ? Math.round((Math.max(0, budgetableCash) / totalExposure) * 100) : 0;
+
+  return {
+    label: `Liquidity ${share}%`,
+    detail: `Budgetable cash is ${share}% of account map exposure.`,
   };
 }
 
