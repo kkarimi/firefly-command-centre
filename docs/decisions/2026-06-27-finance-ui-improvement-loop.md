@@ -229,3 +229,5 @@ do not merge or deploy from this branch without explicit approval.
   lead source visible without implying every neutral gap is a warning.
 - Expected summary now shows both count and value due in the next seven days so
   near-term cash obligations carry workload as well as amount.
+- Review summary now shows stale row count and queued value so old cleanup work
+  has materiality as well as age.

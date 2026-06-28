@@ -8,7 +8,8 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
   const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
   const totalQueued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
-  const staleCount = items.filter((item) => item.ageDays >= staleAgeDays).length;
+  const staleItems = items.filter((item) => item.ageDays >= staleAgeDays);
+  const staleTotal = staleItems.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const groups = reviewGroups(items);
   const riskCount = groups.find((group) => group.tone === 'risk')?.items.length ?? 0;
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
@@ -30,7 +31,11 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
             <Metric label="Risk" value={formatRowCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
             <Metric label="Queued" value={formatMoney(totalQueued, true)} tone={summaryTone} />
             <Metric label="Oldest" value={`${oldestAgeDays}d`} tone={oldestAgeDays >= 7 ? 'watch' : 'ok'} />
-            <Metric label="Stale" value={formatRowCount(staleCount)} tone={staleCount > 0 ? 'watch' : 'ok'} />
+            <Metric
+              label="Stale"
+              value={formatStaleSummary({ count: staleItems.length, total: staleTotal })}
+              tone={staleItems.length > 0 ? 'watch' : 'ok'}
+            />
           </section>
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
@@ -129,6 +134,14 @@ function prioritySortedItems(items: ReviewItem[]) {
 
 function formatRowCount(count: number) {
   return `${count} ${count === 1 ? 'row' : 'rows'}`;
+}
+
+function formatStaleSummary({ count, total }: { count: number; total: number }) {
+  if (count === 0) {
+    return '0 rows';
+  }
+
+  return `${count} / ${formatMoney(total, true)}`;
 }
 
 function formatReviewGroupSummary(items: ReviewItem[]) {
