@@ -165,10 +165,10 @@ const copyText = reviewItem
                     </select>
                   </label>
                   <label class="category-write-confirm">
-                    <input type="checkbox" name="confirmCategoryWrite" value="yes" required />
+                    <input type="checkbox" name="confirmCategoryWrite" value="yes" data-category-confirm required />
                     <span>Save this category to Firefly for this transaction.</span>
                   </label>
-                  <button type="submit">Save category</button>
+                  <button type="submit" data-category-submit>Save category</button>
                 </form>
               ) : (
                 <div class="action-notice tone-watch">
@@ -200,6 +200,8 @@ const copyText = reviewItem
     <script>
       const copyButton = document.querySelector('button[data-copy-fix]');
       const copyFeedback = document.querySelector('[data-copy-feedback]');
+      const categoryConfirm = document.querySelector('input[data-category-confirm]');
+      const categorySubmit = document.querySelector('button[data-category-submit]');
 
       if (copyButton instanceof HTMLButtonElement && copyFeedback instanceof HTMLElement) {
         copyButton.addEventListener('click', async () => {
@@ -213,6 +215,15 @@ const copyText = reviewItem
             copyFeedback.textContent = 'Copy unavailable';
           }
         });
+      }
+
+      if (categoryConfirm instanceof HTMLInputElement && categorySubmit instanceof HTMLButtonElement) {
+        const syncCategorySubmit = () => {
+          categorySubmit.disabled = !categoryConfirm.checked;
+        };
+
+        categoryConfirm.addEventListener('change', syncCategorySubmit);
+        syncCategorySubmit();
       }
     </script>
   </body>
