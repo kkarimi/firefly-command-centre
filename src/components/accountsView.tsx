@@ -29,6 +29,7 @@ export function AccountsView({
   const committedPercent = budgetableCash > 0 ? Math.min(100, Math.max(0, (committedCash / budgetableCash) * 100)) : 0;
   const coverageTone: Tone = cashAfterCommitments < 0 ? 'risk' : committedPercent >= 75 ? 'watch' : 'ok';
   const runwayDays = cashRunwayDays({ activeSpend, cashAfterCommitments, daysElapsed: period.daysElapsed });
+  const debtCover = accountDebtCover({ budgetableCash, liabilities });
 
   return (
     <div className="view-stack">
@@ -43,7 +44,7 @@ export function AccountsView({
           tone={flaggedAccounts.length > 0 ? 'watch' : 'ok'}
         />
       </section>
-      <section className={`cash-coverage ${toneClass(coverageTone)}`} aria-label="Cash coverage">
+      <section className={`cash-coverage ${toneClass(coverageTone)}`} aria-label={`Cash coverage. ${debtCover.detail}`}>
         <header>
           <div>
             <h3>Cash coverage</h3>
@@ -60,6 +61,7 @@ export function AccountsView({
           </span>
           <span>Free after bills {formatMoney(cashAfterCommitments, true)}</span>
           <span>{formatRunwayDays(runwayDays)}</span>
+          <span title={debtCover.detail}>{debtCover.label}</span>
         </div>
       </section>
       <div className="map-grid">
@@ -167,6 +169,25 @@ function cashRunwayDays({
 
 function formatRunwayDays(days: number | null) {
   return days === null ? 'Runway n/a' : `Runway ${days}d at this pace`;
+}
+
+function accountDebtCover({ budgetableCash, liabilities }: { budgetableCash: number; liabilities: number }) {
+  const liabilityExposure = Math.abs(Math.min(0, liabilities));
+
+  if (liabilityExposure <= 0) {
+    return {
+      label: 'Debt cover clear',
+      detail: 'No credit or liability exposure found.',
+    };
+  }
+
+  const coverPercent = Math.round((Math.max(0, budgetableCash) / liabilityExposure) * 100);
+  const cashAfterDebt = budgetableCash - liabilityExposure;
+
+  return {
+    label: `Debt cover ${coverPercent}%`,
+    detail: `Cash after liabilities ${formatMoney(cashAfterDebt)}.`,
+  };
 }
 
 function formatFlaggedSummary({ count, total }: { count: number; total: number }) {
