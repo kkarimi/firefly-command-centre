@@ -121,6 +121,7 @@ export function MonthView({
         <SpendRhythm
           activeLimit={activeLimit}
           activeSpend={activeSpend}
+          budgets={sortedBudgets}
           cash={cash}
           dailySpend={dailySpend}
           onToggleDetails={() => setShowBudgetDetails((value) => !value)}
@@ -216,6 +217,7 @@ function LensSignal({ signal }: { signal: LensSignalModel }) {
 function SpendRhythm({
   activeLimit,
   activeSpend,
+  budgets,
   cash,
   dailySpend,
   onToggleDetails,
@@ -225,6 +227,7 @@ function SpendRhythm({
 }: {
   activeLimit: number;
   activeSpend: number;
+  budgets: BudgetCard[];
   cash: DashboardData['cash'];
   dailySpend: DashboardData['dailySpend'];
   onToggleDetails: () => void;
@@ -249,8 +252,9 @@ function SpendRhythm({
     ? `Projected month-end spend is ${formatMoney(projectedSpend)}.`
     : `Closed month spend was ${formatMoney(activeSpend)}.`;
   const billPosition = formatBillPosition({ cash, paidObligations, period });
+  const focusCategory = monthFocusCategory(budgets);
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${allowanceDetail} ${billPosition.detail}`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${allowanceDetail} ${billPosition.detail} ${focusCategory.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -293,6 +297,7 @@ function SpendRhythm({
           <span>{projectedLabel}</span>
           <span>{allowanceLabel}</span>
           <span>{billPosition.label}</span>
+          <span title={focusCategory.detail}>{focusCategory.label}</span>
         </span>
       </button>
     </section>
@@ -332,6 +337,51 @@ function formatBillPosition({
   return {
     label: `Bills paid ${formatMoney(paidObligations.total, true)}`,
     detail: `${paidObligations.count} settled ${paidObligations.count === 1 ? 'bill' : 'bills'} found for this archived month.`,
+  };
+}
+
+function monthFocusCategory(budgets: BudgetCard[]) {
+  const focus = budgets
+    .map((budget) => {
+      const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
+      const status = budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue);
+      const remaining = remainingBudget(budget.limit, budget.spent);
+      const projectedOver = budget.limit > 0 && remaining >= 0 && projected > budget.limit ? projected - budget.limit : 0;
+      return { budget, projected, projectedOver, remaining, status };
+    })
+    .find((entry) => entry.status !== 'ok');
+
+  if (!focus) {
+    return {
+      label: 'Focus clear',
+      detail: 'No budget category currently needs attention.',
+    };
+  }
+
+  if (focus.status === 'review') {
+    return {
+      label: 'Focus Review queue',
+      detail: `${focus.budget.name} has ${formatMoney(focus.budget.spent)} waiting for cleanup.`,
+    };
+  }
+
+  if (focus.remaining < 0) {
+    return {
+      label: `Focus ${focus.budget.name}`,
+      detail: `${focus.budget.name} is ${formatMoney(Math.abs(focus.remaining))} over plan.`,
+    };
+  }
+
+  if (focus.projectedOver > 0) {
+    return {
+      label: `Focus ${focus.budget.name}`,
+      detail: `${focus.budget.name} is projected ${formatMoney(focus.projectedOver)} over plan.`,
+    };
+  }
+
+  return {
+    label: `Focus ${focus.budget.name}`,
+    detail: `${focus.budget.name} is close to plan at ${formatMoney(focus.projected)} projected spend.`,
   };
 }
 

@@ -29,6 +29,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.spend-rhythm-foot')).toContainText(/Projected £[\d,]+/);
   await expect(page.getByText(/Left\/day/)).toBeVisible();
   await expect(page.getByText('Bills left £1,810')).toBeVisible();
+  await expect(page.getByText('Focus Review queue')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
 
@@ -72,7 +73,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.lens-signal').filter({ hasText: 'Cash' })).toBeVisible();
   await expect(page.locator('.lens-signal').filter({ hasText: 'Focus' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Review' }).click();
+  await page.getByRole('button', { name: 'Review', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
   const reviewSummary = page.getByRole('region', { name: 'Review summary' });
   await expect(reviewSummary).toBeVisible();
