@@ -52,6 +52,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.budget-tile').filter({ hasText: 'Groceries' }).locator('.budget-pace')).toContainText(
     /£\d+\/day/,
   );
+  await expect(page.locator('.budget-tile').filter({ hasText: 'Groceries' }).locator('.budget-values')).toContainText(
+    'Forecast over',
+  );
   await expect(page.locator('.budget-tile').filter({ hasText: 'Eating Out' }).locator('.budget-pace')).toContainText(
     'No room',
   );

@@ -223,3 +223,5 @@ do not merge or deploy from this branch without explicit approval.
   tight forecast is visible before the plan is actually breached.
 - Trust summary now promotes the highest-priority non-clear source so the first
   operational issue is visible before scanning the detail grid.
+- Month category cards now show forecasted overrun before actual breach, so
+  watch budgets no longer hide behind a current-left amount.
