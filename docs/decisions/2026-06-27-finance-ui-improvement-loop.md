@@ -225,3 +225,5 @@ do not merge or deploy from this branch without explicit approval.
   operational issue is visible before scanning the detail grid.
 - Month category cards now show forecasted overrun before actual breach, so
   watch budgets no longer hide behind a current-left amount.
+- Trust summary now counts every non-clear source as open, while keeping the
+  lead source visible without implying every neutral gap is a warning.
