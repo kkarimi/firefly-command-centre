@@ -189,7 +189,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(trustSummary).toBeVisible();
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Verified' })).toContainText('88%');
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Lead issue' })).toContainText('Firefly');
-  await expect(trustSummary.locator('.metric').filter({ hasText: 'Gaps' })).toContainText('0 sources');
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Watch' })).toContainText('1 source');
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Risk' })).toContainText('0 sources');
   await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
 
