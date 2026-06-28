@@ -203,3 +203,5 @@ do not merge or deploy from this branch without explicit approval.
   cleanup appears first inside each triage group.
 - Accounts rows now sort flagged accounts before clear accounts inside each
   group so reviewable manual and liability balances are visible first.
+- Expected summary now shows the amount due in the next seven days so scheduled
+  cashflow pressure is visible before scanning the full cash calendar.
