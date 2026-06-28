@@ -209,3 +209,5 @@ do not merge or deploy from this branch without explicit approval.
   without adding another dashboard panel.
 - Accounts group headers now show each group's share of total account exposure
   so the Money Map reads as allocation as well as balances.
+- Review severity group headers now show the dominant source so cleanup can be
+  routed to the right import path before opening individual rows.
