@@ -144,6 +144,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByText(/Runway \d+d at this pace/)).toBeVisible();
   await expect(page.getByText('Debt cover 72%')).toBeVisible();
   await expect(page.getByText('After debt -£2,775')).toBeVisible();
+  await expect(page.getByText('Liquidity 6%')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-accounts-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Expected' }).click();
