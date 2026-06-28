@@ -142,7 +142,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   const expectedSummary = page.getByRole('region', { name: 'Expected summary' });
   await expect(expectedSummary).toBeVisible();
   await expect(expectedSummary.getByText('£9,300')).toBeVisible();
-  await expect(expectedSummary.getByText('£3,435')).toBeVisible();
+  await expect(expectedSummary.locator('.metric').filter({ hasText: 'Still expected' })).toContainText('2 / £3,435');
   await expect(expectedSummary.getByText('Due next')).toBeVisible();
   await expect(expectedSummary.getByText('4 Jul')).toBeVisible();
   await expect(expectedSummary.locator('.metric').filter({ hasText: 'Next 7d' })).toContainText('1 / £1,435');

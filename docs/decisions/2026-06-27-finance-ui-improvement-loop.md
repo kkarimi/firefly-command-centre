@@ -237,3 +237,5 @@ do not merge or deploy from this branch without explicit approval.
   so scheduled-obligation pressure is visible on the default Month surface.
 - Review summary now shows risk row count and queued value so the highest
   priority cleanup has materiality before opening suggested fixes.
+- Expected summary now shows still-expected count and value so remaining
+  obligations carry workload as well as cash impact.
