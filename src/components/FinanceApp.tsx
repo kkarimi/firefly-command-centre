@@ -244,7 +244,7 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
                 riskBudgets={atRiskBudgets}
               />
             )}
-            {activeTab === 'review' && <ReviewView items={data.reviewItems} />}
+            {activeTab === 'review' && <ReviewView activeSpend={activeSpend} items={data.reviewItems} />}
             {activeTab === 'money' && (
               <AccountsView activeSpend={activeSpend} cash={data.cash} groups={data.moneyMap} period={data.period} />
             )}

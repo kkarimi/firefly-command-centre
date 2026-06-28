@@ -1467,6 +1467,11 @@ p {
     gap: 6px;
   }
 
+  .review-actions header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .expected-group header {
     flex-direction: column;
     gap: 6px;
