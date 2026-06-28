@@ -207,3 +207,5 @@ do not merge or deploy from this branch without explicit approval.
   cashflow pressure is visible before scanning the full cash calendar.
 - Month category cards now show daily room to make category pacing visible
   without adding another dashboard panel.
+- Accounts group headers now show each group's share of total account exposure
+  so the Money Map reads as allocation as well as balances.

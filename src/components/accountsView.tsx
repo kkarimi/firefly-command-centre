@@ -7,6 +7,9 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
   const budgetableCash = sumAccounts(groups.budgetableCash);
   const liabilities = sumAccounts(groups.creditAndLiabilities);
   const netWorth = Object.values(groups).flat().reduce((sum, account) => sum + account.balance, 0);
+  const totalExposure = Object.values(groups)
+    .flat()
+    .reduce((sum, account) => sum + Math.abs(account.balance), 0);
   const flagged = Object.values(groups)
     .flat()
     .filter((account) => account.tone === 'watch').length;
@@ -43,17 +46,48 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
         </div>
       </section>
       <div className="map-grid">
-        <AccountGroup title="Cash accounts" icon={PiggyBank} accounts={groups.budgetableCash} />
-        <AccountGroup title="Credit and liabilities" icon={WalletCards} accounts={groups.creditAndLiabilities} />
-        <AccountGroup title="Wealth and manual assets" icon={Banknote} accounts={groups.wealth} />
-        <AccountGroup title="Excluded and accounting" icon={GitBranch} accounts={groups.excluded} />
+        <AccountGroup
+          title="Cash accounts"
+          icon={PiggyBank}
+          accounts={groups.budgetableCash}
+          totalExposure={totalExposure}
+        />
+        <AccountGroup
+          title="Credit and liabilities"
+          icon={WalletCards}
+          accounts={groups.creditAndLiabilities}
+          totalExposure={totalExposure}
+        />
+        <AccountGroup
+          title="Wealth and manual assets"
+          icon={Banknote}
+          accounts={groups.wealth}
+          totalExposure={totalExposure}
+        />
+        <AccountGroup
+          title="Excluded and accounting"
+          icon={GitBranch}
+          accounts={groups.excluded}
+          totalExposure={totalExposure}
+        />
       </div>
     </div>
   );
 }
 
-function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: LucideIcon; accounts: Account[] }) {
+function AccountGroup({
+  title,
+  icon: Icon,
+  accounts,
+  totalExposure,
+}: {
+  title: string;
+  icon: LucideIcon;
+  accounts: Account[];
+  totalExposure: number;
+}) {
   const total = sumAccounts(accounts);
+  const exposure = sumAccountExposure(accounts);
   const flaggedCount = flaggedAccountCount(accounts);
   const flaggedTotal = flaggedAccountTotal(accounts);
   const visibleAccounts = prioritySortedAccounts(accounts);
@@ -68,7 +102,7 @@ function AccountGroup({ title, icon: Icon, accounts }: { title: string; icon: Lu
         <div className="account-group-summary">
           <strong>{formatMoney(total)}</strong>
           <span className={flaggedCount > 0 ? toneClass('watch') : toneClass('ok')}>
-            {formatFlaggedSummary({ count: flaggedCount, total: flaggedTotal })}
+            {formatGroupSummary({ count: flaggedCount, exposure, flaggedTotal, totalExposure })}
           </span>
         </div>
       </header>
@@ -98,6 +132,10 @@ function sumAccounts(accounts: Account[]) {
   return accounts.reduce((sum, account) => sum + account.balance, 0);
 }
 
+function sumAccountExposure(accounts: Account[]) {
+  return accounts.reduce((sum, account) => sum + Math.abs(account.balance), 0);
+}
+
 function flaggedAccountCount(accounts: Account[]) {
   return accounts.filter((account) => account.tone === 'watch').length;
 }
@@ -117,8 +155,20 @@ function prioritySortedAccounts(accounts: Account[]) {
   });
 }
 
-function formatFlaggedSummary({ count, total }: { count: number; total: number }) {
-  return count === 0 ? 'Clear' : `${count} flagged / ${formatMoney(total, true)}`;
+function formatGroupSummary({
+  count,
+  exposure,
+  flaggedTotal,
+  totalExposure,
+}: {
+  count: number;
+  exposure: number;
+  flaggedTotal: number;
+  totalExposure: number;
+}) {
+  const share = totalExposure > 0 ? Math.round((exposure / totalExposure) * 100) : 0;
+  const flagged = count === 0 ? 'Clear' : `${count} flagged / ${formatMoney(flaggedTotal, true)}`;
+  return `${share}% of map / ${flagged}`;
 }
 
 const accountToneRank: Record<Tone, number> = {
