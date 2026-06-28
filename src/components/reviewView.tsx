@@ -16,7 +16,11 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
   const riskTotal = riskItems.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
   const actionBuckets = reviewActionBuckets(items);
-  const spendImpact = reviewSpendImpact({ activeSpend, reviewTotal: totalQueued });
+  const spendImpact = reviewSpendImpact({
+    activeSpend,
+    cashInTotal: cashInReviewTotal(items),
+    withdrawalTotal: withdrawalReviewTotal(items),
+  });
 
   async function copyFireflyGroupId(groupId: string) {
     await navigator.clipboard.writeText(groupId);
@@ -155,21 +159,49 @@ function formatReviewValueSummary({ count, total }: { count: number; total: numb
   return `${count} / ${formatMoney(total, true)}`;
 }
 
-export function reviewSpendImpact({ activeSpend, reviewTotal }: { activeSpend: number; reviewTotal: number }) {
-  if (activeSpend <= 0) {
-    return {
-      label: 'affects n/a',
-      detail: 'No visible month spend is available for comparison.',
-    };
-  }
-
-  const roundedPercent = Math.round((reviewTotal / activeSpend) * 100);
-  const percentLabel = reviewTotal > 0 && roundedPercent === 0 ? '<1' : String(roundedPercent);
+export function reviewSpendImpact({
+  activeSpend,
+  cashInTotal,
+  withdrawalTotal,
+}: {
+  activeSpend: number;
+  cashInTotal: number;
+  withdrawalTotal: number;
+}) {
+  const labels = [
+    withdrawalTotal > 0 ? formatWithdrawalImpact({ activeSpend, withdrawalTotal }) : null,
+    cashInTotal > 0 ? `cash-in ${formatMoney(cashInTotal, true)}` : null,
+  ].filter((label): label is string => Boolean(label));
+  const detail = [
+    withdrawalTotal > 0
+      ? `${formatMoney(withdrawalTotal)} withdrawal review against ${formatMoney(activeSpend)} visible month spend.`
+      : 'No withdrawal review rows found.',
+    cashInTotal > 0 ? `${formatMoney(cashInTotal)} cash-in review.` : null,
+  ].filter((entry): entry is string => Boolean(entry));
 
   return {
-    label: `affects ${percentLabel}% spend`,
-    detail: `${formatMoney(reviewTotal)} in review against ${formatMoney(activeSpend)} visible month spend.`,
+    label: labels.length > 0 ? labels.join(' / ') : 'spend clear',
+    detail: detail.join(' '),
   };
+}
+
+function formatWithdrawalImpact({ activeSpend, withdrawalTotal }: { activeSpend: number; withdrawalTotal: number }) {
+  if (activeSpend <= 0) {
+    return 'spend n/a';
+  }
+
+  const roundedPercent = Math.round((withdrawalTotal / activeSpend) * 100);
+  const percentLabel = withdrawalTotal > 0 && roundedPercent === 0 ? '<1' : String(roundedPercent);
+
+  return `affects ${percentLabel}% spend`;
+}
+
+function withdrawalReviewTotal(items: ReviewItem[]) {
+  return items.reduce((sum, item) => (item.amount < 0 ? sum + Math.abs(item.amount) : sum), 0);
+}
+
+function cashInReviewTotal(items: ReviewItem[]) {
+  return items.reduce((sum, item) => (item.amount > 0 ? sum + item.amount : sum), 0);
 }
 
 function formatReviewGroupSummary(items: ReviewItem[]) {
