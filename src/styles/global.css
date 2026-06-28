@@ -1281,6 +1281,11 @@ button.month-status-chip {
   font-weight: 720;
 }
 
+.category-fix-form small[data-category-status] {
+  grid-column: 1 / -1;
+  color: var(--amber);
+}
+
 .category-fix-form select {
   width: 100%;
   min-height: 38px;
