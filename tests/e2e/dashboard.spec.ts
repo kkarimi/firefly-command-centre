@@ -144,10 +144,15 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
   await expect(page.locator('.expected-group').filter({ hasText: 'Income' }).locator('header')).toContainText('£9,300');
+  await expect(page.locator('.expected-group').filter({ hasText: 'Income' }).locator('header')).toContainText('0 open');
   await expect(page.locator('.expected-group').filter({ hasText: 'Bills and tax' }).locator('header')).toContainText('£3,649');
+  await expect(page.locator('.expected-group').filter({ hasText: 'Bills and tax' }).locator('header')).toContainText(
+    '2 open / £3,435 due',
+  );
   await expect(page.locator('.expected-group').filter({ hasText: 'Known bills' }).locator('header')).toContainText('£13');
+  await expect(page.locator('.expected-group').filter({ hasText: 'Known bills' }).locator('header')).toContainText('0 open');
   const firstExpectedGroupGap = await page.locator('.expected-group').first().evaluate((group) => {
-    const heading = group.querySelector('h3')?.getBoundingClientRect();
+    const heading = group.querySelector('header')?.getBoundingClientRect();
     const row = group.querySelector('.expected-row')?.getBoundingClientRect();
     return heading && row ? row.top - heading.bottom : 0;
   });

@@ -58,7 +58,10 @@ function ExpectedGroup({ title, events, empty }: { title: string; events: Expect
   return (
     <article className="expected-group">
       <header>
-        <h3>{title}</h3>
+        <div className="expected-group-title">
+          <h3>{title}</h3>
+          <span>{formatExpectedGroupOpen(events)}</span>
+        </div>
         <strong>{formatMoney(sumExpectedEvents(events), true)}</strong>
       </header>
       {events.length === 0 ? (
@@ -91,6 +94,17 @@ function sumOutstanding(events: ExpectedEvent[]) {
 
 function sumExpectedEvents(events: ExpectedEvent[]) {
   return events.reduce((sum, event) => sum + (event.actual ?? event.expected), 0);
+}
+
+function formatExpectedGroupOpen(events: ExpectedEvent[]) {
+  const openEvents = events.filter(isOpenEvent);
+  const openTotal = sumOutstanding(openEvents);
+
+  if (openEvents.length === 0) {
+    return '0 open';
+  }
+
+  return `${openEvents.length} open / ${formatMoney(openTotal, true)} due`;
 }
 
 function formatTimelineStatus({

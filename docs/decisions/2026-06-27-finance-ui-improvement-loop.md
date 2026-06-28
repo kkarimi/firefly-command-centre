@@ -213,3 +213,5 @@ do not merge or deploy from this branch without explicit approval.
   routed to the right import path before opening individual rows.
 - Accounts cash coverage now shows a runway estimate from current spend pace so
   free cash after bills translates into time.
+- Expected group headers now show open item count and due value so each
+  scheduled-cash group can be triaged without reading every row.
