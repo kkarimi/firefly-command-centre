@@ -3,7 +3,17 @@ import type { Account, DashboardData, Tone } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 
-export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; groups: Record<string, Account[]> }) {
+export function AccountsView({
+  activeSpend,
+  cash,
+  groups,
+  period,
+}: {
+  activeSpend: number;
+  cash: DashboardData['cash'];
+  groups: Record<string, Account[]>;
+  period: DashboardData['period'];
+}) {
   const budgetableCash = sumAccounts(groups.budgetableCash);
   const liabilities = sumAccounts(groups.creditAndLiabilities);
   const netWorth = Object.values(groups).flat().reduce((sum, account) => sum + account.balance, 0);
@@ -17,6 +27,7 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
   const cashAfterCommitments = budgetableCash - committedCash;
   const committedPercent = budgetableCash > 0 ? Math.min(100, Math.max(0, (committedCash / budgetableCash) * 100)) : 0;
   const coverageTone: Tone = cashAfterCommitments < 0 ? 'risk' : committedPercent >= 75 ? 'watch' : 'ok';
+  const runwayDays = cashRunwayDays({ activeSpend, cashAfterCommitments, daysElapsed: period.daysElapsed });
 
   return (
     <div className="view-stack">
@@ -43,6 +54,7 @@ export function AccountsView({ cash, groups }: { cash: DashboardData['cash']; gr
             Reserved {formatMoney(committedCash, true)} ({Math.round(committedPercent)}%)
           </span>
           <span>Free after bills {formatMoney(cashAfterCommitments, true)}</span>
+          <span>{formatRunwayDays(runwayDays)}</span>
         </div>
       </section>
       <div className="map-grid">
@@ -130,6 +142,26 @@ function AccountGroup({
 
 function sumAccounts(accounts: Account[]) {
   return accounts.reduce((sum, account) => sum + account.balance, 0);
+}
+
+function cashRunwayDays({
+  activeSpend,
+  cashAfterCommitments,
+  daysElapsed,
+}: {
+  activeSpend: number;
+  cashAfterCommitments: number;
+  daysElapsed: number;
+}) {
+  if (activeSpend <= 0 || cashAfterCommitments <= 0 || daysElapsed <= 0) {
+    return null;
+  }
+
+  return Math.floor(cashAfterCommitments / (activeSpend / daysElapsed));
+}
+
+function formatRunwayDays(days: number | null) {
+  return days === null ? 'Runway n/a' : `Runway ${days}d at this pace`;
 }
 
 function sumAccountExposure(accounts: Account[]) {
