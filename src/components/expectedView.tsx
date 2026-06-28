@@ -24,6 +24,7 @@ export function ExpectedView({
   const nextWeekEvents = eventsDueWithinDays({ balanceDate, days: 7, events: openEvents });
   const nextWeekTotal = sumOutstanding(nextWeekEvents);
   const laterOpenEvents = eventsDueAfterDays({ balanceDate, days: 7, events: openEvents });
+  const monthPosition = expectedMonthPosition({ incomeSeen, stillExpected });
   const nearTermCover = expectedCover({
     cash: cash.budgetableCash,
     laterEvents: laterOpenEvents,
@@ -66,6 +67,7 @@ export function ExpectedView({
           <span>Due {formatExpectedCoverCount({ count: nextWeekEvents.length, total: nextWeekTotal })}</span>
           <span>Later {nearTermCover.laterLabel}</span>
           <span>After 7d {formatMoney(nearTermCover.remainingCash, true)}</span>
+          <span title={monthPosition.detail}>{monthPosition.label}</span>
           <span>{nearTermCover.lead}</span>
         </div>
       </section>
@@ -151,6 +153,16 @@ function formatExpectedGroupOpen(events: ExpectedEvent[]) {
   }
 
   return `${openEvents.length} open / ${formatMoney(openTotal, true)} due`;
+}
+
+function expectedMonthPosition({ incomeSeen, stillExpected }: { incomeSeen: number; stillExpected: number }) {
+  const net = incomeSeen - stillExpected;
+  const isShort = net < 0;
+
+  return {
+    label: `${isShort ? 'Month short' : 'Month net'} ${formatMoney(Math.abs(net), true)}`,
+    detail: `${formatMoney(incomeSeen)} income seen minus ${formatMoney(stillExpected)} still expected.`,
+  };
 }
 
 function formatTimelineStatus({
