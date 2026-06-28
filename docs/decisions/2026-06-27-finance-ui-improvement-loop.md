@@ -248,3 +248,5 @@ do not merge or deploy from this branch without explicit approval.
   a write path.
 - Transaction fix-prep pages now include a copy action for the structured fix
   note so the Firefly handoff can keep the category, tag, and movement context.
+- Flagged account rows now link through an internal Firefly account action so
+  stale/manual account warnings have a direct resolution path.

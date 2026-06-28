@@ -34,6 +34,7 @@ export type Account = {
   balance: number;
   freshness: string;
   tone: Tone;
+  fireflyAccountHref?: string;
 };
 
 export type ExpectedEvent = {
@@ -296,15 +297,43 @@ export const dashboardFixture = {
       { name: 'Monzo savings', kind: 'Reserve cash', balance: 1250, freshness: '7m ago', tone: 'ok' },
     ],
     creditAndLiabilities: [
-      { name: 'AMEX', kind: 'Credit card', balance: -1434.82, freshness: 'Statement checked', tone: 'watch' },
+      {
+        name: 'AMEX',
+        kind: 'Credit card',
+        balance: -1434.82,
+        freshness: 'Statement checked',
+        tone: 'watch',
+        fireflyAccountHref: '/actions/firefly/accounts/show?accountId=amex',
+      },
       { name: 'M&S loan', kind: 'Active liability', balance: -8430.16, freshness: 'API balance', tone: 'ok' },
       { name: 'Closed loan archive', kind: 'Paid off', balance: 0, freshness: 'Verified', tone: 'neutral' },
     ],
     wealth: [
-      { name: 'Prosper SIPP', kind: 'Pension', balance: 48650, freshness: 'Manual, 21 Jun', tone: 'watch' },
-      { name: 'Prosper ISA', kind: 'Investment', balance: 14220, freshness: 'Manual, 21 Jun', tone: 'watch' },
+      {
+        name: 'Prosper SIPP',
+        kind: 'Pension',
+        balance: 48650,
+        freshness: 'Manual, 21 Jun',
+        tone: 'watch',
+        fireflyAccountHref: '/actions/firefly/accounts/show?accountId=prosper-sipp',
+      },
+      {
+        name: 'Prosper ISA',
+        kind: 'Investment',
+        balance: 14220,
+        freshness: 'Manual, 21 Jun',
+        tone: 'watch',
+        fireflyAccountHref: '/actions/firefly/accounts/show?accountId=prosper-isa',
+      },
       { name: 'Fixed-term deposit', kind: 'Cash asset', balance: 10000, freshness: 'Matures 17 Oct', tone: 'ok' },
-      { name: 'Gold holdings', kind: 'Manual asset', balance: 6120, freshness: 'Manual, 18 Jun', tone: 'watch' },
+      {
+        name: 'Gold holdings',
+        kind: 'Manual asset',
+        balance: 6120,
+        freshness: 'Manual, 18 Jun',
+        tone: 'watch',
+        fireflyAccountHref: '/actions/firefly/accounts/show?accountId=gold-holdings',
+      },
       { name: 'Kraken portfolio', kind: 'Crypto', balance: 2940.33, freshness: '41m ago', tone: 'ok' },
     ],
     excluded: [
