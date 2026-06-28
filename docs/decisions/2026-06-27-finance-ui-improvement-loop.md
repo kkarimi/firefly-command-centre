@@ -274,3 +274,6 @@ do not merge or deploy from this branch without explicit approval.
 - Expected bill links now open an internal bill review page before the Firefly
   handoff, so upcoming or awaiting bills show expected/open amount, due state,
   and a copyable resolution note inside the app.
+- Transaction edit links now open an internal transaction handoff page before
+  the Firefly editor, so the external write step is explicit and reviewable
+  while the only in-app write remains the category save on fix-prep pages.

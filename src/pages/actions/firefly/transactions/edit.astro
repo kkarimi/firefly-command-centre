@@ -1,0 +1,153 @@
+---
+import type { DashboardData, ReviewItem } from '../../../../data/fixtures';
+import { formatSignedMoney } from '../../../../lib/money';
+import { reviewClipboardText, reviewFixBrief } from '../../../../lib/reviewFix';
+import { fireflyTransactionEditHref, loadDashboardData } from '../../../../server/dashboard';
+import '../../../../styles/global.css';
+
+const requestUrl = new URL(Astro.request.url);
+const groupId = requestUrl.searchParams.get('groupId')?.trim() ?? '';
+const month = requestUrl.searchParams.get('month');
+const fireflyHref = groupId ? fireflyTransactionEditHref(groupId) : undefined;
+let dashboardData: DashboardData | null = null;
+let reviewItem: ReviewItem | undefined;
+let loadError: string | null = null;
+
+if (!groupId || !fireflyHref) {
+  Astro.response.status = 400;
+} else {
+  try {
+    dashboardData = await loadDashboardData({ month });
+    reviewItem = dashboardData.reviewItems.find((item) => item.fireflyGroupId === groupId);
+  } catch (error) {
+    Astro.response.status = 400;
+    loadError = error instanceof Error ? error.message : 'Transaction handoff could not be loaded';
+  }
+}
+
+const title = reviewItem?.payee ?? (groupId ? `Transaction ${groupId}` : 'Transaction handoff');
+const dashboardHref = month ? `/months/${encodeURIComponent(month)}` : '/';
+const statusLabel = reviewItem?.reason ?? (loadError ?? 'Review row unavailable');
+const statusTone = reviewItem ? `tone-${reviewItem.severity}` : 'tone-watch';
+const fixBrief = reviewItem ? reviewFixBrief(reviewItem) : [];
+const copyText = reviewItem
+  ? reviewClipboardText({ ...reviewItem, fireflyEditHref: fireflyHref })
+  : [`Firefly group: ${groupId || 'Missing'}`, fireflyHref ? `Open: ${fireflyHref}` : null].filter(Boolean).join('\n');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Transaction handoff for Firefly III." />
+    <title>{title} · Firefly handoff</title>
+  </head>
+  <body>
+    <main class="action-shell">
+      <section class="action-panel" aria-labelledby="action-title">
+        <a class="action-back" href={dashboardHref}>Back to dashboard</a>
+        <header class="action-header">
+          <span class={`status-chip ${statusTone}`}>{statusLabel}</span>
+          <h1 id="action-title">{title}</h1>
+          <p>{dashboardData?.period.label ?? 'Firefly transaction'} · {groupId || 'No group id'}</p>
+        </header>
+
+        {reviewItem ? (
+          <>
+            <section class="action-summary-grid" aria-label="Transaction summary">
+              <div>
+                <span>Amount</span>
+                <strong>{formatSignedMoney(reviewItem.amount)}</strong>
+              </div>
+              <div>
+                <span>Source</span>
+                <strong>{reviewItem.source}</strong>
+              </div>
+              <div>
+                <span>Age</span>
+                <strong>{reviewItem.ageDays}d</strong>
+              </div>
+            </section>
+
+            <section class="action-fix-stack" aria-label="Handoff checklist">
+              <div>
+                <span>Firefly-only scope</span>
+                <strong>{reviewItem.suggestion}</strong>
+              </div>
+              <div class="action-fix-brief">
+                {fixBrief.map((entry) => (
+                  <span>
+                    <strong>{entry.label}</strong>
+                    {entry.value}
+                  </span>
+                ))}
+                <span>
+                  <strong>ID</strong>
+                  {groupId}
+                </span>
+              </div>
+            </section>
+
+            <section class="action-copy-block" aria-label="Handoff note">
+              <pre>{copyText}</pre>
+            </section>
+
+            <section class="action-category-panel" aria-label="Firefly transaction handoff">
+              <header>
+                <span>External editor</span>
+                <h2>Continue in Firefly</h2>
+                <p>Use Firefly for fields this dashboard does not write.</p>
+              </header>
+              <div class="action-notice tone-watch">
+                <strong>Review before saving</strong>
+                <span>Firefly can change payee, amount, account, date, notes, tags, budget, rules, and splits.</span>
+              </div>
+            </section>
+          </>
+        ) : (
+          <>
+            <section class="empty-state action-empty">
+              <strong>Review row not found</strong>
+              <p>This transaction is not in the selected review queue.</p>
+            </section>
+            {fireflyHref && (
+              <div class="action-notice tone-watch">
+                <strong>Transaction context unavailable</strong>
+                <span>Open Firefly to inspect the transaction record directly.</span>
+              </div>
+            )}
+          </>
+        )}
+
+        <div class="action-buttons">
+          {fireflyHref && <a class="primary-action" href={fireflyHref}>Continue in Firefly</a>}
+          {reviewItem && (
+            <button type="button" data-copy-fix={copyText} aria-label={`Copy handoff note for ${reviewItem.payee}`}>
+              Copy handoff note
+            </button>
+          )}
+          <a href={dashboardHref}>Dashboard</a>
+          <span class="action-copy-feedback" data-copy-feedback aria-live="polite"></span>
+        </div>
+      </section>
+    </main>
+    <script>
+      const copyButton = document.querySelector('button[data-copy-fix]');
+      const copyFeedback = document.querySelector('[data-copy-feedback]');
+
+      if (copyButton instanceof HTMLButtonElement && copyFeedback instanceof HTMLElement) {
+        copyButton.addEventListener('click', async () => {
+          const copyText = copyButton.getAttribute('data-copy-fix') ?? '';
+
+          try {
+            await navigator.clipboard.writeText(copyText);
+            copyFeedback.textContent = 'Copied';
+            copyButton.setAttribute('aria-label', 'Copied handoff note');
+          } catch {
+            copyFeedback.textContent = 'Copy unavailable';
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
