@@ -1,9 +1,17 @@
 import { CalendarClock } from 'lucide-react';
-import type { ExpectedEvent } from '../data/fixtures';
+import type { DashboardData, ExpectedEvent, Tone } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 
-export function ExpectedView({ balanceDate, groups }: { balanceDate: string; groups: Record<string, ExpectedEvent[]> }) {
+export function ExpectedView({
+  balanceDate,
+  cash,
+  groups,
+}: {
+  balanceDate: string;
+  cash: DashboardData['cash'];
+  groups: Record<string, ExpectedEvent[]>;
+}) {
   const incomeSeen = sumActual(groups.income);
   const stillExpectedEvents = groups.obligations.filter(hasOutstandingAmount);
   const stillExpected = sumOutstanding(stillExpectedEvents);
@@ -15,6 +23,7 @@ export function ExpectedView({ balanceDate, groups }: { balanceDate: string; gro
   const nextOpenEvent = timeline.find(isOpenEvent);
   const nextWeekEvents = eventsDueWithinDays({ balanceDate, days: 7, events: openEvents });
   const nextWeekTotal = sumOutstanding(nextWeekEvents);
+  const nearTermCover = expectedCover({ cash: cash.budgetableCash, events: nextWeekEvents });
 
   return (
     <div className="view-stack">
@@ -32,6 +41,27 @@ export function ExpectedView({ balanceDate, groups }: { balanceDate: string; gro
           value={formatExpectedCountValue({ count: nextWeekEvents.length, total: nextWeekTotal })}
           tone={dueWindowTone({ balanceDate, events: nextWeekEvents })}
         />
+      </section>
+      <section
+        className={`cash-coverage expected-cover ${toneClass(nearTermCover.tone)}`}
+        aria-label={nearTermCover.detail}
+      >
+        <header>
+          <div>
+            <h3>Near-term cover</h3>
+            <p>Open expected items due within 7 days</p>
+          </div>
+          <strong>{formatMoney(nearTermCover.remainingCash)}</strong>
+        </header>
+        <span className="cash-coverage-track" aria-hidden="true">
+          <span style={{ width: `${nearTermCover.reservedPercent}%` }} />
+        </span>
+        <div className="cash-coverage-foot">
+          <span>Due {formatExpectedCountValue({ count: nextWeekEvents.length, total: nextWeekTotal })}</span>
+          <span>After 7d {formatMoney(nearTermCover.remainingCash, true)}</span>
+          <span>Cash base {formatMoney(cash.budgetableCash, true)}</span>
+          <span>{nearTermCover.lead}</span>
+        </div>
       </section>
       {timeline.length > 0 && (
         <section className="expected-timeline" aria-label="Cash calendar">
@@ -140,6 +170,30 @@ function formatExpectedCountValue({ count, total }: { count: number; total: numb
   }
 
   return `${count} / ${formatMoney(total, true)}`;
+}
+
+function expectedCover({ cash, events }: { cash: number; events: ExpectedEvent[] }) {
+  const dueTotal = sumOutstanding(events);
+  const remainingCash = cash - dueTotal;
+  const reservedPercent = cash > 0 ? Math.min(100, Math.max(0, (dueTotal / cash) * 100)) : dueTotal > 0 ? 100 : 0;
+  const tone: Tone = remainingCash < 0 ? 'risk' : reservedPercent >= 75 ? 'watch' : 'ok';
+  const leadEvent = earliestExpectedEvent(events);
+  const lead = leadEvent ? `Next ${leadEvent.due}` : 'Window clear';
+
+  return {
+    detail: `Near-term cover. ${formatExpectedCountValue({ count: events.length, total: dueTotal })} due within 7 days.`,
+    lead,
+    remainingCash,
+    reservedPercent,
+    tone,
+  };
+}
+
+function earliestExpectedEvent(events: ExpectedEvent[]) {
+  const sortedEvents = [...events].sort(
+    (left, right) => dateKeyToUtcTime(left.dateKey ?? '') - dateKeyToUtcTime(right.dateKey ?? ''),
+  );
+  return sortedEvents[0];
 }
 
 function hasOutstandingAmount(event: ExpectedEvent) {
