@@ -42,7 +42,7 @@ export function ExpectedView({
           value={formatExpectedCountValue({ count: stillExpectedEvents.length, total: stillExpected })}
           tone={stillExpected > 0 ? 'watch' : 'ok'}
         />
-        <Metric label="Due next" value={nextOpenEvent?.due ?? 'Clear'} tone={nextOpenEvent ? nextOpenEvent.tone : 'ok'} />
+        <Metric label="Due next" value={formatNextExpectedDue(nextOpenEvent)} tone={nextOpenEvent ? nextOpenEvent.tone : 'ok'} />
         <Metric
           label="Next 7d"
           value={formatExpectedCountValue({ count: nextWeekEvents.length, total: nextWeekTotal })}
@@ -181,6 +181,14 @@ function formatTimelineStatus({
 function formatTimelineEventStatus({ balanceDate, event }: { balanceDate: string; event: ExpectedEvent }) {
   const dueTiming = isOpenEvent(event) ? formatDueTiming({ balanceDate, dateKey: event.dateKey }) : null;
   return dueTiming ? `${event.status} / ${dueTiming}` : event.status;
+}
+
+function formatNextExpectedDue(event?: ExpectedEvent) {
+  if (!event) {
+    return 'Clear';
+  }
+
+  return `${event.due} / ${formatMoney(outstandingAmount(event), true)}`;
 }
 
 function formatExpectedCountValue({ count, total }: { count: number; total: number }) {

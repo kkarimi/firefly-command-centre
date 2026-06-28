@@ -150,7 +150,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(expectedSummary.getByText('£9,300')).toBeVisible();
   await expect(expectedSummary.locator('.metric').filter({ hasText: 'Still expected' })).toContainText('2 / £3,435');
   await expect(expectedSummary.getByText('Due next')).toBeVisible();
-  await expect(expectedSummary.getByText('4 Jul')).toBeVisible();
+  await expect(expectedSummary.getByText('4 Jul / £1,435')).toBeVisible();
   await expect(expectedSummary.locator('.metric').filter({ hasText: 'Next 7d' })).toContainText('1 / £1,435');
   const nearTermCover = page.getByRole('region', { name: /Near-term cover/ });
   await expect(nearTermCover).toBeVisible();
