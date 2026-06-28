@@ -565,6 +565,7 @@ function applyBudgets(data: DashboardData, budgets: FireflyResource[], transacti
       merchants: merchantsByBudget.get(name)?.slice(0, 3) ?? [],
       unusual: reviewQueue && spent > 0 ? 'Live review queue contains material spend' : undefined,
       reviewQueue,
+      fireflyBudgetHref: fireflyBudgetHref(live.id),
     } satisfies BudgetCard;
     return [card];
   });
@@ -704,6 +705,15 @@ export function fireflyTransactionEditHref(transactionGroupId: string) {
   }
 
   return `${fireflyWebBase()}/transactions/edit/${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyBudgetHref(budgetId: string) {
+  const cleanId = budgetId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `${fireflyWebBase()}/budgets/show/${encodeURIComponent(cleanId)}`;
 }
 
 function fireflyWebBase() {

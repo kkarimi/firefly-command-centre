@@ -81,6 +81,8 @@ state before proposing changes.
   house purchase, and valuation movement.
 - Treat uncertainty as a queue.
 - Make incorrect state visibly uncomfortable.
+- Every warning must lead to the Firefly page, local detail view, or review
+  surface that helps resolve it; passive warnings are noise.
 - Keep write actions staged and reversible.
 - Use Firefly as truth, but do not force the user to think in Firefly internals.
 

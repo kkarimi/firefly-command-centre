@@ -11,6 +11,7 @@ export type BudgetCard = {
   unusual?: string;
   tone?: Tone;
   reviewQueue?: boolean;
+  fireflyBudgetHref?: string;
 };
 
 export type ReviewItem = {
@@ -159,6 +160,7 @@ export const dashboardFixture = {
       totalDays: 30,
       merchants: ['Mortgage reserve', 'Energy Co', 'Council tax'],
       tone: 'ok',
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/bills',
     },
     {
       id: 'groceries',
@@ -170,6 +172,7 @@ export const dashboardFixture = {
       merchants: ['Waitrose', 'Sainsbury', 'Ocado'],
       unusual: 'Weekend shop higher than trailing average',
       tone: 'watch',
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/groceries',
     },
     {
       id: 'eating-out',
@@ -181,6 +184,7 @@ export const dashboardFixture = {
       merchants: ['Dishoom', 'Pret', 'Local pub'],
       unusual: 'Already over monthly target',
       tone: 'risk',
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/eating-out',
     },
     {
       id: 'shopping',
@@ -191,6 +195,7 @@ export const dashboardFixture = {
       totalDays: 30,
       merchants: ['John Lewis', 'Boots', 'Apple'],
       tone: 'ok',
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/shopping',
     },
     {
       id: 'transport',
@@ -201,6 +206,7 @@ export const dashboardFixture = {
       totalDays: 30,
       merchants: ['TfL', 'Uber', 'Parking'],
       tone: 'ok',
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/transport',
     },
     {
       id: 'travel',
@@ -212,6 +218,7 @@ export const dashboardFixture = {
       merchants: ['Eurostar', 'Hotel hold', 'Airline'],
       unusual: 'Statement hold awaiting AMEX import',
       tone: 'watch',
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/travel',
     },
     {
       id: 'review',
@@ -224,6 +231,7 @@ export const dashboardFixture = {
       unusual: 'Leakage queue contains material spend',
       tone: 'risk',
       reviewQueue: true,
+      fireflyBudgetHref: 'https://firefly.home/budgets/show/review',
     },
   ] satisfies BudgetCard[],
   reviewItems: [

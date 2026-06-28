@@ -288,6 +288,20 @@ p {
   white-space: nowrap;
 }
 
+button.month-status-chip {
+  cursor: pointer;
+}
+
+.month-status-chip.actionable:hover {
+  background: var(--surface-strong);
+}
+
+.month-status-chip.actionable:focus-visible,
+.budget-action-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ink) 38%, transparent);
+  outline-offset: 2px;
+}
+
 .month-status-chip.tone-ok {
   border-color: color-mix(in oklab, var(--green) 20%, var(--line));
   color: var(--green);
@@ -734,6 +748,28 @@ p {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.9rem;
   line-height: 1;
+}
+
+.tile-head-actions {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+  gap: 8px;
+}
+
+.budget-action-link {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.budget-action-link:hover {
+  border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
 }
 
 .status-chip {
