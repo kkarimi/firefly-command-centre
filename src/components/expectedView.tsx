@@ -3,7 +3,7 @@ import type { ExpectedEvent } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 
-export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[]> }) {
+export function ExpectedView({ balanceDate, groups }: { balanceDate: string; groups: Record<string, ExpectedEvent[]> }) {
   const incomeSeen = sumActual(groups.income);
   const stillExpected = sumOutstanding(groups.obligations);
   const watchCount = Object.values(groups)
@@ -39,7 +39,7 @@ export function ExpectedView({ groups }: { groups: Record<string, ExpectedEvent[
                 </div>
                 <div>
                   <strong>{formatMoney(event.actual ?? event.expected)}</strong>
-                  <span className={toneClass(event.tone)}>{event.status}</span>
+                  <span className={toneClass(event.tone)}>{formatTimelineEventStatus({ balanceDate, event })}</span>
                 </div>
               </article>
             ))}
@@ -108,6 +108,47 @@ function formatTimelineStatus({
   openTimelineTotal: number;
 }) {
   return `${openTimelineCount} open / ${formatMoney(openTimelineTotal, true)} due / ${loggedTimelineCount} logged`;
+}
+
+function formatTimelineEventStatus({ balanceDate, event }: { balanceDate: string; event: ExpectedEvent }) {
+  const dueTiming = isOpenEvent(event) ? formatDueTiming({ balanceDate, dateKey: event.dateKey }) : null;
+  return dueTiming ? `${event.status} / ${dueTiming}` : event.status;
+}
+
+function formatDueTiming({ balanceDate, dateKey }: { balanceDate: string; dateKey?: string }) {
+  if (!dateKey) {
+    return null;
+  }
+
+  const daysUntilDue = daysBetweenDateKeys({ from: balanceDate, to: dateKey });
+  if (!Number.isFinite(daysUntilDue)) {
+    return null;
+  }
+
+  if (daysUntilDue === 0) {
+    return 'due today';
+  }
+
+  if (daysUntilDue > 0) {
+    return `in ${daysUntilDue}d`;
+  }
+
+  return `${Math.abs(daysUntilDue)}d overdue`;
+}
+
+function daysBetweenDateKeys({ from, to }: { from: string; to: string }) {
+  const fromTime = dateKeyToUtcTime(from);
+  const toTime = dateKeyToUtcTime(to);
+  return Math.round((toTime - fromTime) / 86_400_000);
+}
+
+function dateKeyToUtcTime(value: string) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return Number.NaN;
+  }
+
+  return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
 }
 
 function expectedTimeline(groups: Record<string, ExpectedEvent[]>) {
