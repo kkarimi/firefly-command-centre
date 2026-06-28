@@ -217,3 +217,5 @@ do not merge or deploy from this branch without explicit approval.
   scheduled-cash group can be triaged without reading every row.
 - Month spend rhythm now shows projected month-end spend so current pace has a
   whole-month landing estimate before opening category details.
+- Review suggested fixes now show the dominant source lead so cleanup can be
+  routed before scanning severity groups.
