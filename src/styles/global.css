@@ -492,6 +492,7 @@ p {
 .spend-rhythm-head,
 .spend-rhythm-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: 12px;
