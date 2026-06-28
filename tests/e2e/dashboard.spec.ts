@@ -331,6 +331,30 @@ test('renders an internal transaction fix prep page before Firefly handoff', asy
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-transaction-fix-prep.png`), fullPage: true });
 });
 
+test('renders an internal transaction handoff page before the Firefly editor', async ({ page }, testInfo) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/actions/firefly/transactions/edit?groupId=grp_9A2F');
+
+  await expect(page.getByRole('heading', { name: 'Unknown card presentment' })).toBeVisible();
+  await expect(page.locator('.action-header .status-chip')).toHaveText('Missing category and statement marker');
+  await expect(page.getByRole('region', { name: 'Transaction summary' })).toContainText('-£184.20');
+  await expect(page.getByRole('region', { name: 'Handoff checklist' })).toContainText('Travel & Holidays');
+  await expect(page.getByRole('region', { name: 'Handoff note' })).toContainText('Open: https://firefly.home/transactions/edit/grp_9A2F');
+  await expect(page.getByRole('region', { name: 'Firefly transaction handoff' })).toContainText('Continue in Firefly');
+  await expect(page.locator('.action-buttons').getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home/transactions/edit/grp_9A2F',
+  );
+  await page.getByRole('button', { name: 'Copy handoff note for Unknown card presentment' }).click();
+  await expect(page.getByText('Copied')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copied handoff note' })).toBeVisible();
+  const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboardText).toContain('Open: https://firefly.home/transactions/edit/grp_9A2F');
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-transaction-handoff.png`), fullPage: true });
+});
+
 test('renders an internal account review page before Firefly handoff', async ({ page }, testInfo) => {
   await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/actions/firefly/accounts/show?accountId=amex');
