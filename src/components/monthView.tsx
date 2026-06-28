@@ -230,14 +230,19 @@ function SpendRhythm({
   const averageSpend = dailySpend.length > 0 ? activeSpend / dailySpend.length : 0;
   const peakSpend = dailySpendAmounts.length > 0 ? Math.max(...dailySpendAmounts) : 0;
   const targetDaily = dailySpend.length > 0 ? activeLimit / dailySpend.length : 0;
+  const projectedSpend = projectMonthEnd(activeSpend, period.daysElapsed, period.totalDays);
   const remainingDays = Math.max(1, period.totalDays - period.daysElapsed);
   const remainingDaily = Math.max(0, (activeLimit - activeSpend) / remainingDays);
   const allowanceLabel = period.isCurrent ? `Left/day ${formatMoney(remainingDaily, true)}` : 'Month closed';
   const allowanceDetail = period.isCurrent
     ? `Remaining daily allowance ${formatMoney(remainingDaily)}.`
     : 'This archived month is closed.';
+  const projectedLabel = period.isCurrent ? `Projected ${formatMoney(projectedSpend, true)}` : `Closed ${formatMoney(activeSpend, true)}`;
+  const projectedDetail = period.isCurrent
+    ? `Projected month-end spend is ${formatMoney(projectedSpend)}.`
+    : `Closed month spend was ${formatMoney(activeSpend)}.`;
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${allowanceDetail}`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${allowanceDetail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -277,7 +282,7 @@ function SpendRhythm({
         <span className="spend-rhythm-foot">
           <span>Avg {formatMoney(averageSpend, true)}</span>
           {dailySpend.length > 0 && <span>Peak {formatMoney(peakSpend, true)}</span>}
-          <span>Daily plan {formatMoney(targetDaily, true)}</span>
+          <span>{projectedLabel}</span>
           <span>{allowanceLabel}</span>
         </span>
       </button>
