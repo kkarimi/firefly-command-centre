@@ -251,10 +251,11 @@ function SpendRhythm({
   const projectedDetail = period.isCurrent
     ? `Projected month-end spend is ${formatMoney(projectedSpend)}.`
     : `Closed month spend was ${formatMoney(activeSpend)}.`;
+  const planGap = monthPlanGap({ activeLimit, activeSpend, period, projectedSpend });
   const billPosition = formatBillPosition({ cash, paidObligations, period });
   const focusCategory = monthFocusCategory(budgets);
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${allowanceDetail} ${billPosition.detail} ${focusCategory.detail}`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${focusCategory.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -295,6 +296,7 @@ function SpendRhythm({
           <span>Avg {formatMoney(averageSpend, true)}</span>
           {dailySpend.length > 0 && <span>Peak {formatMoney(peakSpend, true)}</span>}
           <span>{projectedLabel}</span>
+          <span title={planGap.detail}>{planGap.label}</span>
           <span>{allowanceLabel}</span>
           <span>{billPosition.label}</span>
           <span title={focusCategory.detail}>{focusCategory.label}</span>
@@ -302,6 +304,38 @@ function SpendRhythm({
       </button>
     </section>
   );
+}
+
+function monthPlanGap({
+  activeLimit,
+  activeSpend,
+  period,
+  projectedSpend,
+}: {
+  activeLimit: number;
+  activeSpend: number;
+  period: DashboardData['period'];
+  projectedSpend: number;
+}) {
+  if (activeLimit <= 0) {
+    return {
+      label: 'No plan',
+      detail: 'No monthly spend plan is configured.',
+    };
+  }
+
+  const spend = period.isCurrent ? projectedSpend : activeSpend;
+  const gap = activeLimit - spend;
+  const isOverPlan = gap < 0;
+  let labelPrefix = isOverPlan ? 'Closed over' : 'Closed spare';
+  if (period.isCurrent) {
+    labelPrefix = isOverPlan ? 'Forecast over' : 'Forecast spare';
+  }
+
+  return {
+    label: `${labelPrefix} ${formatMoney(Math.abs(gap), true)}`,
+    detail: `${period.isCurrent ? 'Projected' : 'Closed'} spend is ${formatMoney(Math.abs(gap))} ${isOverPlan ? 'over' : 'under'} plan.`,
+  };
 }
 
 function formatBillPosition({

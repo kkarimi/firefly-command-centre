@@ -27,6 +27,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('region', { name: 'Monthly spend rhythm' })).toBeVisible();
   await expect(page.getByText('Peak £421')).toBeVisible();
   await expect(page.locator('.spend-rhythm-foot')).toContainText(/Projected £[\d,]+/);
+  await expect(page.locator('.spend-rhythm-foot')).toContainText('Forecast over £217');
   await expect(page.getByText(/Left\/day/)).toBeVisible();
   await expect(page.getByText('Bills left £1,810')).toBeVisible();
   await expect(page.getByText('Focus Review queue')).toBeVisible();
