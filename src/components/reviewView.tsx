@@ -31,6 +31,7 @@ export function ReviewView({
   });
   const netImpact = reviewNetImpact(items);
   const staleShare = reviewStaleShare({ itemCount: items.length, staleCount: staleItems.length });
+  const ruleReadyImpact = reviewRuleReadyImpact(items);
   const reviewSummaryClass = showDetailSignals ? 'split-summary review-summary' : 'split-summary review-summary minimal';
   const detailActionSummary = [
     formatRowCount(items.length),
@@ -38,8 +39,12 @@ export function ReviewView({
     netImpact.label,
     spendImpact.label,
     staleShare.label,
+    ruleReadyImpact.label,
   ].join(' / ');
   const actionSummary = showDetailSignals ? detailActionSummary : formatRowCount(items.length);
+  const actionSummaryDetail = showDetailSignals
+    ? `${netImpact.detail} ${spendImpact.detail} ${staleShare.detail} ${ruleReadyImpact.detail}`
+    : undefined;
 
   async function copyFireflyGroupId(groupId: string) {
     await navigator.clipboard.writeText(groupId);
@@ -72,7 +77,7 @@ export function ReviewView({
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
               <h3>Suggested fixes</h3>
-              <span title={`${netImpact.detail} ${spendImpact.detail} ${staleShare.detail}`}>{actionSummary}</span>
+              <span title={actionSummaryDetail}>{actionSummary}</span>
             </header>
             {showDetailSignals && (
               <div>
@@ -250,6 +255,19 @@ function reviewStaleShare({ itemCount, staleCount }: { itemCount: number; staleC
   return {
     label: `stale ${share}%`,
     detail: `${staleCount} of ${itemCount} review rows are ${staleAgeDays}d or older.`,
+  };
+}
+
+export function reviewRuleReadyImpact(items: ReviewItem[]) {
+  const ruleReadyItems = items.filter((item) => /rule|payee|metadata/i.test(`${item.reason} ${item.suggestion}`));
+  const total = ruleReadyItems.reduce((sum, item) => sum + Math.abs(item.amount), 0);
+
+  return {
+    label: ruleReadyItems.length > 0 ? `rule-ready ${ruleReadyItems.length} / ${formatMoney(total, true)}` : 'rule-ready clear',
+    detail:
+      ruleReadyItems.length > 0
+        ? `${ruleReadyItems.length} review rows look suitable for payee or rule cleanup.`
+        : 'No review rows currently look rule-ready.',
   };
 }
 

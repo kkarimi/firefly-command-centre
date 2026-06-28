@@ -90,6 +90,8 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(suggestedFixes).toBeVisible();
   await expect(suggestedFixes.locator('header')).toContainText('4 rows');
   await expect(suggestedFixes.locator('header')).not.toContainText('source Monzo lead');
+  await expect(suggestedFixes.locator('header')).not.toContainText('rule-ready');
+  await expect(suggestedFixes.locator('header span')).not.toHaveAttribute('title', /rule-ready/);
   await expect(page.getByText('Classify movement 1 / £2,000')).toHaveCount(0);
   await expect(page.getByText('Rule candidate 1 / £43')).toHaveCount(0);
   await expect(page.getByText('Clean payee 1 / £19')).toHaveCount(0);
@@ -217,7 +219,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await page.getByRole('button', { name: 'Review', exact: true }).click();
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 / £19');
   await expect(suggestedFixes.locator('header')).toContainText(
-    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend / stale 25%',
+    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend / stale 25% / rule-ready 2 / £62',
   );
   await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
 
