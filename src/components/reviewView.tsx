@@ -35,7 +35,9 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
               <h3>Suggested fixes</h3>
-              <span>{formatRowCount(items.length)}</span>
+              <span>
+                {formatRowCount(items.length)} / source {primaryReviewSource(items)}
+              </span>
             </header>
             <div>
               {actionBuckets.map((bucket) => (

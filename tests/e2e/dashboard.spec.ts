@@ -72,7 +72,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(reviewSummary).toBeVisible();
   await expect(page.getByText('£2,246')).toBeVisible();
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 row');
-  await expect(page.getByRole('region', { name: 'Suggested fixes' })).toBeVisible();
+  const suggestedFixes = page.getByRole('region', { name: 'Suggested fixes' });
+  await expect(suggestedFixes).toBeVisible();
+  await expect(suggestedFixes.locator('header')).toContainText('4 rows / source Monzo lead');
   await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
   await expect(page.getByText('Rule candidate 1 / £43')).toBeVisible();
   await expect(page.getByText('Clean payee 1 / £19')).toBeVisible();
