@@ -14,7 +14,7 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
 
   return (
     <div className="view-stack">
-      <ViewHeading icon={Activity} title="Data Trust" meta="What this UI can currently verify itself" />
+      <ViewHeading icon={Activity} title="Data Trust" meta={`${formatSourceCount(ops.length)} observed`} />
       <section className="split-summary trust-summary" aria-label="Trust summary">
         <Metric label="Verified" value={verifiedPercent} tone={verifiedTone} />
         <Metric label="Lead issue" value={leadIssue?.label ?? 'Clear'} tone={leadIssue?.tone ?? 'ok'} />
