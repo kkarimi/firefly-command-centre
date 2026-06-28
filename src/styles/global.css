@@ -1254,12 +1254,34 @@ p {
   gap: 3px;
 }
 
+.ops-detail-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .ops-detail-state {
   flex: 0 0 auto;
   font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.ops-detail-actions a {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.ops-detail-actions a:hover {
+  border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
 }
 
 .tone-ok {

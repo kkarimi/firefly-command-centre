@@ -1,4 +1,4 @@
-import { Activity, AlertCircle, CheckCircle2, Info, ShieldAlert, type LucideIcon } from 'lucide-react';
+import { Activity, AlertCircle, CheckCircle2, ExternalLink, Info, ShieldAlert, type LucideIcon } from 'lucide-react';
 import type { DashboardData, Tone } from '../data/fixtures';
 import { Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
@@ -33,6 +33,7 @@ export function TrustView({ ops, showDetailSignals }: { ops: DashboardData['ops'
       <div className="ops-detail-grid">
         {sortedOps.map((item) => {
           const StatusIcon = statusIconForTone(item.tone);
+          const actionHref = trustActionHref(item);
           return (
             <article className="ops-detail" key={item.label}>
               <div className="ops-detail-main">
@@ -42,7 +43,20 @@ export function TrustView({ ops, showDetailSignals }: { ops: DashboardData['ops'
                   <p>{item.value}</p>
                 </div>
               </div>
-              <span className={`ops-detail-state ${toneClass(item.tone)}`}>{toneLabels[item.tone]}</span>
+              <div className="ops-detail-actions">
+                <span className={`ops-detail-state ${toneClass(item.tone)}`}>{toneLabels[item.tone]}</span>
+                {actionHref && (
+                  <a
+                    aria-label={`Open ${item.label} action`}
+                    href={actionHref}
+                    rel="noreferrer"
+                    target="_blank"
+                    title={`Open ${item.label} action`}
+                  >
+                    <ExternalLink size={16} />
+                  </a>
+                )}
+              </div>
             </article>
           );
         })}
@@ -68,6 +82,14 @@ function formatClearPercent({ clearCount, totalCount }: { clearCount: number; to
   }
 
   return `${Math.round((clearCount / totalCount) * 100)}%`;
+}
+
+export function trustActionHref(item: DashboardData['ops'][number]) {
+  if ((item.tone === 'risk' || item.tone === 'watch') && item.href) {
+    return item.href;
+  }
+
+  return null;
 }
 
 function statusIconForTone(tone: Tone): LucideIcon {

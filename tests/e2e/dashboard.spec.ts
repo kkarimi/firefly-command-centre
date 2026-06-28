@@ -206,6 +206,9 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Watch' })).toHaveCount(0);
   await expect(trustSummary.locator('.metric').filter({ hasText: 'Risk' })).toHaveCount(0);
   await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
+  const trustActionLink = page.getByRole('link', { name: 'Open Firefly action' });
+  await expect(trustActionLink).toBeVisible();
+  await expect(trustActionLink).toHaveAttribute('href', 'https://firefly.home');
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
 
