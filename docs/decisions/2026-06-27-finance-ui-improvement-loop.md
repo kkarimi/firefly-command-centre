@@ -262,3 +262,6 @@ do not merge or deploy from this branch without explicit approval.
 - Category-save-unavailable notices now include an internal transaction handoff
   link, so the warning itself points at the resolution path instead of relying
   on nearby page actions.
+- Approved category writes now include a collapsed scope disclosure explaining
+  that the save changes only this split's category and leaves rules, tags, and
+  other transaction fields unchanged.

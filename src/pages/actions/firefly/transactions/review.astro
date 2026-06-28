@@ -152,32 +152,42 @@ const copyText = reviewItem
               )}
 
               {categoryWriteAvailable ? (
-                <form method="post" class="category-fix-form">
-                  <label>
-                    <span>Category</span>
-                    <select
-                      name="categoryId"
-                      data-category-select
-                      data-current-category-id={reviewItem.categoryId ?? ''}
-                      data-current-category-name={reviewItem.categoryName ?? ''}
-                      required
-                    >
-                      <option value="">Choose category</option>
-                      {categoryOptions.map((category) => (
-                        <option value={category.id} selected={category.id === selectedCategoryId}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    {reviewItem.categoryName && <small>Current: {reviewItem.categoryName}</small>}
-                  </label>
-                  <label class="category-write-confirm">
-                    <input type="checkbox" name="confirmCategoryWrite" value="yes" data-category-confirm required />
-                    <span>Save this category to Firefly for this transaction.</span>
-                  </label>
-                  <small data-category-status hidden>Choose a different category.</small>
-                  <button type="submit" data-category-submit>Save category</button>
-                </form>
+                <>
+                  <form method="post" class="category-fix-form">
+                    <label>
+                      <span>Category</span>
+                      <select
+                        name="categoryId"
+                        data-category-select
+                        data-current-category-id={reviewItem.categoryId ?? ''}
+                        data-current-category-name={reviewItem.categoryName ?? ''}
+                        required
+                      >
+                        <option value="">Choose category</option>
+                        {categoryOptions.map((category) => (
+                          <option value={category.id} selected={category.id === selectedCategoryId}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      {reviewItem.categoryName && <small>Current: {reviewItem.categoryName}</small>}
+                    </label>
+                    <label class="category-write-confirm">
+                      <input type="checkbox" name="confirmCategoryWrite" value="yes" data-category-confirm required />
+                      <span>Save this category to Firefly for this transaction.</span>
+                    </label>
+                    <small data-category-status hidden>Choose a different category.</small>
+                    <button type="submit" data-category-submit>Save category</button>
+                  </form>
+                  <details class="action-write-scope">
+                    <summary>What this save changes</summary>
+                    <ul>
+                      <li>Sets the category on this transaction split only.</li>
+                      <li>Leaves amount, account, date, notes, tags, budget, and rules unchanged.</li>
+                      <li>Uses an existing Firefly category and refreshes the review row after save.</li>
+                    </ul>
+                  </details>
+                </>
               ) : (
                 <div class="action-notice tone-watch">
                   <strong>Category save unavailable</strong>
