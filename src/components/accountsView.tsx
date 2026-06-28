@@ -161,8 +161,8 @@ function AccountGroup({
                   <a
                     className="account-action-link"
                     href={account.fireflyAccountHref}
-                    title="Open account in Firefly"
-                    aria-label={`Open ${account.name} account in Firefly`}
+                    title="Open account review"
+                    aria-label={`Open ${account.name} account review`}
                   >
                     <ArrowUpRight size={15} />
                   </a>

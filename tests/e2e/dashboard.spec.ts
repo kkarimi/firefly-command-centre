@@ -149,11 +149,11 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).toContainText(
     '1 flagged / £1,435',
   );
-  await expect(page.getByRole('link', { name: 'Open AMEX account in Firefly' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Open AMEX account review' })).toHaveAttribute(
     'href',
     '/actions/firefly/accounts/show?accountId=amex',
   );
-  await expect(page.getByRole('link', { name: 'Open M&S loan account in Firefly' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Open M&S loan account review' })).toHaveCount(0);
   await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).not.toContainText(
     '69% of map',
   );
@@ -329,4 +329,29 @@ test('renders an internal transaction fix prep page before Firefly handoff', asy
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(horizontalOverflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-transaction-fix-prep.png`), fullPage: true });
+});
+
+test('renders an internal account review page before Firefly handoff', async ({ page }, testInfo) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/actions/firefly/accounts/show?accountId=amex');
+
+  await expect(page.getByRole('heading', { name: 'AMEX' })).toBeVisible();
+  await expect(page.locator('.action-header .status-chip')).toHaveText('Needs review');
+  await expect(page.getByRole('region', { name: 'Account summary' })).toContainText('-£1,434.82');
+  await expect(page.getByRole('region', { name: 'Account review guidance' })).toContainText('Verify the latest balance');
+  await expect(page.getByRole('region', { name: 'Account review note' })).toContainText('Firefly account: amex');
+  await expect(page.getByRole('region', { name: 'Account resolution' })).toContainText('Check the account balance');
+  await expect(page.locator('.action-buttons').getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home/accounts/show/amex',
+  );
+  await page.getByRole('button', { name: 'Copy account note for AMEX' }).click();
+  await expect(page.getByText('Copied')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copied account note' })).toBeVisible();
+  const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboardText).toContain('Firefly account: amex');
+  expect(clipboardText).toContain('Status: Needs review');
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-account-review.png`), fullPage: true });
 });
