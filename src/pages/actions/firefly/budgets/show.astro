@@ -1,0 +1,168 @@
+---
+import { budgetReviewCopyText, findBudgetReviewTarget } from '../../../../lib/budgetReview';
+import { formatMoney } from '../../../../lib/money';
+import { fireflyBudgetHref, loadDashboardData } from '../../../../server/dashboard';
+import '../../../../styles/global.css';
+
+const requestUrl = new URL(Astro.request.url);
+const budgetId = requestUrl.searchParams.get('budgetId')?.trim() ?? '';
+const month = requestUrl.searchParams.get('month');
+const fireflyHref = budgetId ? fireflyBudgetHref(budgetId) : undefined;
+let loadError: string | null = null;
+let target = null;
+
+if (!budgetId || !fireflyHref) {
+  Astro.response.status = 400;
+} else {
+  try {
+    const dashboardData = await loadDashboardData({ month });
+    target = findBudgetReviewTarget({ budgetId, budgets: dashboardData.budgets });
+  } catch (error) {
+    Astro.response.status = 400;
+    loadError = error instanceof Error ? error.message : 'Budget review could not be loaded';
+  }
+}
+
+const title = target?.budget.name ?? (budgetId ? `Budget ${budgetId}` : 'Budget review');
+const dashboardHref = month ? `/months/${encodeURIComponent(month)}` : '/';
+const statusLabel = target?.statusLabel ?? (loadError ?? 'Budget unavailable');
+const statusTone = target ? `tone-${target.status}` : 'tone-watch';
+const noticeTone =
+  !target || target.status === 'watch' ? 'tone-watch'
+  : target.status === 'ok' ? 'tone-ok'
+  : 'tone-risk';
+const copyText =
+  target ?
+    budgetReviewCopyText({ fireflyHref, target })
+  : [`Firefly budget: ${budgetId || 'Missing'}`, fireflyHref ? `Open: ${fireflyHref}` : null].filter(Boolean).join('\n');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Budget review prep for Firefly III." />
+    <title>{title} · Budget review</title>
+  </head>
+  <body>
+    <main class="action-shell">
+      <section class="action-panel" aria-labelledby="action-title">
+        <a class="action-back" href={dashboardHref}>Back to dashboard</a>
+        <header class="action-header">
+          <span class={`status-chip ${statusTone}`}>{statusLabel}</span>
+          <h1 id="action-title">{title}</h1>
+          <p>{target ? `${target.used}% used` : 'Firefly budget'} · {budgetId || 'No budget id'}</p>
+        </header>
+
+        {target ? (
+          <>
+            <section class="action-summary-grid" aria-label="Budget summary">
+              <div>
+                <span>Spent</span>
+                <strong>{formatMoney(target.budget.spent)}</strong>
+              </div>
+              <div>
+                <span>Plan</span>
+                <strong>{formatMoney(target.budget.limit)}</strong>
+              </div>
+              <div>
+                <span>Projected</span>
+                <strong>{formatMoney(target.projected)}</strong>
+              </div>
+            </section>
+
+            <section class="action-fix-stack" aria-label="Budget review guidance">
+              <div>
+                <span>Review path</span>
+                <strong>{target.guidance}</strong>
+              </div>
+              <div class="action-fix-brief">
+                <span>
+                  <strong>Remaining</strong>
+                  {formatMoney(target.remaining)}
+                </span>
+                <span>
+                  <strong>Status</strong>
+                  {target.statusLabel}
+                </span>
+                <span>
+                  <strong>ID</strong>
+                  {target.budgetId}
+                </span>
+              </div>
+            </section>
+
+            <section class="action-copy-block" aria-label="Budget review note">
+              <pre>{copyText}</pre>
+            </section>
+
+            <section class="action-category-panel" aria-label="Budget resolution">
+              <header>
+                <span>Firefly handoff</span>
+                <h2>Resolve budget warning</h2>
+                <p>{target.action}</p>
+              </header>
+              {target.budget.merchants.length > 0 && (
+                <div class="action-fix-brief">
+                  {target.budget.merchants.map((merchant) => (
+                    <span>
+                      <strong>Merchant</strong>
+                      {merchant}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div class={`action-notice ${noticeTone}`}>
+                <strong>{target.status === 'ok' ? 'No warning' : 'Review needed'}</strong>
+                <span>{target.guidance}</span>
+              </div>
+            </section>
+          </>
+        ) : (
+          <>
+            <section class="empty-state action-empty">
+              <strong>Budget not found</strong>
+              <p>This budget is not in the current monthly review data. Open Firefly to inspect the budget record.</p>
+            </section>
+            {fireflyHref && (
+              <div class="action-notice tone-watch">
+                <strong>Budget review unavailable</strong>
+                <span>The dashboard has no matching budget row for this id.</span>
+                <a href={fireflyHref}>Open budget in Firefly</a>
+              </div>
+            )}
+          </>
+        )}
+
+        <div class="action-buttons">
+          {fireflyHref && <a class="primary-action" href={fireflyHref}>Continue in Firefly</a>}
+          {target && (
+            <button type="button" data-copy-fix={copyText} aria-label={`Copy budget note for ${target.budget.name}`}>
+              Copy budget note
+            </button>
+          )}
+          <a href={dashboardHref}>Dashboard</a>
+          <span class="action-copy-feedback" data-copy-feedback aria-live="polite"></span>
+        </div>
+      </section>
+    </main>
+    <script>
+      const copyButton = document.querySelector('button[data-copy-fix]');
+      const copyFeedback = document.querySelector('[data-copy-feedback]');
+
+      if (copyButton instanceof HTMLButtonElement && copyFeedback instanceof HTMLElement) {
+        copyButton.addEventListener('click', async () => {
+          const copyText = copyButton.getAttribute('data-copy-fix') ?? '';
+
+          try {
+            await navigator.clipboard.writeText(copyText);
+            copyFeedback.textContent = 'Copied';
+            copyButton.setAttribute('aria-label', 'Copied budget note');
+          } catch {
+            copyFeedback.textContent = 'Copy unavailable';
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
