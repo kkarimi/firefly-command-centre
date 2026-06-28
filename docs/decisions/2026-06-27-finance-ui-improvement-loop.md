@@ -271,3 +271,6 @@ do not merge or deploy from this branch without explicit approval.
 - Budget warning links now open an internal budget review page before the
   Firefly handoff, so tight or overrun categories show spent, plan, forecast,
   remaining room, merchants, and a copyable resolution note inside the app.
+- Expected bill links now open an internal bill review page before the Firefly
+  handoff, so upcoming or awaiting bills show expected/open amount, due state,
+  and a copyable resolution note inside the app.
