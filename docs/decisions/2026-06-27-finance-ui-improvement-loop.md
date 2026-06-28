@@ -219,3 +219,5 @@ do not merge or deploy from this branch without explicit approval.
   whole-month landing estimate before opening category details.
 - Review suggested fixes now show the dominant source lead so cleanup can be
   routed before scanning severity groups.
+- Month status now uses projected month-end spend, not only spent-to-date, so a
+  tight forecast is visible before the plan is actually breached.
