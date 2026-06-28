@@ -7,10 +7,12 @@ export function ExpectedView({
   balanceDate,
   cash,
   groups,
+  showDetailSignals,
 }: {
   balanceDate: string;
   cash: DashboardData['cash'];
   groups: Record<string, ExpectedEvent[]>;
+  showDetailSignals: boolean;
 }) {
   const incomeSeen = sumActual(groups.income);
   const stillExpectedEvents = groups.obligations.filter(hasOutstandingAmount);
@@ -65,14 +67,18 @@ export function ExpectedView({
         </span>
         <div className="cash-coverage-foot">
           <span>Due {formatExpectedCoverCount({ count: nextWeekEvents.length, total: nextWeekTotal })}</span>
-          <span>Later {nearTermCover.laterLabel}</span>
           <span>After 7d {formatMoney(nearTermCover.remainingCash, true)}</span>
-          <span title={nearTermCover.allOpenDetail}>After all {formatMoney(nearTermCover.remainingAfterAll, true)}</span>
-          <span className={toneClass(nearTermCover.allOpenTone)} title={nearTermCover.allOpenReserveDetail}>
-            Open reserve {nearTermCover.allOpenPercent}%
-          </span>
-          <span title={monthPosition.detail}>{monthPosition.label}</span>
           <span>{nearTermCover.lead}</span>
+          {showDetailSignals && (
+            <>
+              <span>Later {nearTermCover.laterLabel}</span>
+              <span title={nearTermCover.allOpenDetail}>After all {formatMoney(nearTermCover.remainingAfterAll, true)}</span>
+              <span className={toneClass(nearTermCover.allOpenTone)} title={nearTermCover.allOpenReserveDetail}>
+                Open reserve {nearTermCover.allOpenPercent}%
+              </span>
+              <span title={monthPosition.detail}>{monthPosition.label}</span>
+            </>
+          )}
         </div>
       </section>
       {timeline.length > 0 && (
