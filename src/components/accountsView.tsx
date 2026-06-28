@@ -31,6 +31,7 @@ export function AccountsView({
   const runwayDays = cashRunwayDays({ activeSpend, cashAfterCommitments, daysElapsed: period.daysElapsed });
   const debtCover = accountDebtCover({ budgetableCash, liabilities });
   const liquidity = accountLiquidity({ budgetableCash, totalExposure });
+  const concentration = accountConcentration({ groups, totalExposure });
 
   return (
     <div className="view-stack">
@@ -65,6 +66,9 @@ export function AccountsView({
           <span title={debtCover.detail}>{debtCover.label}</span>
           <span title={debtCover.detail}>After debt {formatMoney(debtCover.cashAfterDebt, true)}</span>
           <span title={liquidity.detail}>{liquidity.label}</span>
+          <span className={toneClass(concentration.tone)} title={concentration.detail}>
+            {concentration.label}
+          </span>
         </div>
       </section>
       <div className="map-grid">
@@ -201,6 +205,30 @@ function accountLiquidity({ budgetableCash, totalExposure }: { budgetableCash: n
   return {
     label: `Liquidity ${share}%`,
     detail: `Budgetable cash is ${share}% of account map exposure.`,
+  };
+}
+
+function accountConcentration({
+  groups,
+  totalExposure,
+}: {
+  groups: Record<string, Account[]>;
+  totalExposure: number;
+}) {
+  const accounts = Object.values(groups).flat();
+  const largest = accounts.reduce<Account | null>(
+    (lead, account) => (!lead || Math.abs(account.balance) > Math.abs(lead.balance) ? account : lead),
+    null,
+  );
+  const share = largest && totalExposure > 0 ? Math.round((Math.abs(largest.balance) / totalExposure) * 100) : 0;
+  const tone: Tone = share >= 65 ? 'risk' : share >= 40 ? 'watch' : 'ok';
+
+  return {
+    label: `Largest exposure ${share}%`,
+    detail: largest
+      ? `${largest.name} is ${share}% of account map exposure.`
+      : 'No accounts returned for exposure concentration.',
+    tone,
   };
 }
 
