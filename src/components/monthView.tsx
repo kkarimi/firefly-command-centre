@@ -356,6 +356,7 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
   const status = budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue);
   const used = percentUsed(budget.spent, budget.limit);
   const remaining = remainingBudget(budget.limit, budget.spent);
+  const pace = budgetDailyRoom({ budget, projected, remaining });
   const variance = budget.reviewQueue
     ? { label: 'Queue', value: 'Open' }
     : remaining < 0
@@ -392,6 +393,11 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
         <span className={`progress-fill ${toneClass(status)}`} style={{ width: `${progressWidth}%` }} />
       </div>
 
+      <div className="budget-pace" title={pace.detail}>
+        <span>{pace.label}</span>
+        <strong className={toneClass(pace.tone)}>{pace.value}</strong>
+      </div>
+
       {budget.merchants.length > 0 && (
         <div className="merchant-line">
           {budget.merchants.map((merchant) => (
@@ -405,6 +411,54 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
       {budget.unusual && <p className={`tile-note ${toneClass(status)}`}>{budget.unusual}</p>}
     </article>
   );
+}
+
+function budgetDailyRoom({
+  budget,
+  projected,
+  remaining,
+}: {
+  budget: BudgetCard;
+  projected: number;
+  remaining: number;
+}): { label: string; value: string; tone: Tone | 'review'; detail: string } {
+  if (budget.reviewQueue) {
+    return {
+      label: 'Pace',
+      value: 'Review only',
+      tone: 'review',
+      detail: 'This leakage queue is reviewed manually rather than paced against a budget.',
+    };
+  }
+
+  if (budget.daysElapsed >= budget.totalDays) {
+    return {
+      label: 'Daily room',
+      value: 'Closed',
+      tone: remaining < 0 ? 'risk' : 'ok',
+      detail: `Month closed with ${formatMoney(Math.abs(remaining))} ${remaining < 0 ? 'over plan' : 'left'}.`,
+    };
+  }
+
+  if (remaining <= 0) {
+    return {
+      label: 'Daily room',
+      value: 'No room',
+      tone: 'risk',
+      detail: `${budget.name} is ${formatMoney(Math.abs(remaining))} over plan.`,
+    };
+  }
+
+  const remainingDays = Math.max(1, budget.totalDays - budget.daysElapsed);
+  const dailyRoom = remaining / remainingDays;
+  const tone: Tone = projected > budget.limit * 0.95 ? 'watch' : 'ok';
+
+  return {
+    label: 'Daily room',
+    value: `${formatMoney(dailyRoom, true)}/day`,
+    tone,
+    detail: `${formatMoney(remaining)} left for ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}. Projected month-end spend is ${formatMoney(projected)}.`,
+  };
 }
 
 function planToneFor(percent: number): Tone {
