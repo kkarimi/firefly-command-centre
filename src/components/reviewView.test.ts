@@ -3,10 +3,16 @@ import { reviewSpendImpact } from './reviewView';
 
 describe('review spend impact', () => {
   it('keeps sub-1% review impact visible when review value is non-zero', () => {
-    expect(reviewSpendImpact({ activeSpend: 10_000, reviewTotal: 25 }).label).toBe('affects <1% spend');
+    expect(reviewSpendImpact({ activeSpend: 10_000, cashInTotal: 0, withdrawalTotal: 25 }).label).toBe('affects <1% spend');
   });
 
   it('rounds material review impact to the nearest whole percent', () => {
-    expect(reviewSpendImpact({ activeSpend: 4610.62, reviewTotal: 2245.99 }).label).toBe('affects 49% spend');
+    expect(reviewSpendImpact({ activeSpend: 4610.62, cashInTotal: 0, withdrawalTotal: 2245.99 }).label).toBe(
+      'affects 49% spend',
+    );
+  });
+
+  it('keeps cash-in review value separate from spend impact', () => {
+    expect(reviewSpendImpact({ activeSpend: 10_000, cashInTotal: 25, withdrawalTotal: 0 }).label).toBe('cash-in £25');
   });
 });
