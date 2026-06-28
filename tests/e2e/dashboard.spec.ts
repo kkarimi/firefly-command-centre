@@ -199,11 +199,11 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(cashCalendar.locator('header')).toContainText('2 open / £3,435 due / 3 logged');
   await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
   await expect(cashCalendar.getByText(/Awaiting bank-side transfer \/ (in \d+d|due today|\d+d overdue)/)).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Open AMEX statement payment bill in Firefly' }).first()).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Open AMEX statement payment bill review' }).first()).toHaveAttribute(
     'href',
     '/actions/firefly/bills/show?billId=amex-statement-payment',
   );
-  await expect(page.getByRole('link', { name: 'Open Council tax bill in Firefly' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Open Council tax bill review' })).toHaveCount(0);
   await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
   await expect(page.locator('.expected-group').filter({ hasText: 'Income' }).locator('header')).toContainText('£9,300');
@@ -379,4 +379,29 @@ test('renders an internal budget review page before Firefly handoff', async ({ p
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(horizontalOverflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-budget-review.png`), fullPage: true });
+});
+
+test('renders an internal bill review page before Firefly handoff', async ({ page }, testInfo) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/actions/firefly/bills/show?billId=amex-statement-payment');
+
+  await expect(page.getByRole('heading', { name: 'AMEX statement payment' })).toBeVisible();
+  await expect(page.locator('.action-header .status-chip')).toHaveText('Awaiting bank-side transfer');
+  await expect(page.getByRole('region', { name: 'Bill summary' })).toContainText('£1,434.82');
+  await expect(page.getByRole('region', { name: 'Bill review guidance' })).toContainText('expected payment');
+  await expect(page.getByRole('region', { name: 'Bill review note' })).toContainText('Firefly bill: amex-statement-payment');
+  await expect(page.getByRole('region', { name: 'Bill resolution' })).toContainText('confirm due date');
+  await expect(page.locator('.action-buttons').getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home/bills/show/amex-statement-payment',
+  );
+  await page.getByRole('button', { name: 'Copy bill note for AMEX statement payment' }).click();
+  await expect(page.getByText('Copied')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copied bill note' })).toBeVisible();
+  const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboardText).toContain('Firefly bill: amex-statement-payment');
+  expect(clipboardText).toContain('Status: Awaiting bank-side transfer');
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-bill-review.png`), fullPage: true });
 });

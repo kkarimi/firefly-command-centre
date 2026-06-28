@@ -1,4 +1,4 @@
-import { CalendarClock, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, CalendarClock } from 'lucide-react';
 import type { DashboardData, ExpectedEvent, Tone } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
@@ -106,12 +106,12 @@ export function ExpectedView({
                     <span className={toneClass(event.tone)}>{formatTimelineEventStatus({ balanceDate, event })}</span>
                     {actionHref && (
                       <a
-                        aria-label={`Open ${event.name} bill in Firefly`}
+                        aria-label={`Open ${event.name} bill review`}
                         className="expected-action-link"
                         href={actionHref}
-                        title={`Open ${event.name} bill in Firefly`}
+                        title={`Open ${event.name} bill review`}
                       >
-                        <ExternalLink size={16} />
+                        <ArrowUpRight size={16} />
                       </a>
                     )}
                   </div>
@@ -157,12 +157,12 @@ function ExpectedGroup({ title, events, empty }: { title: string; events: Expect
                 <span className={toneClass(event.tone)}>{event.status}</span>
                 {actionHref && (
                   <a
-                    aria-label={`Open ${event.name} bill in Firefly`}
+                    aria-label={`Open ${event.name} bill review`}
                     className="expected-action-link"
                     href={actionHref}
-                    title={`Open ${event.name} bill in Firefly`}
+                    title={`Open ${event.name} bill review`}
                   >
-                    <ExternalLink size={16} />
+                    <ArrowUpRight size={16} />
                   </a>
                 )}
               </div>
