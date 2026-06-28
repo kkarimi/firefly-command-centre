@@ -265,3 +265,6 @@ do not merge or deploy from this branch without explicit approval.
 - Approved category writes now include a collapsed scope disclosure explaining
   that the save changes only this split's category and leaves rules, tags, and
   other transaction fields unchanged.
+- Flagged account links now open an internal account review page before the
+  Firefly handoff, so account warnings include balance, freshness, and a
+  copyable resolution note without adding another write path.

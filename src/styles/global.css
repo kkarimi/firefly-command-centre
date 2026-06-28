@@ -1221,6 +1221,7 @@ button.month-status-chip {
   margin: 0;
   color: var(--ink);
   font: 0.86rem/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  overflow-wrap: anywhere;
   padding: 14px;
   white-space: pre-wrap;
 }
