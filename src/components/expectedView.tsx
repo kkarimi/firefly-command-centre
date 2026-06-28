@@ -68,6 +68,9 @@ export function ExpectedView({
           <span>Later {nearTermCover.laterLabel}</span>
           <span>After 7d {formatMoney(nearTermCover.remainingCash, true)}</span>
           <span title={nearTermCover.allOpenDetail}>After all {formatMoney(nearTermCover.remainingAfterAll, true)}</span>
+          <span className={toneClass(nearTermCover.allOpenTone)} title={nearTermCover.allOpenReserveDetail}>
+            Open reserve {nearTermCover.allOpenPercent}%
+          </span>
           <span title={monthPosition.detail}>{monthPosition.label}</span>
           <span>{nearTermCover.lead}</span>
         </div>
@@ -220,15 +223,21 @@ function expectedCover({
 }) {
   const dueTotal = sumOutstanding(soonEvents);
   const laterTotal = sumOutstanding(laterEvents);
+  const allOpenTotal = dueTotal + laterTotal;
   const dueLabel = formatExpectedCoverCount({ count: soonEvents.length, total: dueTotal });
   const laterLabel = formatExpectedCoverCount({ count: laterEvents.length, total: laterTotal });
   const remainingCash = cash - dueTotal;
   const remainingAfterAll = remainingCash - laterTotal;
   const reservedPercent = cash > 0 ? Math.min(100, Math.max(0, (dueTotal / cash) * 100)) : dueTotal > 0 ? 100 : 0;
+  const allOpenPercent = cash > 0 ? Math.min(100, Math.max(0, Math.round((allOpenTotal / cash) * 100))) : allOpenTotal > 0 ? 100 : 0;
   const tone: Tone = remainingCash < 0 ? 'risk' : reservedPercent >= 75 ? 'watch' : 'ok';
+  const allOpenTone: Tone = remainingAfterAll < 0 ? 'risk' : allOpenPercent >= 75 ? 'watch' : 'ok';
 
   return {
     allOpenDetail: `Cash after all open expected items is ${formatMoney(remainingAfterAll)}.`,
+    allOpenPercent,
+    allOpenReserveDetail: `${formatMoney(allOpenTotal)} of budgetable cash is reserved by all open expected items.`,
+    allOpenTone,
     detail: `Near-term cover. ${dueLabel} due within 7 days. ${laterLabel} later.`,
     laterLabel,
     lead: nextOpenEvent ? `Next ${nextOpenEvent.due}` : 'All clear',
