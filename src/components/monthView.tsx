@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { ArrowDown, ArrowUp, Check, ExternalLink, Minus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, Minus } from 'lucide-react';
 import type { BudgetCard, DashboardData, ExpectedEvent, MonthComparison, Tone } from '../data/fixtures';
 import {
   budgetStatus,
@@ -659,12 +659,12 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
           <span className="tile-percent">{budget.reviewQueue ? formatMoney(budget.spent) : `${used}%`}</span>
           {actionHref && (
             <a
-              aria-label={`Open ${budget.name} budget in Firefly`}
+              aria-label={`Open ${budget.name} budget review`}
               className="budget-action-link"
               href={actionHref}
-              title={`Open ${budget.name} budget in Firefly`}
+              title={`Open ${budget.name} budget review`}
             >
-              <ExternalLink size={16} />
+              <ArrowUpRight size={16} />
             </a>
           )}
         </div>

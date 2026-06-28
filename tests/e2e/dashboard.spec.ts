@@ -69,15 +69,15 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.locator('.budget-tile').filter({ hasText: 'Eating Out' }).locator('.budget-pace')).toContainText(
     'No room',
   );
-  await expect(page.getByRole('link', { name: 'Open Eating Out budget in Firefly' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Open Eating Out budget review' })).toHaveAttribute(
     'href',
     '/actions/firefly/budgets/show?budgetId=eating-out',
   );
-  await expect(page.getByRole('link', { name: 'Open Groceries budget in Firefly' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Open Groceries budget review' })).toHaveAttribute(
     'href',
     '/actions/firefly/budgets/show?budgetId=groceries',
   );
-  await expect(page.getByRole('link', { name: 'Open Bills & Utilities budget in Firefly' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Open Bills & Utilities budget review' })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Open dashboard settings' }).click();
@@ -354,4 +354,29 @@ test('renders an internal account review page before Firefly handoff', async ({ 
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(horizontalOverflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-account-review.png`), fullPage: true });
+});
+
+test('renders an internal budget review page before Firefly handoff', async ({ page }, testInfo) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/actions/firefly/budgets/show?budgetId=eating-out');
+
+  await expect(page.getByRole('heading', { name: 'Eating Out' })).toBeVisible();
+  await expect(page.locator('.action-header .status-chip')).toHaveText('Overrun');
+  await expect(page.getByRole('region', { name: 'Budget summary' })).toContainText('£507.20');
+  await expect(page.getByRole('region', { name: 'Budget review guidance' })).toContainText('over plan');
+  await expect(page.getByRole('region', { name: 'Budget review note' })).toContainText('Firefly budget: eating-out');
+  await expect(page.getByRole('region', { name: 'Budget resolution' })).toContainText('Inspect spend rows');
+  await expect(page.locator('.action-buttons').getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home/budgets/show/eating-out',
+  );
+  await page.getByRole('button', { name: 'Copy budget note for Eating Out' }).click();
+  await expect(page.getByText('Copied')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copied budget note' })).toBeVisible();
+  const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboardText).toContain('Firefly budget: eating-out');
+  expect(clipboardText).toContain('Status: Overrun');
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-budget-review.png`), fullPage: true });
 });

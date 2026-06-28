@@ -268,3 +268,6 @@ do not merge or deploy from this branch without explicit approval.
 - Flagged account links now open an internal account review page before the
   Firefly handoff, so account warnings include balance, freshness, and a
   copyable resolution note without adding another write path.
+- Budget warning links now open an internal budget review page before the
+  Firefly handoff, so tight or overrun categories show spent, plan, forecast,
+  remaining room, merchants, and a copyable resolution note inside the app.
