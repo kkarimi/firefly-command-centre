@@ -155,7 +155,13 @@ const copyText = reviewItem
                 <form method="post" class="category-fix-form">
                   <label>
                     <span>Category</span>
-                    <select name="categoryId" required>
+                    <select
+                      name="categoryId"
+                      data-category-select
+                      data-current-category-id={reviewItem.categoryId ?? ''}
+                      data-current-category-name={reviewItem.categoryName ?? ''}
+                      required
+                    >
                       <option value="">Choose category</option>
                       {categoryOptions.map((category) => (
                         <option value={category.id} selected={category.id === selectedCategoryId}>
@@ -169,6 +175,7 @@ const copyText = reviewItem
                     <input type="checkbox" name="confirmCategoryWrite" value="yes" data-category-confirm required />
                     <span>Save this category to Firefly for this transaction.</span>
                   </label>
+                  <small data-category-status hidden>Choose a different category.</small>
                   <button type="submit" data-category-submit>Save category</button>
                 </form>
               ) : (
@@ -201,8 +208,10 @@ const copyText = reviewItem
     <script>
       const copyButton = document.querySelector('button[data-copy-fix]');
       const copyFeedback = document.querySelector('[data-copy-feedback]');
+      const categorySelect = document.querySelector('select[data-category-select]');
       const categoryConfirm = document.querySelector('input[data-category-confirm]');
       const categorySubmit = document.querySelector('button[data-category-submit]');
+      const categoryStatus = document.querySelector('[data-category-status]');
 
       if (copyButton instanceof HTMLButtonElement && copyFeedback instanceof HTMLElement) {
         copyButton.addEventListener('click', async () => {
@@ -218,11 +227,31 @@ const copyText = reviewItem
         });
       }
 
-      if (categoryConfirm instanceof HTMLInputElement && categorySubmit instanceof HTMLButtonElement) {
+      if (
+        categorySelect instanceof HTMLSelectElement &&
+        categoryConfirm instanceof HTMLInputElement &&
+        categorySubmit instanceof HTMLButtonElement
+      ) {
+        const currentCategoryId = categorySelect.getAttribute('data-current-category-id') ?? '';
+        const currentCategoryName = (categorySelect.getAttribute('data-current-category-name') ?? '').trim().toLowerCase();
+
         const syncCategorySubmit = () => {
-          categorySubmit.disabled = !categoryConfirm.checked;
+          const selectedOption = categorySelect.selectedOptions[0];
+          const selectedCategoryName = selectedOption?.textContent?.trim().toLowerCase() ?? '';
+          const hasSelection = categorySelect.value !== '';
+          const selectsCurrentCategory =
+            hasSelection &&
+            ((currentCategoryId && categorySelect.value === currentCategoryId) ||
+              (currentCategoryName && selectedCategoryName === currentCategoryName));
+
+          categorySubmit.disabled = !hasSelection || selectsCurrentCategory || !categoryConfirm.checked;
+
+          if (categoryStatus instanceof HTMLElement) {
+            categoryStatus.hidden = !selectsCurrentCategory;
+          }
         };
 
+        categorySelect.addEventListener('change', syncCategorySubmit);
         categoryConfirm.addEventListener('change', syncCategorySubmit);
         syncCategorySubmit();
       }

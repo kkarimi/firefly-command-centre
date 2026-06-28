@@ -256,3 +256,6 @@ do not merge or deploy from this branch without explicit approval.
 - Transaction fix-prep pages now offer a warning-gated category save flow using
   existing Firefly categories only, so missing-category warnings can be resolved
   without leaving the app.
+- Transaction category saves now remain disabled until the user chooses a
+  different category and confirms the write, so no-op Firefly writes are harder
+  to trigger from the fix-prep page.
