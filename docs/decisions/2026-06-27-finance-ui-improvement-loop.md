@@ -227,3 +227,5 @@ do not merge or deploy from this branch without explicit approval.
   watch budgets no longer hide behind a current-left amount.
 - Trust summary now counts every non-clear source as open, while keeping the
   lead source visible without implying every neutral gap is a warning.
+- Expected summary now shows both count and value due in the next seven days so
+  near-term cash obligations carry workload as well as amount.
