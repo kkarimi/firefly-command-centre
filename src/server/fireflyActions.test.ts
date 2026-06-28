@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildTransactionCategoryUpdateBody, categoryOptionsFromResources } from './fireflyActions';
+import { buildTransactionCategoryUpdateBody, categoryOptionsFromResources, splitUsesCategory } from './fireflyActions';
 import type { FireflyResource } from './fireflyClient';
 
 describe('Firefly transaction category actions', () => {
@@ -84,6 +84,27 @@ describe('Firefly transaction category actions', () => {
         },
       ],
     });
+  });
+
+  it('detects no-op category selections', () => {
+    expect(
+      splitUsesCategory({
+        category: { id: '9', name: 'Travel & Holidays' },
+        split: { category_id: '9', category_name: 'Old name' },
+      }),
+    ).toBe(true);
+    expect(
+      splitUsesCategory({
+        category: { id: '9', name: 'Travel & Holidays' },
+        split: { category_id: '4', category_name: 'Travel & Holidays' },
+      }),
+    ).toBe(true);
+    expect(
+      splitUsesCategory({
+        category: { id: '9', name: 'Travel & Holidays' },
+        split: { category_id: '4', category_name: 'General' },
+      }),
+    ).toBe(false);
   });
 
   it('rejects a transaction update when the review split is missing', () => {

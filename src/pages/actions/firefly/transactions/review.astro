@@ -65,7 +65,7 @@ const suggestedCategoryName = fixBrief.find((entry) => entry.label === 'Category
 const suggestedCategory = suggestedCategoryName
   ? categoryOptions.find((category) => category.name.toLowerCase() === suggestedCategoryName.toLowerCase())
   : undefined;
-const selectedCategoryId = submittedCategoryId || suggestedCategory?.id || reviewItem?.categoryId || '';
+const selectedCategoryId = submittedCategoryId || suggestedCategory?.id || '';
 const hasFireflyJournalId = Boolean(reviewItem?.fireflyJournalId);
 const categoryWriteAvailable = reviewItem && hasFireflyJournalId && categoryOptions.length > 0;
 if (!categoryWriteAvailable && reviewItem && !loadError && !categoryLoadError) {
@@ -163,6 +163,7 @@ const copyText = reviewItem
                         </option>
                       ))}
                     </select>
+                    {reviewItem.categoryName && <small>Current: {reviewItem.categoryName}</small>}
                   </label>
                   <label class="category-write-confirm">
                     <input type="checkbox" name="confirmCategoryWrite" value="yes" data-category-confirm required />

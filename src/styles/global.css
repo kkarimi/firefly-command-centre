@@ -1275,6 +1275,12 @@ button.month-status-chip {
   gap: 7px;
 }
 
+.category-fix-form small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 720;
+}
+
 .category-fix-form select {
   width: 100%;
   min-height: 38px;

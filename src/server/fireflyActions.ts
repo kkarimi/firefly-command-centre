@@ -116,6 +116,11 @@ export async function updateTransactionCategory({
     }
 
     const group = await loadTransactionGroup(token, groupId);
+    const targetSplit = transactionSplits(group).find((split) => stringValue(split.transaction_journal_id) === transactionJournalId);
+    if (targetSplit && splitUsesCategory({ category, split: targetSplit })) {
+      return { categoryName: category.name, message: 'Choose a category that differs from the current Firefly category.', ok: false };
+    }
+
     const body = buildTransactionCategoryUpdateBody({ category, group, transactionJournalId });
     await fireflyPut<FireflySingle<FireflyResource>>(token, `/transactions/${encodeURIComponent(groupId)}`, body);
 
@@ -156,6 +161,12 @@ export function categoryOptionsFromResources(resources: FireflyResource[]) {
     }))
     .filter((category): category is FireflyCategoryOption => Boolean(category.id && category.name))
     .sort((left, right) => left.name.localeCompare(right.name, 'en-GB'));
+}
+
+export function splitUsesCategory({ category, split }: { category: FireflyCategoryOption; split: FireflySplit }) {
+  const categoryId = stringValue(split.category_id);
+  const categoryName = stringValue(split.category_name);
+  return categoryId === category.id || categoryName.toLowerCase() === category.name.toLowerCase();
 }
 
 export function buildTransactionCategoryUpdateBody({
