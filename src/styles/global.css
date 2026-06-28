@@ -1448,6 +1448,12 @@ p {
     text-align: left;
   }
 
+  .review-group header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
   .suggestion {
     border-left: 0;
     border-top: 1px solid var(--line);

@@ -78,10 +78,10 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByText('Handle first')).toBeVisible();
   await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Handle first review rows' }).locator('header')).toContainText(
-    '1 row / £184 / oldest 2d',
+    '1 row / £184 / oldest 2d / source AMEX',
   );
   await expect(page.getByRole('region', { name: 'Watch next review rows' }).locator('header')).toContainText(
-    '2 rows / £2,043 / oldest 5d',
+    '2 rows / £2,043 / oldest 5d / source Monzo',
   );
   await expect(page.getByRole('region', { name: 'Watch next review rows' }).locator('.review-row').first()).toContainText(
     'Cash movement',

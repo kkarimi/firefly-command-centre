@@ -132,7 +132,39 @@ function formatRowCount(count: number) {
 function formatReviewGroupSummary(items: ReviewItem[]) {
   const queued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
-  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d`;
+  return `${formatRowCount(items.length)} / ${formatMoney(queued, true)} / oldest ${oldestAgeDays}d / source ${primaryReviewSource(items)}`;
+}
+
+function primaryReviewSource(items: ReviewItem[]) {
+  const sources = new Map<string, { count: number; total: number }>();
+
+  for (const item of items) {
+    const current = sources.get(item.source) ?? { count: 0, total: 0 };
+    sources.set(item.source, {
+      count: current.count + 1,
+      total: current.total + Math.abs(item.amount),
+    });
+  }
+
+  const [primary, ...rest] = [...sources.entries()].sort((left, right) => {
+    const totalDelta = right[1].total - left[1].total;
+    if (totalDelta !== 0) {
+      return totalDelta;
+    }
+
+    const countDelta = right[1].count - left[1].count;
+    if (countDelta !== 0) {
+      return countDelta;
+    }
+
+    return left[0].localeCompare(right[0]);
+  });
+
+  if (!primary) {
+    return 'None';
+  }
+
+  return rest.length === 0 ? primary[0] : `${primary[0]} lead`;
 }
 
 function reviewActionBuckets(items: ReviewItem[]) {
