@@ -371,11 +371,14 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
   const status = budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue);
   const used = percentUsed(budget.spent, budget.limit);
   const remaining = remainingBudget(budget.limit, budget.spent);
+  const projectedOver = budget.limit > 0 && remaining >= 0 && projected > budget.limit ? projected - budget.limit : 0;
   const pace = budgetDailyRoom({ budget, projected, remaining });
   const variance = budget.reviewQueue
     ? { label: 'Queue', value: 'Open' }
     : remaining < 0
       ? { label: 'Over by', value: formatMoney(Math.abs(remaining)) }
+      : projectedOver > 0
+        ? { label: 'Forecast over', value: formatMoney(projectedOver) }
       : { label: 'Left', value: formatMoney(remaining) };
   const progressWidth = budget.reviewQueue ? 100 : Math.min(100, used);
 
