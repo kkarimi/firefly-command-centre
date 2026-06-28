@@ -62,6 +62,7 @@ export function AccountsView({
           <span>Free after bills {formatMoney(cashAfterCommitments, true)}</span>
           <span>{formatRunwayDays(runwayDays)}</span>
           <span title={debtCover.detail}>{debtCover.label}</span>
+          <span title={debtCover.detail}>After debt {formatMoney(debtCover.cashAfterDebt, true)}</span>
         </div>
       </section>
       <div className="map-grid">
@@ -176,6 +177,7 @@ function accountDebtCover({ budgetableCash, liabilities }: { budgetableCash: num
 
   if (liabilityExposure <= 0) {
     return {
+      cashAfterDebt: budgetableCash,
       label: 'Debt cover clear',
       detail: 'No credit or liability exposure found.',
     };
@@ -185,6 +187,7 @@ function accountDebtCover({ budgetableCash, liabilities }: { budgetableCash: num
   const cashAfterDebt = budgetableCash - liabilityExposure;
 
   return {
+    cashAfterDebt,
     label: `Debt cover ${coverPercent}%`,
     detail: `Cash after liabilities ${formatMoney(cashAfterDebt)}.`,
   };
