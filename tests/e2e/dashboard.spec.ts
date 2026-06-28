@@ -165,6 +165,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(nearTermCover).not.toContainText('Later 1 / £2,000');
   await expect(nearTermCover).not.toContainText('After all £1,495');
   await expect(nearTermCover).not.toContainText('Open reserve 70%');
+  await expect(nearTermCover).not.toContainText('Cash floor 31 Jul / £1,495');
   await expect(nearTermCover).not.toContainText('Month net £5,865');
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
   await expect(cashCalendar).toBeVisible();
@@ -226,6 +227,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
 
   await page.getByRole('button', { name: 'Expected' }).click();
   await expect(page.getByRole('region', { name: /Near-term cover/ })).toContainText('Open reserve 70%');
+  await expect(page.getByRole('region', { name: /Near-term cover/ })).toContainText('Cash floor 31 Jul / £1,495');
 
   await page.getByRole('button', { name: 'Trust' }).click();
   await expect(page.getByText('8 sources observed')).toBeVisible();

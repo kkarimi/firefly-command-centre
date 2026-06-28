@@ -33,6 +33,7 @@ export function ExpectedView({
     nextOpenEvent,
     soonEvents: nextWeekEvents,
   });
+  const cashFloor = expectedCashFloor({ cash: cash.budgetableCash, events: openEvents });
 
   return (
     <div className="view-stack">
@@ -75,6 +76,9 @@ export function ExpectedView({
               <span title={nearTermCover.allOpenDetail}>After all {formatMoney(nearTermCover.remainingAfterAll, true)}</span>
               <span className={toneClass(nearTermCover.allOpenTone)} title={nearTermCover.allOpenReserveDetail}>
                 Open reserve {nearTermCover.allOpenPercent}%
+              </span>
+              <span className={toneClass(cashFloor.tone)} title={cashFloor.detail}>
+                {cashFloor.label}
               </span>
               <span title={monthPosition.detail}>{monthPosition.label}</span>
             </>
@@ -216,6 +220,46 @@ function formatExpectedCoverCount({ count, total }: { count: number; total: numb
   return formatExpectedCountValue({ count, total });
 }
 
+export function expectedCashFloor({
+  cash,
+  events,
+}: {
+  cash: number;
+  events: ExpectedEvent[];
+}): { detail: string; label: string; tone: Tone } {
+  const sortedOpenEvents = events
+    .filter((event) => outstandingAmount(event) > 0)
+    .sort((left, right) => expectedEventDateRank(left) - expectedEventDateRank(right) || left.name.localeCompare(right.name));
+
+  if (sortedOpenEvents.length === 0) {
+    return {
+      detail: 'No open expected items reduce budgetable cash.',
+      label: 'Cash floor clear',
+      tone: 'ok',
+    };
+  }
+
+  let runningCash = cash;
+  let floorCash = cash;
+  let floorEvent = sortedOpenEvents[0];
+
+  for (const event of sortedOpenEvents) {
+    runningCash -= outstandingAmount(event);
+    if (runningCash < floorCash) {
+      floorCash = runningCash;
+      floorEvent = event;
+    }
+  }
+
+  const tone: Tone = floorCash < 0 ? 'risk' : floorCash < Math.max(0, cash) * 0.25 ? 'watch' : 'ok';
+
+  return {
+    detail: `Lowest projected cash is ${formatMoney(floorCash)} after ${floorEvent.name}.`,
+    label: `Cash floor ${floorEvent.due} / ${formatMoney(floorCash, true)}`,
+    tone,
+  };
+}
+
 function expectedCover({
   cash,
   laterEvents,
@@ -318,6 +362,11 @@ function dateKeyToUtcTime(value: string) {
   }
 
   return Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+function expectedEventDateRank(event: ExpectedEvent) {
+  const time = dateKeyToUtcTime(event.dateKey ?? '');
+  return Number.isFinite(time) ? time : Number.MAX_SAFE_INTEGER;
 }
 
 function expectedTimeline(groups: Record<string, ExpectedEvent[]>) {
