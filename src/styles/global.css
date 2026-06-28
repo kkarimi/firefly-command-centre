@@ -1366,6 +1366,27 @@ button.month-status-chip {
   text-underline-offset: 3px;
 }
 
+.action-write-scope {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding-top: 10px;
+}
+
+.action-write-scope summary {
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 820;
+}
+
+.action-write-scope ul {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
 .action-buttons {
   display: flex;
   flex-wrap: wrap;
