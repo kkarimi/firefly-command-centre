@@ -565,7 +565,7 @@ function applyBudgets(data: DashboardData, budgets: FireflyResource[], transacti
       merchants: merchantsByBudget.get(name)?.slice(0, 3) ?? [],
       unusual: reviewQueue && spent > 0 ? 'Live review queue contains material spend' : undefined,
       reviewQueue,
-      fireflyBudgetHref: fireflyBudgetHref(live.id),
+      fireflyBudgetHref: fireflyBudgetActionHref(live.id),
     } satisfies BudgetCard;
     return [card];
   });
@@ -645,7 +645,7 @@ function applyReviewItems(data: DashboardData, transactions: FireflyResource[]) 
       suggestion: review.suggestion,
       severity: Math.abs(signed) > 100 ? 'risk' : 'watch',
       fireflyGroupId: group.id,
-      fireflyEditHref: fireflyTransactionEditHref(group.id),
+      fireflyEditHref: fireflyTransactionActionHref(group.id),
     });
   }
 
@@ -707,6 +707,15 @@ export function fireflyTransactionEditHref(transactionGroupId: string) {
   return `${fireflyWebBase()}/transactions/edit/${encodeURIComponent(cleanId)}`;
 }
 
+export function fireflyTransactionActionHref(transactionGroupId: string) {
+  const cleanId = transactionGroupId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `/actions/firefly/transactions/edit?groupId=${encodeURIComponent(cleanId)}`;
+}
+
 export function fireflyBudgetHref(budgetId: string) {
   const cleanId = budgetId.trim();
   if (!cleanId) {
@@ -714,6 +723,19 @@ export function fireflyBudgetHref(budgetId: string) {
   }
 
   return `${fireflyWebBase()}/budgets/show/${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyBudgetActionHref(budgetId: string) {
+  const cleanId = budgetId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `/actions/firefly/budgets/show?budgetId=${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyHomeHref() {
+  return fireflyWebBase();
 }
 
 function fireflyWebBase() {

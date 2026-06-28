@@ -49,8 +49,8 @@ export function TrustView({ ops, showDetailSignals }: { ops: DashboardData['ops'
                   <a
                     aria-label={`Open ${item.label} action`}
                     href={actionHref}
-                    rel="noreferrer"
-                    target="_blank"
+                    rel={isExternalHref(actionHref) ? 'noreferrer' : undefined}
+                    target={isExternalHref(actionHref) ? '_blank' : undefined}
                     title={`Open ${item.label} action`}
                   >
                     <ExternalLink size={16} />
@@ -90,6 +90,10 @@ export function trustActionHref(item: DashboardData['ops'][number]) {
   }
 
   return null;
+}
+
+function isExternalHref(href: string) {
+  return /^https?:\/\//i.test(href);
 }
 
 function statusIconForTone(tone: Tone): LucideIcon {

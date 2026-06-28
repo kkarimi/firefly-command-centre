@@ -43,7 +43,7 @@ function reviewItem(overrides: Partial<ReviewItem> = {}): ReviewItem {
     suggestion: 'Create deterministic payee rule',
     severity: 'watch',
     fireflyGroupId: '100',
-    fireflyEditHref: 'https://firefly.home/transactions/edit/100',
+    fireflyEditHref: '/actions/firefly/transactions/edit?groupId=100',
     ...overrides,
   };
 }

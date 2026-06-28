@@ -11,13 +11,13 @@ describe('month budget actions', () => {
     daysElapsed: 27,
     totalDays: 30,
     merchants: [],
-    fireflyBudgetHref: 'https://firefly.home/budgets/show/groceries',
+    fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=groceries',
   } satisfies BudgetCard;
 
   it('links warning budgets to their Firefly budget', () => {
-    expect(budgetActionHref({ budget, status: 'watch' })).toBe('https://firefly.home/budgets/show/groceries');
-    expect(budgetActionHref({ budget, status: 'risk' })).toBe('https://firefly.home/budgets/show/groceries');
-    expect(budgetActionHref({ budget, status: 'review' })).toBe('https://firefly.home/budgets/show/groceries');
+    expect(budgetActionHref({ budget, status: 'watch' })).toBe('/actions/firefly/budgets/show?budgetId=groceries');
+    expect(budgetActionHref({ budget, status: 'risk' })).toBe('/actions/firefly/budgets/show?budgetId=groceries');
+    expect(budgetActionHref({ budget, status: 'review' })).toBe('/actions/firefly/budgets/show?budgetId=groceries');
   });
 
   it('keeps clear budgets passive', () => {
