@@ -142,7 +142,7 @@ export const dashboardFixture = {
   ]),
   ops: [
     { label: 'Repo', value: 'Aligned', tone: 'ok', href: 'https://github.com/kkarimi/firefly-command-centre' },
-    { label: 'Firefly', value: 'Online', tone: 'ok', href: 'https://firefly.home' },
+    { label: 'Firefly', value: 'Online', tone: 'ok', href: '/actions/firefly' },
     { label: 'Monzo', value: '7m ago', tone: 'ok' },
     { label: 'Kraken', value: '41m ago', tone: 'ok' },
     { label: 'Backup', value: '03:14', tone: 'ok' },
@@ -160,7 +160,7 @@ export const dashboardFixture = {
       totalDays: 30,
       merchants: ['Mortgage reserve', 'Energy Co', 'Council tax'],
       tone: 'ok',
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/bills',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=bills',
     },
     {
       id: 'groceries',
@@ -172,7 +172,7 @@ export const dashboardFixture = {
       merchants: ['Waitrose', 'Sainsbury', 'Ocado'],
       unusual: 'Weekend shop higher than trailing average',
       tone: 'watch',
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/groceries',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=groceries',
     },
     {
       id: 'eating-out',
@@ -184,7 +184,7 @@ export const dashboardFixture = {
       merchants: ['Dishoom', 'Pret', 'Local pub'],
       unusual: 'Already over monthly target',
       tone: 'risk',
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/eating-out',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=eating-out',
     },
     {
       id: 'shopping',
@@ -195,7 +195,7 @@ export const dashboardFixture = {
       totalDays: 30,
       merchants: ['John Lewis', 'Boots', 'Apple'],
       tone: 'ok',
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/shopping',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=shopping',
     },
     {
       id: 'transport',
@@ -206,7 +206,7 @@ export const dashboardFixture = {
       totalDays: 30,
       merchants: ['TfL', 'Uber', 'Parking'],
       tone: 'ok',
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/transport',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=transport',
     },
     {
       id: 'travel',
@@ -218,7 +218,7 @@ export const dashboardFixture = {
       merchants: ['Eurostar', 'Hotel hold', 'Airline'],
       unusual: 'Statement hold awaiting AMEX import',
       tone: 'watch',
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/travel',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=travel',
     },
     {
       id: 'review',
@@ -231,7 +231,7 @@ export const dashboardFixture = {
       unusual: 'Leakage queue contains material spend',
       tone: 'risk',
       reviewQueue: true,
-      fireflyBudgetHref: 'https://firefly.home/budgets/show/review',
+      fireflyBudgetHref: '/actions/firefly/budgets/show?budgetId=review',
     },
   ] satisfies BudgetCard[],
   reviewItems: [
@@ -245,7 +245,7 @@ export const dashboardFixture = {
       suggestion: 'Travel & Holidays, tag statement-review',
       severity: 'risk',
       fireflyGroupId: 'grp_9A2F',
-      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_9A2F',
+      fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_9A2F',
     },
     {
       id: 'tx-20477',
@@ -257,7 +257,7 @@ export const dashboardFixture = {
       suggestion: 'Eating Out, create deterministic payee rule',
       severity: 'watch',
       fireflyGroupId: 'grp_87B1',
-      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_87B1',
+      fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_87B1',
     },
     {
       id: 'tx-20402',
@@ -269,7 +269,7 @@ export const dashboardFixture = {
       suggestion: 'Transfers, Savings & Investments; tag cash-movement',
       severity: 'watch',
       fireflyGroupId: 'grp_7C41',
-      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_7C41',
+      fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_7C41',
     },
     {
       id: 'tx-20388',
@@ -281,7 +281,7 @@ export const dashboardFixture = {
       suggestion: 'Rewrite payee from import metadata',
       severity: 'neutral',
       fireflyGroupId: 'grp_5B01',
-      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_5B01',
+      fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_5B01',
     },
   ] satisfies ReviewItem[],
   moneyMap: {

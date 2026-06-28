@@ -83,8 +83,10 @@ FIREFLY_TOKEN_FILE=/run/secrets/firefly_token
 ```
 
 The browser receives only aggregated dashboard data, never the Firefly token.
-Review warnings include Firefly edit links so visible alerts point at the place
-to resolve them. Without a token, the app uses sanitized fixture data.
+Review warnings use internal `/actions/firefly/*` links that redirect server-side
+to the relevant Firefly page, so visible alerts point at the place to resolve
+them without exposing the configured Firefly web host in dashboard data. Without
+a token, the app uses sanitized fixture data.
 
 ## Safety
 

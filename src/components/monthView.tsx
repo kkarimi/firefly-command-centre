@@ -662,8 +662,6 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
               aria-label={`Open ${budget.name} budget in Firefly`}
               className="budget-action-link"
               href={actionHref}
-              rel="noreferrer"
-              target="_blank"
               title={`Open ${budget.name} budget in Firefly`}
             >
               <ExternalLink size={16} />

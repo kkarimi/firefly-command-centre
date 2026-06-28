@@ -71,11 +71,11 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   );
   await expect(page.getByRole('link', { name: 'Open Eating Out budget in Firefly' })).toHaveAttribute(
     'href',
-    'https://firefly.home/budgets/show/eating-out',
+    '/actions/firefly/budgets/show?budgetId=eating-out',
   );
   await expect(page.getByRole('link', { name: 'Open Groceries budget in Firefly' })).toHaveAttribute(
     'href',
-    'https://firefly.home/budgets/show/groceries',
+    '/actions/firefly/budgets/show?budgetId=groceries',
   );
   await expect(page.getByRole('link', { name: 'Open Bills & Utilities budget in Firefly' })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
@@ -123,7 +123,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.getByRole('button', { name: 'Copy grp_9A2F' })).toBeVisible();
   const firstFireflyLink = page.getByRole('link', { name: 'Open transaction in Firefly' }).first();
   await expect(firstFireflyLink).toBeVisible();
-  await expect(firstFireflyLink).toHaveAttribute('href', 'https://firefly.home/transactions/edit/grp_9A2F');
+  await expect(firstFireflyLink).toHaveAttribute('href', '/actions/firefly/transactions/edit?groupId=grp_9A2F');
   await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' })).toHaveCount(0);
   await expect(page.locator('.review-row').filter({ hasText: 'Generated payee 1842' }).locator('.row-detail span').last()).toHaveClass(
     /tone-watch/,
@@ -221,7 +221,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
   const trustActionLink = page.getByRole('link', { name: 'Open Firefly action' });
   await expect(trustActionLink).toBeVisible();
-  await expect(trustActionLink).toHaveAttribute('href', 'https://firefly.home');
+  await expect(trustActionLink).toHaveAttribute('href', '/actions/firefly');
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
 
