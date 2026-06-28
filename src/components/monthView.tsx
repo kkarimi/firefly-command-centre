@@ -1,7 +1,15 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { ArrowDown, ArrowUp, Check, Minus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ExternalLink, Minus } from 'lucide-react';
 import type { BudgetCard, DashboardData, ExpectedEvent, MonthComparison, Tone } from '../data/fixtures';
-import { budgetStatus, formatMoney, formatSignedMoney, percentUsed, projectMonthEnd, remainingBudget } from '../lib/money';
+import {
+  budgetStatus,
+  formatMoney,
+  formatSignedMoney,
+  percentUsed,
+  projectMonthEnd,
+  remainingBudget,
+  type BudgetStatus,
+} from '../lib/money';
 import type { DashboardSettings } from './dashboardSettings';
 import { EmptyState, toneClass } from './uiPrimitives';
 
@@ -105,7 +113,13 @@ export function MonthView({
           <div className="lens-heading">
             <div className="lens-title-row">
               <h2>{period.shortLabel}</h2>
-              <MonthStatusChip percent={overallPercent} plan={activeLimit} projectedSpend={projectedSpend} tone={planTone} />
+              <MonthStatusChip
+                onOpenDetails={dashboardSettings.showSpend && planTone !== 'ok' ? () => setShowBudgetDetails(true) : undefined}
+                percent={overallPercent}
+                plan={activeLimit}
+                projectedSpend={projectedSpend}
+                tone={planTone}
+              />
             </div>
           </div>
         </div>
@@ -536,22 +550,38 @@ function TrendPill({ direction, label, tone }: { direction: TrendDirection; labe
 }
 
 function MonthStatusChip({
+  onOpenDetails,
   percent,
   plan,
   projectedSpend,
   tone,
 }: {
+  onOpenDetails?: () => void;
   percent: number;
   plan: number;
   projectedSpend: number;
   tone: Tone;
 }) {
   const detail = `${monthStatusLabel(tone)}. ${percent}% of the monthly plan is used. Projected month-end spend is ${formatMoney(projectedSpend)} against ${formatMoney(plan)} plan.`;
+  const label = onOpenDetails ? `${detail} Open category details.` : detail;
+  const content = (
+    <>
+      {tone === 'ok' && <Check size={13} aria-hidden="true" />}
+      <span>{monthStatusLabel(tone)}</span>
+    </>
+  );
+
+  if (onOpenDetails) {
+    return (
+      <button aria-label={label} className={`month-status-chip ${toneClass(tone)} actionable`} onClick={onOpenDetails} title={label} type="button">
+        {content}
+      </button>
+    );
+  }
 
   return (
     <span aria-label={detail} className={`month-status-chip ${toneClass(tone)}`} title={detail}>
-      {tone === 'ok' && <Check size={13} aria-hidden="true" />}
-      <span>{monthStatusLabel(tone)}</span>
+      {content}
     </span>
   );
 }
@@ -604,6 +634,7 @@ function MonthHistory({
 function BudgetTile({ budget }: { budget: BudgetCard }) {
   const projected = projectMonthEnd(budget.spent, budget.daysElapsed, budget.totalDays);
   const status = budgetStatus(budget.spent, budget.limit, projected, budget.reviewQueue);
+  const actionHref = budgetActionHref({ budget, status });
   const used = percentUsed(budget.spent, budget.limit);
   const remaining = remainingBudget(budget.limit, budget.spent);
   const projectedOver = budget.limit > 0 && remaining >= 0 && projected > budget.limit ? projected - budget.limit : 0;
@@ -624,7 +655,21 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
           <h3>{budget.name}</h3>
           <span className={`status-chip ${toneClass(status)}`}>{statusLabels[status]}</span>
         </div>
-        <span className="tile-percent">{budget.reviewQueue ? formatMoney(budget.spent) : `${used}%`}</span>
+        <div className="tile-head-actions">
+          <span className="tile-percent">{budget.reviewQueue ? formatMoney(budget.spent) : `${used}%`}</span>
+          {actionHref && (
+            <a
+              aria-label={`Open ${budget.name} budget in Firefly`}
+              className="budget-action-link"
+              href={actionHref}
+              rel="noreferrer"
+              target="_blank"
+              title={`Open ${budget.name} budget in Firefly`}
+            >
+              <ExternalLink size={16} />
+            </a>
+          )}
+        </div>
       </div>
 
       <div className="budget-values">
@@ -664,6 +709,14 @@ function BudgetTile({ budget }: { budget: BudgetCard }) {
       {budget.unusual && <p className={`tile-note ${toneClass(status)}`}>{budget.unusual}</p>}
     </article>
   );
+}
+
+export function budgetActionHref({ budget, status }: { budget: BudgetCard; status: BudgetStatus }) {
+  if (status !== 'ok' && budget.fireflyBudgetHref) {
+    return budget.fireflyBudgetHref;
+  }
+
+  return null;
 }
 
 function budgetDailyRoom({

@@ -3,6 +3,7 @@ import {
   accountTone,
   buildMonthPeriod,
   currentMonthKey,
+  fireflyBudgetHref,
   fireflyTransactionEditHref,
   isSelectableMonthKey,
   reviewReason,
@@ -57,6 +58,11 @@ describe('dashboard review suggestions', () => {
   it('points review warnings at the Firefly edit surface', () => {
     expect(fireflyTransactionEditHref('304')).toBe('https://firefly.home/transactions/edit/304');
     expect(fireflyTransactionEditHref(' group/1 ')).toBe('https://firefly.home/transactions/edit/group%2F1');
+  });
+
+  it('points budget warnings at the Firefly budget surface', () => {
+    expect(fireflyBudgetHref('12')).toBe('https://firefly.home/budgets/show/12');
+    expect(fireflyBudgetHref(' budget/1 ')).toBe('https://firefly.home/budgets/show/budget%2F1');
   });
 
   it('keeps generic cash-in rows out of household spend suggestions', () => {

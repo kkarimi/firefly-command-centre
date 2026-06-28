@@ -19,8 +19,12 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.locator('.month-status-chip')).toHaveCount(1);
   await expect(page.locator('.month-status-chip')).toHaveText('Tight');
   await expect(page.locator('.month-status-chip')).toHaveAccessibleName(
-    /Tight\. \d+% of the monthly plan is used\. Projected month-end spend is .* against .* plan\./,
+    /Tight\. \d+% of the monthly plan is used\. Projected month-end spend is .* against .* plan\. Open category details\./,
   );
+  await page.locator('.month-status-chip').click();
+  await expect(page.getByRole('region', { name: 'Spend categories' })).toBeVisible();
+  await page.locator('.spend-rhythm-trigger').click();
+  await expect(page.locator('.spend-rhythm-trigger')).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByText(/heavier|lighter/)).toHaveCount(0);
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();
@@ -65,6 +69,15 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.locator('.budget-tile').filter({ hasText: 'Eating Out' }).locator('.budget-pace')).toContainText(
     'No room',
   );
+  await expect(page.getByRole('link', { name: 'Open Eating Out budget in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home/budgets/show/eating-out',
+  );
+  await expect(page.getByRole('link', { name: 'Open Groceries budget in Firefly' })).toHaveAttribute(
+    'href',
+    'https://firefly.home/budgets/show/groceries',
+  );
+  await expect(page.getByRole('link', { name: 'Open Bills & Utilities budget in Firefly' })).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-dashboard.png`), fullPage: true });
 
   await page.getByRole('button', { name: 'Open dashboard settings' }).click();
