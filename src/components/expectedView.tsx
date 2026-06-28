@@ -6,14 +6,13 @@ import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 export function ExpectedView({ balanceDate, groups }: { balanceDate: string; groups: Record<string, ExpectedEvent[]> }) {
   const incomeSeen = sumActual(groups.income);
   const stillExpected = sumOutstanding(groups.obligations);
-  const watchCount = Object.values(groups)
-    .flat()
-    .filter((event) => event.tone === 'watch' || event.tone === 'risk').length;
+  const openEvents = Object.values(groups).flat().filter(isOpenEvent);
   const timeline = expectedTimeline(groups);
   const openTimelineCount = timeline.filter(isOpenEvent).length;
   const loggedTimelineCount = timeline.length - openTimelineCount;
   const openTimelineTotal = sumOutstanding(timeline.filter(isOpenEvent));
   const nextOpenEvent = timeline.find(isOpenEvent);
+  const nextWeekTotal = sumDueWithinDays({ balanceDate, days: 7, events: openEvents });
 
   return (
     <div className="view-stack">
@@ -22,7 +21,7 @@ export function ExpectedView({ balanceDate, groups }: { balanceDate: string; gro
         <Metric label="Income seen" value={formatMoney(incomeSeen, true)} tone="ok" />
         <Metric label="Still expected" value={formatMoney(stillExpected, true)} tone={stillExpected > 0 ? 'watch' : 'ok'} />
         <Metric label="Due next" value={nextOpenEvent?.due ?? 'Clear'} tone={nextOpenEvent ? nextOpenEvent.tone : 'ok'} />
-        <Metric label="Watch" value={formatRowCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
+        <Metric label="Next 7d" value={formatMoney(nextWeekTotal, true)} tone={nextWeekTotal > 0 ? 'watch' : 'ok'} />
       </section>
       {timeline.length > 0 && (
         <section className="expected-timeline" aria-label="Cash calendar">
@@ -94,10 +93,6 @@ function sumExpectedEvents(events: ExpectedEvent[]) {
   return events.reduce((sum, event) => sum + (event.actual ?? event.expected), 0);
 }
 
-function formatRowCount(count: number) {
-  return `${count} ${count === 1 ? 'row' : 'rows'}`;
-}
-
 function formatTimelineStatus({
   loggedTimelineCount,
   openTimelineCount,
@@ -134,6 +129,17 @@ function formatDueTiming({ balanceDate, dateKey }: { balanceDate: string; dateKe
   }
 
   return `${Math.abs(daysUntilDue)}d overdue`;
+}
+
+function sumDueWithinDays({ balanceDate, days, events }: { balanceDate: string; days: number; events: ExpectedEvent[] }) {
+  return events.reduce((sum, event) => {
+    const daysUntilDue = daysBetweenDateKeys({ from: balanceDate, to: event.dateKey ?? '' });
+    if (daysUntilDue < 0 || daysUntilDue > days) {
+      return sum;
+    }
+
+    return sum + Math.max(event.expected - (event.actual ?? 0), 0);
+  }, 0);
 }
 
 function daysBetweenDateKeys({ from, to }: { from: string; to: string }) {
