@@ -221,3 +221,5 @@ do not merge or deploy from this branch without explicit approval.
   routed before scanning severity groups.
 - Month status now uses projected month-end spend, not only spent-to-date, so a
   tight forecast is visible before the plan is actually breached.
+- Trust summary now promotes the highest-priority non-clear source so the first
+  operational issue is visible before scanning the detail grid.

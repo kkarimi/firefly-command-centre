@@ -10,13 +10,14 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
   const clearPercent = formatClearPercent({ clearCount, totalCount: ops.length });
   const clearTone: Tone = riskCount > 0 ? 'risk' : watchCount > 0 ? 'watch' : infoCount > 0 ? 'neutral' : 'ok';
   const sortedOps = [...ops].sort((left, right) => toneRank[left.tone] - toneRank[right.tone]);
+  const leadIssue = sortedOps.find((item) => item.tone !== 'ok');
 
   return (
     <div className="view-stack">
       <ViewHeading icon={Activity} title="Data Trust" meta="What this UI can currently verify itself" />
       <section className="split-summary trust-summary" aria-label="Trust summary">
         <Metric label="Clear" value={clearPercent} tone={clearTone} />
-        <Metric label="Info" value={formatSourceCount(infoCount)} tone="neutral" />
+        <Metric label="Lead issue" value={leadIssue?.label ?? 'Clear'} tone={leadIssue?.tone ?? 'ok'} />
         <Metric label="Watch" value={formatSourceCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
         <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
       </section>
