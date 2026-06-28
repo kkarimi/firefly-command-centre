@@ -1,4 +1,4 @@
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, ExternalLink } from 'lucide-react';
 import type { DashboardData, ExpectedEvent, Tone } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
@@ -92,18 +92,32 @@ export function ExpectedView({
             <span>{formatTimelineStatus({ loggedTimelineCount, openTimelineCount, openTimelineTotal })}</span>
           </header>
           <div>
-            {timeline.map((event) => (
-              <article key={`${event.name}-${event.due}`}>
-                <div>
-                  <strong>{event.name}</strong>
-                  <span>{event.due}</span>
-                </div>
-                <div>
-                  <strong>{formatMoney(event.actual ?? event.expected)}</strong>
-                  <span className={toneClass(event.tone)}>{formatTimelineEventStatus({ balanceDate, event })}</span>
-                </div>
-              </article>
-            ))}
+            {timeline.map((event) => {
+              const actionHref = expectedEventActionHref(event);
+
+              return (
+                <article key={`${event.name}-${event.due}`}>
+                  <div>
+                    <strong>{event.name}</strong>
+                    <span>{event.due}</span>
+                  </div>
+                  <div>
+                    <strong>{formatMoney(event.actual ?? event.expected)}</strong>
+                    <span className={toneClass(event.tone)}>{formatTimelineEventStatus({ balanceDate, event })}</span>
+                    {actionHref && (
+                      <a
+                        aria-label={`Open ${event.name} bill in Firefly`}
+                        className="expected-action-link"
+                        href={actionHref}
+                        title={`Open ${event.name} bill in Firefly`}
+                      >
+                        <ExternalLink size={16} />
+                      </a>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
@@ -129,18 +143,32 @@ function ExpectedGroup({ title, events, empty }: { title: string; events: Expect
       {events.length === 0 ? (
         <EmptyState title="Nothing found" detail={empty} compact />
       ) : (
-        events.map((event) => (
-          <div className="expected-row" key={`${event.name}-${event.due}`}>
-            <div>
-              <strong>{event.name}</strong>
-              <span>{event.due}</span>
+        events.map((event) => {
+          const actionHref = expectedEventActionHref(event);
+
+          return (
+            <div className="expected-row" key={`${event.name}-${event.due}`}>
+              <div>
+                <strong>{event.name}</strong>
+                <span>{event.due}</span>
+              </div>
+              <div>
+                <strong>{formatMoney(event.actual ?? event.expected)}</strong>
+                <span className={toneClass(event.tone)}>{event.status}</span>
+                {actionHref && (
+                  <a
+                    aria-label={`Open ${event.name} bill in Firefly`}
+                    className="expected-action-link"
+                    href={actionHref}
+                    title={`Open ${event.name} bill in Firefly`}
+                  >
+                    <ExternalLink size={16} />
+                  </a>
+                )}
+              </div>
             </div>
-            <div>
-              <strong>{formatMoney(event.actual ?? event.expected)}</strong>
-              <span className={toneClass(event.tone)}>{event.status}</span>
-            </div>
-          </div>
-        ))
+          );
+        })
       )}
     </article>
   );
@@ -389,4 +417,12 @@ function expectedTimeline(groups: Record<string, ExpectedEvent[]>) {
 
 function isOpenEvent(event: ExpectedEvent) {
   return event.actual === undefined && (event.tone === 'watch' || event.tone === 'risk' || /upcoming|outstanding|awaiting/i.test(event.status));
+}
+
+export function expectedEventActionHref(event: ExpectedEvent) {
+  if (isOpenEvent(event) && event.fireflyBillHref) {
+    return event.fireflyBillHref;
+  }
+
+  return null;
 }

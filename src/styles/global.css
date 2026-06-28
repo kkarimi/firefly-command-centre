@@ -1269,6 +1269,34 @@ button.month-status-chip {
   text-align: right;
 }
 
+.expected-timeline article > div:last-child,
+.expected-row > div:last-child {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 8px;
+}
+
+.expected-timeline article > div:last-child strong,
+.expected-row > div:last-child strong {
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+
+.expected-action-link {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+}
+
+.expected-action-link:hover {
+  border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
+}
+
 .ops-detail {
   display: flex;
   min-height: 78px;

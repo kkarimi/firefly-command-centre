@@ -190,6 +190,11 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(cashCalendar.locator('header')).toContainText('2 open / £3,435 due / 3 logged');
   await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
   await expect(cashCalendar.getByText(/Awaiting bank-side transfer \/ (in \d+d|due today|\d+d overdue)/)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open AMEX statement payment bill in Firefly' }).first()).toHaveAttribute(
+    'href',
+    '/actions/firefly/bills/show?billId=amex-statement-payment',
+  );
+  await expect(page.getByRole('link', { name: 'Open Council tax bill in Firefly' })).toHaveCount(0);
   await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
   await expect(page.locator('.expected-group').filter({ hasText: 'Income' }).locator('header')).toContainText('£9,300');
