@@ -21,6 +21,7 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
     cashInTotal: cashInReviewTotal(items),
     withdrawalTotal: withdrawalReviewTotal(items),
   });
+  const netImpact = reviewNetImpact(items);
 
   async function copyFireflyGroupId(groupId: string) {
     await navigator.clipboard.writeText(groupId);
@@ -51,8 +52,8 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
               <h3>Suggested fixes</h3>
-              <span title={spendImpact.detail}>
-                {formatRowCount(items.length)} / {primaryReviewOrigin(items)} / {spendImpact.label}
+              <span title={`${netImpact.detail} ${spendImpact.detail}`}>
+                {formatRowCount(items.length)} / {primaryReviewOrigin(items)} / {netImpact.label} / {spendImpact.label}
               </span>
             </header>
             <div>
@@ -202,6 +203,22 @@ function withdrawalReviewTotal(items: ReviewItem[]) {
 
 function cashInReviewTotal(items: ReviewItem[]) {
   return items.reduce((sum, item) => (item.amount > 0 ? sum + item.amount : sum), 0);
+}
+
+function reviewNetImpact(items: ReviewItem[]) {
+  const net = items.reduce((sum, item) => sum + item.amount, 0);
+
+  if (net === 0) {
+    return {
+      label: 'net flat',
+      detail: 'Review queue nets to zero.',
+    };
+  }
+
+  return {
+    label: `${net < 0 ? 'net out' : 'net in'} ${formatMoney(Math.abs(net), true)}`,
+    detail: `Signed review queue total is ${formatSignedMoney(net)}.`,
+  };
 }
 
 function formatReviewGroupSummary(items: ReviewItem[]) {
