@@ -1438,6 +1438,16 @@ p {
     min-height: 210px;
   }
 
+  .account-group header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .account-group-summary {
+    justify-items: start;
+    text-align: left;
+  }
+
   .suggestion {
     border-left: 0;
     border-top: 1px solid var(--line);
