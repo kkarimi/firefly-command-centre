@@ -25,6 +25,7 @@ export type ReviewItem = {
   severity: Tone;
   fireflyGroupId: string;
   fireflyEditHref?: string;
+  fireflyReviewHref?: string;
 };
 
 export type Account = {
@@ -247,6 +248,7 @@ export const dashboardFixture = {
       severity: 'risk',
       fireflyGroupId: 'grp_9A2F',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_9A2F',
+      fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_9A2F&month=2026-06',
     },
     {
       id: 'tx-20477',
@@ -259,6 +261,7 @@ export const dashboardFixture = {
       severity: 'watch',
       fireflyGroupId: 'grp_87B1',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_87B1',
+      fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_87B1&month=2026-06',
     },
     {
       id: 'tx-20402',
@@ -271,6 +274,7 @@ export const dashboardFixture = {
       severity: 'watch',
       fireflyGroupId: 'grp_7C41',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_7C41',
+      fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_7C41&month=2026-06',
     },
     {
       id: 'tx-20388',
@@ -283,6 +287,7 @@ export const dashboardFixture = {
       severity: 'neutral',
       fireflyGroupId: 'grp_5B01',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_5B01',
+      fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_5B01&month=2026-06',
     },
   ] satisfies ReviewItem[],
   moneyMap: {

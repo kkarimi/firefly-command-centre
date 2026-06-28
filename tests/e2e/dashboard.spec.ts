@@ -122,9 +122,12 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   );
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Copy review fix for Unknown card presentment' })).toBeVisible();
-  const firstFireflyLink = page.getByRole('link', { name: 'Open transaction in Firefly' }).first();
-  await expect(firstFireflyLink).toBeVisible();
-  await expect(firstFireflyLink).toHaveAttribute('href', '/actions/firefly/transactions/edit?groupId=grp_9A2F');
+  const firstReviewFixLink = page.getByRole('link', { name: 'Open review fix prep for Unknown card presentment' });
+  await expect(firstReviewFixLink).toBeVisible();
+  await expect(firstReviewFixLink).toHaveAttribute(
+    'href',
+    '/actions/firefly/transactions/review?groupId=grp_9A2F&month=2026-06',
+  );
   await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' })).toHaveCount(0);
   await expect(page.locator('.review-row').filter({ hasText: 'Generated payee 1842' }).locator('.row-detail span').last()).toHaveClass(
     /tone-watch/,
@@ -289,4 +292,21 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(horizontalOverflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-month-archive.png`), fullPage: true });
+});
+
+test('renders an internal transaction fix prep page before Firefly handoff', async ({ page }, testInfo) => {
+  await page.goto('/actions/firefly/transactions/review?groupId=grp_9A2F&month=2026-06');
+
+  await expect(page.getByRole('heading', { name: 'Unknown card presentment' })).toBeVisible();
+  await expect(page.locator('.action-header .status-chip')).toHaveText('Missing category and statement marker');
+  await expect(page.getByRole('region', { name: 'Transaction summary' })).toContainText('-£184.20');
+  await expect(page.getByRole('region', { name: 'Fix checklist' })).toContainText('Travel & Holidays');
+  await expect(page.getByRole('region', { name: 'Review fix note' })).toContainText('Open: /actions/firefly/transactions/edit?groupId=grp_9A2F');
+  await expect(page.getByRole('link', { name: 'Continue in Firefly' })).toHaveAttribute(
+    'href',
+    '/actions/firefly/transactions/edit?groupId=grp_9A2F',
+  );
+  const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(horizontalOverflow).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-transaction-fix-prep.png`), fullPage: true });
 });

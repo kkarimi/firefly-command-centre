@@ -1,0 +1,107 @@
+---
+import type { DashboardData, ReviewItem } from '../../../../data/fixtures';
+import { formatSignedMoney } from '../../../../lib/money';
+import { reviewClipboardText, reviewFixBrief } from '../../../../lib/reviewFix';
+import { fireflyTransactionActionHref, loadDashboardData } from '../../../../server/dashboard';
+import '../../../../styles/global.css';
+
+const requestUrl = new URL(Astro.request.url);
+const groupId = requestUrl.searchParams.get('groupId')?.trim() ?? '';
+const month = requestUrl.searchParams.get('month');
+const fireflyEditHref = groupId ? fireflyTransactionActionHref(groupId) : undefined;
+let dashboardData: DashboardData | null = null;
+let reviewItem: ReviewItem | undefined;
+let loadError: string | null = null;
+
+if (!groupId || !fireflyEditHref) {
+  Astro.response.status = 400;
+} else {
+  try {
+    dashboardData = await loadDashboardData({ month });
+    reviewItem = dashboardData.reviewItems.find((item) => item.fireflyGroupId === groupId);
+  } catch (error) {
+    Astro.response.status = 400;
+    loadError = error instanceof Error ? error.message : 'Review item could not be loaded';
+  }
+}
+
+const fixBrief = reviewItem ? reviewFixBrief(reviewItem) : [];
+const title = reviewItem?.payee ?? (groupId ? `Transaction ${groupId}` : 'Transaction review');
+const dashboardHref = month ? `/months/${encodeURIComponent(month)}` : '/';
+const copyText = reviewItem
+  ? reviewClipboardText({ ...reviewItem, fireflyEditHref })
+  : [`Firefly group: ${groupId || 'Missing'}`, fireflyEditHref ? `Open: ${fireflyEditHref}` : null].filter(Boolean).join('\n');
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content="Transaction review prep for Firefly III." />
+    <title>{title} · Fix prep</title>
+  </head>
+  <body>
+    <main class="action-shell">
+      <section class="action-panel" aria-labelledby="action-title">
+        <a class="action-back" href={dashboardHref}>Back to dashboard</a>
+        <header class="action-header">
+          <span class={`status-chip ${reviewItem ? `tone-${reviewItem.severity}` : 'tone-watch'}`}>
+            {reviewItem?.reason ?? (loadError ?? 'Review row unavailable')}
+          </span>
+          <h1 id="action-title">{title}</h1>
+          <p>{dashboardData?.period.label ?? 'Firefly transaction'} · {groupId || 'No group id'}</p>
+        </header>
+
+        {reviewItem ? (
+          <>
+            <section class="action-summary-grid" aria-label="Transaction summary">
+              <div>
+                <span>Amount</span>
+                <strong>{formatSignedMoney(reviewItem.amount)}</strong>
+              </div>
+              <div>
+                <span>Source</span>
+                <strong>{reviewItem.source}</strong>
+              </div>
+              <div>
+                <span>Age</span>
+                <strong>{reviewItem.ageDays}d</strong>
+              </div>
+            </section>
+
+            <section class="action-fix-stack" aria-label="Fix checklist">
+              <div>
+                <span>Suggested fix</span>
+                <strong>{reviewItem.suggestion}</strong>
+              </div>
+              {fixBrief.length > 0 && (
+                <div class="action-fix-brief">
+                  {fixBrief.map((entry) => (
+                    <span>
+                      <strong>{entry.label}</strong>
+                      {entry.value}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section class="action-copy-block" aria-label="Review fix note">
+              <pre>{copyText}</pre>
+            </section>
+          </>
+        ) : (
+          <section class="empty-state action-empty">
+            <strong>Review row not found</strong>
+            <p>This transaction is not in the selected review queue.</p>
+          </section>
+        )}
+
+        <div class="action-buttons">
+          {fireflyEditHref && <a class="primary-action" href={fireflyEditHref}>Continue in Firefly</a>}
+          <a href={dashboardHref}>Dashboard</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

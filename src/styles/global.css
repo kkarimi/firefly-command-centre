@@ -1069,6 +1069,196 @@ button.month-status-chip {
   opacity: 0.45;
 }
 
+.action-shell {
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 22px;
+}
+
+.action-panel {
+  display: grid;
+  width: min(820px, 100%);
+  gap: 16px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.action-back {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.action-back:hover {
+  color: var(--ink);
+}
+
+.action-header {
+  display: grid;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 16px;
+}
+
+.action-header .status-chip {
+  margin-top: 0;
+}
+
+.action-header h1 {
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 820;
+  line-height: 0.98;
+}
+
+.action-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 760;
+}
+
+.action-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--line);
+}
+
+.action-summary-grid div,
+.action-fix-stack,
+.action-copy-block {
+  background: var(--panel-2);
+}
+
+.action-summary-grid div {
+  display: grid;
+  gap: 6px;
+  min-height: 82px;
+  align-content: center;
+  padding: 14px;
+}
+
+.action-summary-grid span,
+.action-fix-stack span,
+.action-copy-block {
+  color: var(--muted);
+}
+
+.action-summary-grid span,
+.action-fix-stack > div > span {
+  font-size: 0.72rem;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.action-summary-grid strong {
+  overflow-wrap: anywhere;
+  font-size: 1.12rem;
+  line-height: 1.1;
+}
+
+.action-fix-stack {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.action-fix-stack > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.action-fix-stack > div:first-child strong {
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+.action-fix-brief {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-fix-brief span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.action-fix-brief strong {
+  color: var(--ink);
+}
+
+.action-copy-block {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.action-copy-block pre {
+  overflow-x: auto;
+  margin: 0;
+  color: var(--ink);
+  font: 0.86rem/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  padding: 14px;
+  white-space: pre-wrap;
+}
+
+.action-empty {
+  box-shadow: none;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.action-buttons a {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 820;
+  padding: 0 14px;
+  text-decoration: none;
+}
+
+.action-buttons a:hover {
+  border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
+}
+
+.action-buttons .primary-action {
+  border-color: var(--green);
+  background: var(--green);
+  color: white;
+}
+
 .map-grid,
 .expected-grid,
 .ops-detail-grid {
@@ -1510,6 +1700,18 @@ button.month-status-chip {
   .split-summary.review-summary,
   .split-summary.trust-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-shell {
+    padding: 12px;
+  }
+
+  .action-panel {
+    padding: 14px;
+  }
+
+  .action-summary-grid {
+    grid-template-columns: 1fr;
   }
 
   .expected-timeline header {
