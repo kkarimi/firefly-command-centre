@@ -23,7 +23,13 @@ export function ExpectedView({
   const nextOpenEvent = timeline.find(isOpenEvent);
   const nextWeekEvents = eventsDueWithinDays({ balanceDate, days: 7, events: openEvents });
   const nextWeekTotal = sumOutstanding(nextWeekEvents);
-  const nearTermCover = expectedCover({ cash: cash.budgetableCash, events: nextWeekEvents });
+  const laterOpenEvents = eventsDueAfterDays({ balanceDate, days: 7, events: openEvents });
+  const nearTermCover = expectedCover({
+    cash: cash.budgetableCash,
+    laterEvents: laterOpenEvents,
+    nextOpenEvent,
+    soonEvents: nextWeekEvents,
+  });
 
   return (
     <div className="view-stack">
@@ -57,9 +63,9 @@ export function ExpectedView({
           <span style={{ width: `${nearTermCover.reservedPercent}%` }} />
         </span>
         <div className="cash-coverage-foot">
-          <span>Due {formatExpectedCountValue({ count: nextWeekEvents.length, total: nextWeekTotal })}</span>
+          <span>Due {formatExpectedCoverCount({ count: nextWeekEvents.length, total: nextWeekTotal })}</span>
+          <span>Later {nearTermCover.laterLabel}</span>
           <span>After 7d {formatMoney(nearTermCover.remainingCash, true)}</span>
-          <span>Cash base {formatMoney(cash.budgetableCash, true)}</span>
           <span>{nearTermCover.lead}</span>
         </div>
       </section>
@@ -172,28 +178,41 @@ function formatExpectedCountValue({ count, total }: { count: number; total: numb
   return `${count} / ${formatMoney(total, true)}`;
 }
 
-function expectedCover({ cash, events }: { cash: number; events: ExpectedEvent[] }) {
-  const dueTotal = sumOutstanding(events);
+function formatExpectedCoverCount({ count, total }: { count: number; total: number }) {
+  if (count === 0) {
+    return 'clear';
+  }
+
+  return formatExpectedCountValue({ count, total });
+}
+
+function expectedCover({
+  cash,
+  laterEvents,
+  nextOpenEvent,
+  soonEvents,
+}: {
+  cash: number;
+  laterEvents: ExpectedEvent[];
+  nextOpenEvent?: ExpectedEvent;
+  soonEvents: ExpectedEvent[];
+}) {
+  const dueTotal = sumOutstanding(soonEvents);
+  const laterTotal = sumOutstanding(laterEvents);
+  const dueLabel = formatExpectedCoverCount({ count: soonEvents.length, total: dueTotal });
+  const laterLabel = formatExpectedCoverCount({ count: laterEvents.length, total: laterTotal });
   const remainingCash = cash - dueTotal;
   const reservedPercent = cash > 0 ? Math.min(100, Math.max(0, (dueTotal / cash) * 100)) : dueTotal > 0 ? 100 : 0;
   const tone: Tone = remainingCash < 0 ? 'risk' : reservedPercent >= 75 ? 'watch' : 'ok';
-  const leadEvent = earliestExpectedEvent(events);
-  const lead = leadEvent ? `Next ${leadEvent.due}` : 'Window clear';
 
   return {
-    detail: `Near-term cover. ${formatExpectedCountValue({ count: events.length, total: dueTotal })} due within 7 days.`,
-    lead,
+    detail: `Near-term cover. ${dueLabel} due within 7 days. ${laterLabel} later.`,
+    laterLabel,
+    lead: nextOpenEvent ? `Next ${nextOpenEvent.due}` : 'All clear',
     remainingCash,
     reservedPercent,
     tone,
   };
-}
-
-function earliestExpectedEvent(events: ExpectedEvent[]) {
-  const sortedEvents = [...events].sort(
-    (left, right) => dateKeyToUtcTime(left.dateKey ?? '') - dateKeyToUtcTime(right.dateKey ?? ''),
-  );
-  return sortedEvents[0];
 }
 
 function hasOutstandingAmount(event: ExpectedEvent) {
@@ -237,6 +256,13 @@ function eventsDueWithinDays({ balanceDate, days, events }: { balanceDate: strin
   return events.filter((event) => {
     const daysUntilDue = daysBetweenDateKeys({ from: balanceDate, to: event.dateKey ?? '' });
     return daysUntilDue <= days;
+  });
+}
+
+function eventsDueAfterDays({ balanceDate, days, events }: { balanceDate: string; days: number; events: ExpectedEvent[] }) {
+  return events.filter((event) => {
+    const daysUntilDue = daysBetweenDateKeys({ from: balanceDate, to: event.dateKey ?? '' });
+    return daysUntilDue > days;
   });
 }
 
