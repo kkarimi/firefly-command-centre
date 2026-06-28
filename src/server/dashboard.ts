@@ -498,6 +498,7 @@ function accountFromResource(resource: FireflyResource): Account | null {
     balance,
     freshness: updated ? `Updated ${updated.slice(0, 10)}` : 'Live Firefly',
     tone: accountTone({ kind, name, updatedAt: updated }),
+    fireflyAccountHref: fireflyAccountActionHref(resource.id),
   };
 }
 
@@ -771,6 +772,24 @@ export function fireflyBillActionHref(billId: string) {
   }
 
   return `/actions/firefly/bills/show?billId=${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyAccountHref(accountId: string) {
+  const cleanId = accountId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `${fireflyWebBase()}/accounts/show/${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyAccountActionHref(accountId: string) {
+  const cleanId = accountId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `/actions/firefly/accounts/show?accountId=${encodeURIComponent(cleanId)}`;
 }
 
 export function fireflyHomeHref() {

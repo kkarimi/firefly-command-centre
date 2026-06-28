@@ -149,6 +149,11 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' }).locator('header')).toContainText(
     '1 flagged / £1,435',
   );
+  await expect(page.getByRole('link', { name: 'Open AMEX account in Firefly' })).toHaveAttribute(
+    'href',
+    '/actions/firefly/accounts/show?accountId=amex',
+  );
+  await expect(page.getByRole('link', { name: 'Open M&S loan account in Firefly' })).toHaveCount(0);
   await expect(page.locator('.account-group').filter({ hasText: 'Wealth and manual assets' }).locator('header')).not.toContainText(
     '69% of map',
   );

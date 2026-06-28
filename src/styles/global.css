@@ -1494,6 +1494,12 @@ button.month-status-chip {
   text-align: right;
 }
 
+.account-row > div:last-child {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 8px;
+}
+
 .expected-timeline article > div:last-child,
 .expected-row > div:last-child {
   display: grid;
@@ -1502,11 +1508,13 @@ button.month-status-chip {
 }
 
 .expected-timeline article > div:last-child strong,
+.account-row > div:last-child strong,
 .expected-row > div:last-child strong {
   grid-column: 1 / -1;
   justify-self: end;
 }
 
+.account-action-link,
 .expected-action-link {
   display: inline-grid;
   width: 28px;
@@ -1518,6 +1526,7 @@ button.month-status-chip {
   color: var(--ink);
 }
 
+.account-action-link:hover,
 .expected-action-link:hover {
   border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
 }

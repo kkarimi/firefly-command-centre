@@ -3,6 +3,8 @@ import {
   accountTone,
   buildMonthPeriod,
   currentMonthKey,
+  fireflyAccountActionHref,
+  fireflyAccountHref,
   fireflyBillActionHref,
   fireflyBillHref,
   fireflyBudgetActionHref,
@@ -85,6 +87,13 @@ describe('dashboard review suggestions', () => {
     expect(fireflyBillHref(' bill/1 ')).toBe('https://firefly.home/bills/show/bill%2F1');
     expect(fireflyBillActionHref('8')).toBe('/actions/firefly/bills/show?billId=8');
     expect(fireflyBillActionHref(' bill/1 ')).toBe('/actions/firefly/bills/show?billId=bill%2F1');
+  });
+
+  it('points account warnings at the Firefly account surface', () => {
+    expect(fireflyAccountHref('8')).toBe('https://firefly.home/accounts/show/8');
+    expect(fireflyAccountHref(' account/1 ')).toBe('https://firefly.home/accounts/show/account%2F1');
+    expect(fireflyAccountActionHref('8')).toBe('/actions/firefly/accounts/show?accountId=8');
+    expect(fireflyAccountActionHref(' account/1 ')).toBe('/actions/firefly/accounts/show?accountId=account%2F1');
   });
 
   it('keeps generic cash-in rows out of household spend suggestions', () => {

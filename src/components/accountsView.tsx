@@ -1,4 +1,4 @@
-import { Banknote, GitBranch, Landmark, PiggyBank, WalletCards, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Banknote, GitBranch, Landmark, PiggyBank, WalletCards, type LucideIcon } from 'lucide-react';
 import type { Account, DashboardData, Tone } from '../data/fixtures';
 import { formatMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
@@ -157,6 +157,16 @@ function AccountGroup({
               <div>
                 <strong>{formatMoney(account.balance)}</strong>
                 <span className={toneClass(account.tone)}>{account.freshness}</span>
+                {account.tone === 'watch' && account.fireflyAccountHref && (
+                  <a
+                    className="account-action-link"
+                    href={account.fireflyAccountHref}
+                    title="Open account in Firefly"
+                    aria-label={`Open ${account.name} account in Firefly`}
+                  >
+                    <ArrowUpRight size={15} />
+                  </a>
+                )}
               </div>
             </div>
           ))
