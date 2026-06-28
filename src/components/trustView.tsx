@@ -18,7 +18,7 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
       <section className="split-summary trust-summary" aria-label="Trust summary">
         <Metric label="Verified" value={verifiedPercent} tone={verifiedTone} />
         <Metric label="Lead issue" value={leadIssue?.label ?? 'Clear'} tone={leadIssue?.tone ?? 'ok'} />
-        <Metric label="Gaps" value={formatSourceCount(gapCount)} tone={gapCount > 0 ? 'neutral' : 'ok'} />
+        <Metric label="Watch" value={formatSourceCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
         <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
       </section>
       <div className="ops-detail-grid">
