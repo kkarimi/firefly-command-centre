@@ -5,7 +5,8 @@ import { EmptyState, Metric, toneClass, ViewHeading } from './uiPrimitives';
 
 export function ExpectedView({ balanceDate, groups }: { balanceDate: string; groups: Record<string, ExpectedEvent[]> }) {
   const incomeSeen = sumActual(groups.income);
-  const stillExpected = sumOutstanding(groups.obligations);
+  const stillExpectedEvents = groups.obligations.filter(hasOutstandingAmount);
+  const stillExpected = sumOutstanding(stillExpectedEvents);
   const openEvents = Object.values(groups).flat().filter(isOpenEvent);
   const timeline = expectedTimeline(groups);
   const openTimelineCount = timeline.filter(isOpenEvent).length;
@@ -20,11 +21,15 @@ export function ExpectedView({ balanceDate, groups }: { balanceDate: string; gro
       <ViewHeading icon={CalendarClock} title="Expected" meta="Live income, bills, tax, and known obligations" />
       <section className="split-summary expected-summary" aria-label="Expected summary">
         <Metric label="Income seen" value={formatMoney(incomeSeen, true)} tone="ok" />
-        <Metric label="Still expected" value={formatMoney(stillExpected, true)} tone={stillExpected > 0 ? 'watch' : 'ok'} />
+        <Metric
+          label="Still expected"
+          value={formatExpectedCountValue({ count: stillExpectedEvents.length, total: stillExpected })}
+          tone={stillExpected > 0 ? 'watch' : 'ok'}
+        />
         <Metric label="Due next" value={nextOpenEvent?.due ?? 'Clear'} tone={nextOpenEvent ? nextOpenEvent.tone : 'ok'} />
         <Metric
           label="Next 7d"
-          value={formatDueWindow({ count: nextWeekEvents.length, total: nextWeekTotal })}
+          value={formatExpectedCountValue({ count: nextWeekEvents.length, total: nextWeekTotal })}
           tone={dueWindowTone({ balanceDate, events: nextWeekEvents })}
         />
       </section>
@@ -94,7 +99,7 @@ function sumActual(events: ExpectedEvent[]) {
 }
 
 function sumOutstanding(events: ExpectedEvent[]) {
-  return events.reduce((sum, event) => sum + Math.max(event.expected - (event.actual ?? 0), 0), 0);
+  return events.reduce((sum, event) => sum + outstandingAmount(event), 0);
 }
 
 function sumExpectedEvents(events: ExpectedEvent[]) {
@@ -129,12 +134,20 @@ function formatTimelineEventStatus({ balanceDate, event }: { balanceDate: string
   return dueTiming ? `${event.status} / ${dueTiming}` : event.status;
 }
 
-function formatDueWindow({ count, total }: { count: number; total: number }) {
+function formatExpectedCountValue({ count, total }: { count: number; total: number }) {
   if (count === 0) {
     return 'Clear';
   }
 
   return `${count} / ${formatMoney(total, true)}`;
+}
+
+function hasOutstandingAmount(event: ExpectedEvent) {
+  return outstandingAmount(event) > 0;
+}
+
+function outstandingAmount(event: ExpectedEvent) {
+  return Math.max(event.expected - (event.actual ?? 0), 0);
 }
 
 function dueWindowTone({ balanceDate, events }: { balanceDate: string; events: ExpectedEvent[] }) {
