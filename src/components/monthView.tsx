@@ -125,6 +125,7 @@ export function MonthView({
           activeSpend={activeSpend}
           budgets={sortedBudgets}
           cash={cash}
+          comparison={comparison}
           dailySpend={dailySpend}
           onToggleDetails={() => setShowBudgetDetails((value) => !value)}
           incomeSeen={incomeSeen}
@@ -222,6 +223,7 @@ function SpendRhythm({
   activeSpend,
   budgets,
   cash,
+  comparison,
   dailySpend,
   incomeSeen,
   onToggleDetails,
@@ -233,6 +235,7 @@ function SpendRhythm({
   activeSpend: number;
   budgets: BudgetCard[];
   cash: DashboardData['cash'];
+  comparison?: MonthComparison;
   dailySpend: DashboardData['dailySpend'];
   incomeSeen: number;
   onToggleDetails: () => void;
@@ -259,9 +262,11 @@ function SpendRhythm({
   const planGap = monthPlanGap({ activeLimit, activeSpend, period, projectedSpend });
   const billPosition = formatBillPosition({ cash, paidObligations, period });
   const cashFlow = monthCashFlow({ activeSpend, incomeSeen });
+  const cashTrend = monthCashTrend({ cash, comparison });
   const focusCategory = monthFocusCategory(budgets);
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${cashFlow.detail} ${focusCategory.detail}`;
+  const cashTrendDetail = cashTrend ? `${cashTrend.detail} ` : '';
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${cashFlow.detail} ${cashTrendDetail}${focusCategory.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -306,6 +311,7 @@ function SpendRhythm({
           <span>{allowanceLabel}</span>
           <span>{billPosition.label}</span>
           <span title={cashFlow.detail}>{cashFlow.label}</span>
+          {cashTrend && <span title={cashTrend.detail}>{cashTrend.label}</span>}
           <span title={focusCategory.detail}>{focusCategory.label}</span>
         </span>
       </button>
@@ -394,6 +400,19 @@ function monthCashFlow({ activeSpend, incomeSeen }: { activeSpend: number; incom
   return {
     label: `Net flow ${formatMoney(netFlow, true)}`,
     detail: `${formatMoney(incomeSeen)} income seen minus ${formatMoney(activeSpend)} visible month spend.`,
+  };
+}
+
+function monthCashTrend({ cash, comparison }: { cash: DashboardData['cash']; comparison?: MonthComparison }) {
+  if (!comparison) {
+    return null;
+  }
+
+  const delta = cash.projectedLeft - comparison.cash;
+
+  return {
+    label: `Cash trend ${formatSignedCompactMoney(delta)}`,
+    detail: `Cash after bills is ${formatSignedMoney(delta)} vs ${comparison.previous.shortLabel}.`,
   };
 }
 
@@ -777,6 +796,14 @@ function formatCompactMoney(value: number) {
   }
 
   return formatMoney(value, true);
+}
+
+function formatSignedCompactMoney(value: number) {
+  if (Math.abs(value) < 0.5) {
+    return formatMoney(0, true);
+  }
+
+  return `${value > 0 ? '+' : '-'}${formatMoney(Math.abs(value), true)}`;
 }
 
 function spendBarTone(amount: number, targetDaily: number) {
