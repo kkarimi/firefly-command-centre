@@ -199,3 +199,5 @@ do not merge or deploy from this branch without explicit approval.
   each group.
 - Expected cash calendar rows now show compact due timing for open dated events
   so payment urgency is visible without relying on the event order alone.
+- Review group rows now sort by queued value and then age so the highest-impact
+  cleanup appears first inside each triage group.

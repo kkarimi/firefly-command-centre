@@ -106,12 +106,23 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
 
 function reviewGroups(items: ReviewItem[]) {
   const groups: Array<{ label: string; tone: Tone; items: ReviewItem[] }> = [
-    { label: 'Handle first', tone: 'risk', items: items.filter((item) => item.severity === 'risk') },
-    { label: 'Watch next', tone: 'watch', items: items.filter((item) => item.severity === 'watch') },
-    { label: 'Reference', tone: 'neutral', items: items.filter((item) => item.severity === 'neutral') },
+    { label: 'Handle first', tone: 'risk', items: prioritySortedItems(items.filter((item) => item.severity === 'risk')) },
+    { label: 'Watch next', tone: 'watch', items: prioritySortedItems(items.filter((item) => item.severity === 'watch')) },
+    { label: 'Reference', tone: 'neutral', items: prioritySortedItems(items.filter((item) => item.severity === 'neutral')) },
   ];
 
   return groups.filter((group) => group.items.length > 0);
+}
+
+function prioritySortedItems(items: ReviewItem[]) {
+  return [...items].sort((left, right) => {
+    const valueDelta = Math.abs(right.amount) - Math.abs(left.amount);
+    if (valueDelta !== 0) {
+      return valueDelta;
+    }
+
+    return right.ageDays - left.ageDays;
+  });
 }
 
 function formatRowCount(count: number) {
