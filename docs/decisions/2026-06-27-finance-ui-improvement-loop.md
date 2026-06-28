@@ -259,3 +259,6 @@ do not merge or deploy from this branch without explicit approval.
 - Transaction category saves now remain disabled until the user chooses a
   different category and confirms the write, so no-op Firefly writes are harder
   to trigger from the fix-prep page.
+- Category-save-unavailable notices now include an internal transaction handoff
+  link, so the warning itself points at the resolution path instead of relying
+  on nearby page actions.
