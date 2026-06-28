@@ -1013,9 +1013,33 @@ button.month-status-chip {
   padding-left: 14px;
 }
 
-.suggestion > span {
+.suggestion-copy {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.suggestion-copy > span {
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.fix-brief {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.fix-brief span {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.fix-brief strong {
+  color: var(--ink);
 }
 
 .icon-actions {

@@ -4,6 +4,8 @@ import type { ReviewItem, Tone } from '../data/fixtures';
 import { formatMoney, formatSignedMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
+type ReviewFixBriefEntry = { label: string; value: string };
+
 export function ReviewView({
   activeSpend,
   items,
@@ -112,7 +114,19 @@ export function ReviewView({
                         <span className={item.ageDays >= staleAgeDays ? toneClass('watch') : undefined}>{item.ageDays}d</span>
                       </div>
                       <div className="suggestion">
-                        <span>{item.suggestion}</span>
+                        <div className="suggestion-copy">
+                          <span>{item.suggestion}</span>
+                          {showDetailSignals && (
+                            <div className="fix-brief" aria-label={`Fix brief for ${item.payee}`}>
+                              {reviewFixBrief(item).map((entry) => (
+                                <span key={`${entry.label}-${entry.value}`}>
+                                  <strong>{entry.label}</strong>
+                                  {entry.value}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <div className="icon-actions">
                           <button
                             type="button"
@@ -267,6 +281,89 @@ export function reviewRuleReadyImpact(items: ReviewItem[]) {
         ? `${ruleReadyItems.length} review rows look suitable for payee or rule cleanup.`
         : 'No review rows currently look rule-ready.',
   };
+}
+
+export function reviewFixBrief(item: ReviewItem) {
+  const entries = [
+    categoryFixEntry(item),
+    budgetFixEntry(item.suggestion),
+    tagFixEntry(item.suggestion),
+    ruleFixEntry(item.suggestion),
+    movementFixEntry(item),
+  ].filter((entry): entry is ReviewFixBriefEntry => Boolean(entry));
+
+  return dedupeFixBrief(entries).slice(0, 3);
+}
+
+function categoryFixEntry(item: ReviewItem) {
+  const suggestion = item.suggestion;
+  const firstDirective = suggestion.split(/[;,]/)[0]?.trim();
+  const startsWithAction = /^(Attach|Create|Rewrite|Confirm|Assign|Replace|Decide)\b/i.test(firstDirective ?? '');
+  if (firstDirective && /^[A-Z][\w &/-]+$/.test(firstDirective) && !startsWithAction) {
+    return { label: 'Category', value: firstDirective };
+  }
+
+  if (/Assign a category|Decide category/i.test(suggestion)) {
+    return { label: 'Category', value: 'Decide' };
+  }
+
+  if (/Replace General/i.test(suggestion)) {
+    return { label: 'Category', value: 'Specific household category' };
+  }
+
+  if (/income, transfer, or accounting category/i.test(suggestion)) {
+    return { label: 'Category', value: 'Income / transfer' };
+  }
+
+  if (/Missing category|Generic category/i.test(item.reason)) {
+    return { label: 'Category', value: 'Resolve' };
+  }
+
+  return null;
+}
+
+function budgetFixEntry(suggestion: string) {
+  const budget = suggestion.match(/\bAttach to ([^;.]+?)(?: or|$)/i)?.[1]?.trim();
+  return budget ? { label: 'Budget', value: budget } : null;
+}
+
+function tagFixEntry(suggestion: string) {
+  const tag = suggestion.match(/\btag\s+([^;,]+)/i)?.[1]?.trim();
+  return tag ? { label: 'Tag', value: tag } : null;
+}
+
+function ruleFixEntry(suggestion: string) {
+  if (/rule/i.test(suggestion)) {
+    return { label: 'Next', value: 'Rule' };
+  }
+
+  if (/payee|metadata/i.test(suggestion)) {
+    return { label: 'Next', value: 'Payee cleanup' };
+  }
+
+  return null;
+}
+
+function movementFixEntry(item: ReviewItem) {
+  if (/transfer|accounting|cash-movement|investment/i.test(`${item.reason} ${item.suggestion}`)) {
+    return { label: 'Movement', value: 'Confirm type' };
+  }
+
+  return null;
+}
+
+function dedupeFixBrief(entries: ReviewFixBriefEntry[]) {
+  const seen = new Set<string>();
+
+  return entries.filter((entry) => {
+    const key = `${entry.label}:${entry.value}`.toLowerCase();
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
 }
 
 function formatReviewGroupSummary({ items, showDetailSignals }: { items: ReviewItem[]; showDetailSignals: boolean }) {

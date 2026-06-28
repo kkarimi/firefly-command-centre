@@ -108,6 +108,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.getByText('Classify movement 1 / £2,000')).toHaveCount(0);
   await expect(page.getByText('Rule candidate 1 / £43')).toHaveCount(0);
   await expect(page.getByText('Clean payee 1 / £19')).toHaveCount(0);
+  await expect(page.locator('.fix-brief')).toHaveCount(0);
   await expect(page.getByText('Handle first')).toBeVisible();
   await expect(page.getByText('Watch next')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Handle first review rows' }).locator('header')).toContainText(
@@ -243,6 +244,11 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
     '4 rows / source Monzo lead / net out £2,246 / affects 49% spend / stale 25% / rule-ready 2 / £62',
   );
   await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
+  const firstFixBrief = page.locator('[aria-label="Fix brief for Unknown card presentment"]');
+  await expect(firstFixBrief).toContainText('Category');
+  await expect(firstFixBrief).toContainText('Travel & Holidays');
+  await expect(firstFixBrief).toContainText('Tag');
+  await expect(firstFixBrief).toContainText('statement-review');
 
   await page.getByRole('button', { name: 'Accounts' }).click();
   await expect(page.getByText('Debt cover 72%')).toBeVisible();

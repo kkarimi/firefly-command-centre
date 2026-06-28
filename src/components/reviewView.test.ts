@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ReviewItem } from '../data/fixtures';
-import { reviewRuleReadyImpact, reviewSpendImpact } from './reviewView';
+import { reviewFixBrief, reviewRuleReadyImpact, reviewSpendImpact } from './reviewView';
 
 describe('review spend impact', () => {
   it('keeps sub-1% review impact visible when review value is non-zero', () => {
@@ -29,6 +29,34 @@ describe('review rule-ready impact', () => {
     expect(reviewRuleReadyImpact([reviewItem({ reason: 'Missing category', suggestion: 'Set category' })]).label).toBe(
       'rule-ready clear',
     );
+  });
+});
+
+describe('review fix brief', () => {
+  it('extracts category and tag guidance from category warnings', () => {
+    expect(
+      reviewFixBrief(
+        reviewItem({
+          reason: 'Missing category and statement marker',
+          suggestion: 'Travel & Holidays, tag statement-review',
+        }),
+      ),
+    ).toEqual([
+      { label: 'Category', value: 'Travel & Holidays' },
+      { label: 'Tag', value: 'statement-review' },
+    ]);
+  });
+
+  it('extracts rule and transfer follow-up guidance', () => {
+    expect(reviewFixBrief(reviewItem({ suggestion: 'Eating Out, create deterministic payee rule' }))).toEqual([
+      { label: 'Category', value: 'Eating Out' },
+      { label: 'Next', value: 'Rule' },
+    ]);
+    expect(reviewFixBrief(reviewItem({ suggestion: 'Transfers, Savings & Investments; tag cash-movement' }))).toEqual([
+      { label: 'Category', value: 'Transfers' },
+      { label: 'Tag', value: 'cash-movement' },
+      { label: 'Movement', value: 'Confirm type' },
+    ]);
   });
 });
 

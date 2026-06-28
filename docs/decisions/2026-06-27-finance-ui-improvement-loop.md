@@ -239,3 +239,5 @@ do not merge or deploy from this branch without explicit approval.
   priority cleanup has materiality before opening suggested fixes.
 - Expected summary now shows still-expected count and value so remaining
   obligations carry workload as well as cash impact.
+- Review rows now expose a detail-only fix brief so category, tag, movement,
+  and rule guidance is easier to apply in Firefly without adding write access.
