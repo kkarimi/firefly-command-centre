@@ -182,9 +182,10 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('heading', { name: 'Data Trust' })).toBeVisible();
   const trustSummary = page.getByRole('region', { name: 'Trust summary' });
   await expect(trustSummary).toBeVisible();
-  await expect(trustSummary.locator('.metric').filter({ hasText: 'Clear' })).toContainText('88%');
-  await expect(trustSummary.locator('.metric').filter({ hasText: 'Lead source' })).toContainText('Firefly');
-  await expect(trustSummary.locator('.metric').filter({ hasText: 'Open' })).toContainText('1 source');
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Verified' })).toContainText('88%');
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Lead issue' })).toContainText('Firefly');
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Gaps' })).toContainText('0 sources');
+  await expect(trustSummary.locator('.metric').filter({ hasText: 'Risk' })).toContainText('0 sources');
   await expect(page.locator('.ops-detail h3').first()).toHaveText('Firefly');
 
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-ops-dashboard.png`), fullPage: true });
