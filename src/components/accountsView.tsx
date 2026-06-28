@@ -20,9 +20,10 @@ export function AccountsView({
   const totalExposure = Object.values(groups)
     .flat()
     .reduce((sum, account) => sum + Math.abs(account.balance), 0);
-  const flagged = Object.values(groups)
+  const flaggedAccounts = Object.values(groups)
     .flat()
-    .filter((account) => account.tone === 'watch').length;
+    .filter((account) => account.tone === 'watch');
+  const flaggedTotal = flaggedAccounts.reduce((sum, account) => sum + Math.abs(account.balance), 0);
   const committedCash = Math.max(0, cash.committedUntilMonthEnd);
   const cashAfterCommitments = budgetableCash - committedCash;
   const committedPercent = budgetableCash > 0 ? Math.min(100, Math.max(0, (committedCash / budgetableCash) * 100)) : 0;
@@ -36,7 +37,11 @@ export function AccountsView({
         <Metric label="Budgetable cash" value={formatMoney(budgetableCash)} tone="ok" />
         <Metric label="Liabilities" value={formatMoney(liabilities)} tone={liabilities < 0 ? 'watch' : 'ok'} />
         <Metric label="Net position" value={formatMoney(netWorth)} tone="neutral" />
-        <Metric label="Needs review" value={`${flagged} flagged`} tone={flagged > 0 ? 'watch' : 'ok'} />
+        <Metric
+          label="Needs review"
+          value={formatFlaggedSummary({ count: flaggedAccounts.length, total: flaggedTotal })}
+          tone={flaggedAccounts.length > 0 ? 'watch' : 'ok'}
+        />
       </section>
       <section className={`cash-coverage ${toneClass(coverageTone)}`} aria-label="Cash coverage">
         <header>
@@ -162,6 +167,14 @@ function cashRunwayDays({
 
 function formatRunwayDays(days: number | null) {
   return days === null ? 'Runway n/a' : `Runway ${days}d at this pace`;
+}
+
+function formatFlaggedSummary({ count, total }: { count: number; total: number }) {
+  if (count === 0) {
+    return 'Clear';
+  }
+
+  return `${count} / ${formatMoney(total, true)}`;
 }
 
 function sumAccountExposure(accounts: Account[]) {
