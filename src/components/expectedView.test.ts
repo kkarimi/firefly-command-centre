@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ExpectedEvent } from '../data/fixtures';
-import { expectedCashFloor } from './expectedView';
+import { expectedCashFloor, expectedEventActionHref } from './expectedView';
 
 describe('expected cash floor', () => {
   it('uses the lowest running cash point across dated open items', () => {
@@ -22,5 +22,34 @@ describe('expected cash floor', () => {
     ];
 
     expect(expectedCashFloor({ cash: 1000, events }).tone).toBe('risk');
+  });
+});
+
+describe('expected event actions', () => {
+  it('links open bill warnings to Firefly', () => {
+    expect(
+      expectedEventActionHref({
+        name: 'AMEX statement payment',
+        expected: 1434.82,
+        due: '4 Jul',
+        status: 'Upcoming',
+        tone: 'watch',
+        fireflyBillHref: '/actions/firefly/bills/show?billId=amex',
+      }),
+    ).toBe('/actions/firefly/bills/show?billId=amex');
+  });
+
+  it('keeps settled bills passive', () => {
+    expect(
+      expectedEventActionHref({
+        name: 'Council tax',
+        expected: 214,
+        actual: 214,
+        due: 'Paid 3 Jun',
+        status: 'Matched',
+        tone: 'ok',
+        fireflyBillHref: '/actions/firefly/bills/show?billId=council-tax',
+      }),
+    ).toBeNull();
   });
 });

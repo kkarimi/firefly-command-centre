@@ -43,6 +43,7 @@ export type ExpectedEvent = {
   dateKey?: string;
   status: string;
   tone: Tone;
+  fireflyBillHref?: string;
 };
 
 export type DailySpend = {
@@ -337,6 +338,7 @@ export const dashboardFixture = {
         dateKey: '2026-07-31',
         status: 'Outstanding',
         tone: 'watch',
+        fireflyBillHref: '/actions/firefly/bills/show?billId=hmrc-payment-on-account',
       },
       {
         name: 'AMEX statement payment',
@@ -345,6 +347,7 @@ export const dashboardFixture = {
         dateKey: '2026-07-04',
         status: 'Awaiting bank-side transfer',
         tone: 'watch',
+        fireflyBillHref: '/actions/firefly/bills/show?billId=amex-statement-payment',
       },
       {
         name: 'Council tax',
@@ -358,7 +361,14 @@ export const dashboardFixture = {
     ],
     candidates: [
       { name: 'Apple services', expected: 12.99, actual: 12.99, due: 'Seen once', status: 'One-off expense', tone: 'neutral' },
-      { name: 'Private health provider', expected: 0, due: 'No longer recurring', status: 'Do not create bill', tone: 'neutral' },
+      {
+        name: 'Private health provider',
+        expected: 0,
+        due: 'No longer recurring',
+        status: 'Do not create bill',
+        tone: 'neutral',
+        fireflyBillHref: '/actions/firefly/bills/show?billId=private-health-provider',
+      },
     ],
   } satisfies Record<string, ExpectedEvent[]>,
   comparison: {

@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { describe, expect, it } from 'vitest';
 import { GET as redirectToFirefly } from './index';
+import { GET as redirectToBill } from './bills/show';
 import { GET as redirectToBudget } from './budgets/show';
 import { GET as redirectToTransaction } from './transactions/edit';
 
@@ -19,6 +20,13 @@ describe('Firefly action routes', () => {
     expect(response.headers.get('location')).toBe('https://firefly.home/budgets/show/groceries');
   });
 
+  it('redirects internal bill action links to Firefly', () => {
+    const response = redirectToBill(contextFor('/actions/firefly/bills/show?billId=amex'));
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).toBe('https://firefly.home/bills/show/amex');
+  });
+
   it('redirects the Firefly home action', () => {
     const response = redirectToFirefly(contextFor('/actions/firefly'));
 
@@ -29,6 +37,7 @@ describe('Firefly action routes', () => {
   it('rejects incomplete action links', () => {
     expect(redirectToTransaction(contextFor('/actions/firefly/transactions/edit')).status).toBe(400);
     expect(redirectToBudget(contextFor('/actions/firefly/budgets/show')).status).toBe(400);
+    expect(redirectToBill(contextFor('/actions/firefly/bills/show')).status).toBe(400);
   });
 });
 

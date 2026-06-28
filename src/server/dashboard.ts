@@ -734,6 +734,24 @@ export function fireflyBudgetActionHref(budgetId: string) {
   return `/actions/firefly/budgets/show?budgetId=${encodeURIComponent(cleanId)}`;
 }
 
+export function fireflyBillHref(billId: string) {
+  const cleanId = billId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `${fireflyWebBase()}/bills/show/${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyBillActionHref(billId: string) {
+  const cleanId = billId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `/actions/firefly/bills/show?billId=${encodeURIComponent(cleanId)}`;
+}
+
 export function fireflyHomeHref() {
   return fireflyWebBase();
 }
@@ -866,6 +884,7 @@ function billFromResource(resource: FireflyResource): ExpectedEvent | null {
     dateKey: isoDate(dueDate),
     status: inFuture ? 'Upcoming' : 'Known bill',
     tone: inFuture ? 'watch' : 'neutral',
+    fireflyBillHref: fireflyBillActionHref(resource.id),
   };
 }
 
