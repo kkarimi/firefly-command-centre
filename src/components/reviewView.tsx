@@ -22,6 +22,14 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
     withdrawalTotal: withdrawalReviewTotal(items),
   });
   const netImpact = reviewNetImpact(items);
+  const staleShare = reviewStaleShare({ itemCount: items.length, staleCount: staleItems.length });
+  const actionSummary = [
+    formatRowCount(items.length),
+    primaryReviewOrigin(items),
+    netImpact.label,
+    spendImpact.label,
+    staleShare.label,
+  ].join(' / ');
 
   async function copyFireflyGroupId(groupId: string) {
     await navigator.clipboard.writeText(groupId);
@@ -52,9 +60,7 @@ export function ReviewView({ activeSpend, items }: { activeSpend: number; items:
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
               <h3>Suggested fixes</h3>
-              <span title={`${netImpact.detail} ${spendImpact.detail}`}>
-                {formatRowCount(items.length)} / {primaryReviewOrigin(items)} / {netImpact.label} / {spendImpact.label}
-              </span>
+              <span title={`${netImpact.detail} ${spendImpact.detail} ${staleShare.detail}`}>{actionSummary}</span>
             </header>
             <div>
               {actionBuckets.map((bucket) => (
@@ -218,6 +224,15 @@ function reviewNetImpact(items: ReviewItem[]) {
   return {
     label: `${net < 0 ? 'net out' : 'net in'} ${formatMoney(Math.abs(net), true)}`,
     detail: `Signed review queue total is ${formatSignedMoney(net)}.`,
+  };
+}
+
+function reviewStaleShare({ itemCount, staleCount }: { itemCount: number; staleCount: number }) {
+  const share = itemCount > 0 ? Math.round((staleCount / itemCount) * 100) : 0;
+
+  return {
+    label: `stale ${share}%`,
+    detail: `${staleCount} of ${itemCount} review rows are ${staleAgeDays}d or older.`,
   };
 }
 

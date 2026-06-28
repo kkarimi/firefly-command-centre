@@ -88,7 +88,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   const suggestedFixes = page.getByRole('region', { name: 'Suggested fixes' });
   await expect(suggestedFixes).toBeVisible();
   await expect(suggestedFixes.locator('header')).toContainText(
-    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend',
+    '4 rows / source Monzo lead / net out £2,246 / affects 49% spend / stale 25%',
   );
   await expect(page.getByText('Classify movement 1 / £2,000')).toBeVisible();
   await expect(page.getByText('Rule candidate 1 / £43')).toBeVisible();
