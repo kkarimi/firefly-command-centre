@@ -17,8 +17,10 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('meter', { name: /Plan used: \d+%/ })).toBeVisible();
   await expect(page.getByText('Current month')).toHaveCount(0);
   await expect(page.locator('.month-status-chip')).toHaveCount(1);
-  await expect(page.locator('.month-status-chip')).toHaveText('On track');
-  await expect(page.locator('.month-status-chip')).toHaveAccessibleName(/On track\. \d+% of the monthly plan is used\./);
+  await expect(page.locator('.month-status-chip')).toHaveText('Tight');
+  await expect(page.locator('.month-status-chip')).toHaveAccessibleName(
+    /Tight\. \d+% of the monthly plan is used\. Projected month-end spend is .* against .* plan\./,
+  );
   await expect(page.getByText(/heavier|lighter/)).toHaveCount(0);
   await expect(page.locator('.lens-signal')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open dashboard settings' })).toBeVisible();

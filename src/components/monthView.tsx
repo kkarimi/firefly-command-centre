@@ -59,7 +59,8 @@ export function MonthView({
 }) {
   const [showBudgetDetails, setShowBudgetDetails] = useState(dashboardSettings.showCategories);
   const overallPercent = percentUsed(activeSpend, activeLimit);
-  const planTone = planToneFor(overallPercent);
+  const projectedSpend = projectMonthEnd(activeSpend, period.daysElapsed, period.totalDays);
+  const planTone = planToneFor({ percent: overallPercent, plan: activeLimit, projectedSpend });
   const lensSignals = monthLensSignals({
     activeSpend,
     activeLimit,
@@ -102,7 +103,7 @@ export function MonthView({
           <div className="lens-heading">
             <div className="lens-title-row">
               <h2>{period.shortLabel}</h2>
-              <MonthStatusChip percent={overallPercent} tone={planTone} />
+              <MonthStatusChip percent={overallPercent} plan={activeLimit} projectedSpend={projectedSpend} tone={planTone} />
             </div>
           </div>
         </div>
@@ -299,13 +300,22 @@ function TrendPill({ direction, label, tone }: { direction: TrendDirection; labe
   );
 }
 
-function MonthStatusChip({ percent, tone }: { percent: number; tone: Tone }) {
-  const displayTone = tone === 'risk' ? 'risk' : 'ok';
-  const detail = `${monthStatusLabel(tone)}. ${percent}% of the monthly plan is used.`;
+function MonthStatusChip({
+  percent,
+  plan,
+  projectedSpend,
+  tone,
+}: {
+  percent: number;
+  plan: number;
+  projectedSpend: number;
+  tone: Tone;
+}) {
+  const detail = `${monthStatusLabel(tone)}. ${percent}% of the monthly plan is used. Projected month-end spend is ${formatMoney(projectedSpend)} against ${formatMoney(plan)} plan.`;
 
   return (
-    <span aria-label={detail} className={`month-status-chip ${toneClass(displayTone)}`} title={detail}>
-      {displayTone === 'ok' && <Check size={13} aria-hidden="true" />}
+    <span aria-label={detail} className={`month-status-chip ${toneClass(tone)}`} title={detail}>
+      {tone === 'ok' && <Check size={13} aria-hidden="true" />}
       <span>{monthStatusLabel(tone)}</span>
     </span>
   );
@@ -466,13 +476,27 @@ function budgetDailyRoom({
   };
 }
 
-function planToneFor(percent: number): Tone {
-  if (percent > 100) return 'risk';
+function planToneFor({
+  percent,
+  plan,
+  projectedSpend,
+}: {
+  percent: number;
+  plan: number;
+  projectedSpend: number;
+}): Tone {
+  if (plan <= 0) {
+    return percent > 0 ? 'risk' : 'ok';
+  }
+
+  if (percent > 100 || projectedSpend >= plan * 1.08) return 'risk';
+  if (projectedSpend > plan * 0.95) return 'watch';
   return 'ok';
 }
 
 function monthStatusLabel(tone: Tone) {
   if (tone === 'risk') return 'Over plan';
+  if (tone === 'watch') return 'Tight';
   return 'On track';
 }
 
