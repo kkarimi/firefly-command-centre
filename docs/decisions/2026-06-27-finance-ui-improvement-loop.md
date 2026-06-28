@@ -277,3 +277,6 @@ do not merge or deploy from this branch without explicit approval.
 - Transaction edit links now open an internal transaction handoff page before
   the Firefly editor, so the external write step is explicit and reviewable
   while the only in-app write remains the category save on fix-prep pages.
+- The generic Firefly Trust action now opens an internal status handoff page
+  before Firefly home, so API/status warnings also resolve through a local
+  explanation and final external action.
