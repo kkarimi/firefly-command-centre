@@ -20,10 +20,14 @@ export type ReviewItem = {
   payee: string;
   amount: number;
   ageDays: number;
+  budgetName?: string;
+  categoryId?: string;
+  categoryName?: string;
   reason: string;
   suggestion: string;
   severity: Tone;
   fireflyGroupId: string;
+  fireflyJournalId?: string;
   fireflyEditHref?: string;
   fireflyReviewHref?: string;
 };
@@ -248,6 +252,7 @@ export const dashboardFixture = {
       suggestion: 'Travel & Holidays, tag statement-review',
       severity: 'risk',
       fireflyGroupId: 'grp_9A2F',
+      fireflyJournalId: 'tx-20491',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_9A2F',
       fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_9A2F&month=2026-06',
     },
@@ -261,6 +266,7 @@ export const dashboardFixture = {
       suggestion: 'Eating Out, create deterministic payee rule',
       severity: 'watch',
       fireflyGroupId: 'grp_87B1',
+      fireflyJournalId: 'tx-20477',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_87B1',
       fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_87B1&month=2026-06',
     },
@@ -274,6 +280,7 @@ export const dashboardFixture = {
       suggestion: 'Transfers, Savings & Investments; tag cash-movement',
       severity: 'watch',
       fireflyGroupId: 'grp_7C41',
+      fireflyJournalId: 'tx-20402',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_7C41',
       fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_7C41&month=2026-06',
     },
@@ -287,6 +294,7 @@ export const dashboardFixture = {
       suggestion: 'Rewrite payee from import metadata',
       severity: 'neutral',
       fireflyGroupId: 'grp_5B01',
+      fireflyJournalId: 'tx-20388',
       fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_5B01',
       fireflyReviewHref: '/actions/firefly/transactions/review?groupId=grp_5B01&month=2026-06',
     },

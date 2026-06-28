@@ -1135,7 +1135,8 @@ button.month-status-chip {
 
 .action-summary-grid div,
 .action-fix-stack,
-.action-copy-block {
+.action-copy-block,
+.action-category-panel {
   background: var(--panel-2);
 }
 
@@ -1226,6 +1227,117 @@ button.month-status-chip {
 
 .action-empty {
   box-shadow: none;
+}
+
+.action-category-panel {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.action-category-panel header {
+  display: grid;
+  gap: 5px;
+}
+
+.action-category-panel header span,
+.category-fix-form label > span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 820;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.action-category-panel h2 {
+  font-size: 1.08rem;
+  line-height: 1.1;
+}
+
+.action-category-panel p {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.category-fix-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.category-fix-form label:first-child {
+  display: grid;
+  gap: 7px;
+}
+
+.category-fix-form select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 760;
+  padding: 0 10px;
+}
+
+.category-write-confirm {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.category-write-confirm input {
+  margin-top: 2px;
+}
+
+.category-fix-form button {
+  min-height: 38px;
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  background: var(--green);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 820;
+  padding: 0 14px;
+}
+
+.category-fix-form button:hover {
+  border-color: color-mix(in srgb, var(--green) 86%, black);
+  background: color-mix(in srgb, var(--green) 92%, black);
+}
+
+.action-notice {
+  display: grid;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 10px 12px;
+}
+
+.action-notice strong {
+  font-size: 0.88rem;
+}
+
+.action-notice span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 680;
 }
 
 .action-buttons {
@@ -1731,6 +1843,10 @@ button.month-status-chip {
   }
 
   .action-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .category-fix-form {
     grid-template-columns: 1fr;
   }
 

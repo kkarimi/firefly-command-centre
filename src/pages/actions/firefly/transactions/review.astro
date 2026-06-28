@@ -2,6 +2,12 @@
 import type { DashboardData, ReviewItem } from '../../../../data/fixtures';
 import { formatSignedMoney } from '../../../../lib/money';
 import { reviewClipboardText, reviewFixBrief } from '../../../../lib/reviewFix';
+import {
+  loadFireflyCategoryOptions,
+  updateTransactionCategory,
+  type CategoryFixResult,
+  type FireflyCategoryOption,
+} from '../../../../server/fireflyActions';
 import { fireflyTransactionActionHref, loadDashboardData } from '../../../../server/dashboard';
 import '../../../../styles/global.css';
 
@@ -12,6 +18,10 @@ const fireflyEditHref = groupId ? fireflyTransactionActionHref(groupId) : undefi
 let dashboardData: DashboardData | null = null;
 let reviewItem: ReviewItem | undefined;
 let loadError: string | null = null;
+let categoryOptions: FireflyCategoryOption[] = [];
+let categoryLoadError: string | null = null;
+let categoryFixResult: CategoryFixResult | null = null;
+let submittedCategoryId = '';
 
 if (!groupId || !fireflyEditHref) {
   Astro.response.status = 400;
@@ -19,15 +29,54 @@ if (!groupId || !fireflyEditHref) {
   try {
     dashboardData = await loadDashboardData({ month });
     reviewItem = dashboardData.reviewItems.find((item) => item.fireflyGroupId === groupId);
+
+    if (Astro.request.method === 'POST' && reviewItem) {
+      const formData = await Astro.request.formData();
+      submittedCategoryId = formData.get('categoryId')?.toString() ?? '';
+      const transactionJournalId = reviewItem.fireflyJournalId ?? '';
+      categoryFixResult = await updateTransactionCategory({
+        categoryId: submittedCategoryId,
+        confirmed: formData.get('confirmCategoryWrite') === 'yes',
+        groupId,
+        transactionJournalId,
+      });
+
+      if (categoryFixResult.ok) {
+        dashboardData = await loadDashboardData({ bypassCache: true, month });
+        reviewItem = dashboardData.reviewItems.find((item) => item.fireflyGroupId === groupId) ?? reviewItem;
+      }
+    }
   } catch (error) {
     Astro.response.status = 400;
     loadError = error instanceof Error ? error.message : 'Review item could not be loaded';
+  }
+
+  try {
+    categoryOptions = await loadFireflyCategoryOptions();
+  } catch (error) {
+    categoryLoadError = error instanceof Error ? error.message : 'Firefly categories could not be loaded';
   }
 }
 
 const fixBrief = reviewItem ? reviewFixBrief(reviewItem) : [];
 const title = reviewItem?.payee ?? (groupId ? `Transaction ${groupId}` : 'Transaction review');
 const dashboardHref = month ? `/months/${encodeURIComponent(month)}` : '/';
+const suggestedCategoryName = fixBrief.find((entry) => entry.label === 'Category')?.value ?? '';
+const suggestedCategory = suggestedCategoryName
+  ? categoryOptions.find((category) => category.name.toLowerCase() === suggestedCategoryName.toLowerCase())
+  : undefined;
+const selectedCategoryId = submittedCategoryId || suggestedCategory?.id || reviewItem?.categoryId || '';
+const hasFireflyJournalId = Boolean(reviewItem?.fireflyJournalId);
+const categoryWriteAvailable = reviewItem && hasFireflyJournalId && categoryOptions.length > 0;
+if (!categoryWriteAvailable && reviewItem && !loadError && !categoryLoadError) {
+  if (!hasFireflyJournalId) {
+    categoryLoadError = 'Firefly did not return the split ID needed for an in-app save.';
+  } else if (categoryOptions.length === 0) {
+    categoryLoadError = 'No Firefly categories were available from the API.';
+  }
+}
+const statusLabel = categoryFixResult?.ok ? categoryFixResult.message : (reviewItem?.reason ?? (loadError ?? 'Review row unavailable'));
+const statusTone = categoryFixResult?.ok ? 'tone-ok' : reviewItem ? `tone-${reviewItem.severity}` : 'tone-watch';
 const copyText = reviewItem
   ? reviewClipboardText({ ...reviewItem, fireflyEditHref })
   : [`Firefly group: ${groupId || 'Missing'}`, fireflyEditHref ? `Open: ${fireflyEditHref}` : null].filter(Boolean).join('\n');
@@ -45,9 +94,7 @@ const copyText = reviewItem
       <section class="action-panel" aria-labelledby="action-title">
         <a class="action-back" href={dashboardHref}>Back to dashboard</a>
         <header class="action-header">
-          <span class={`status-chip ${reviewItem ? `tone-${reviewItem.severity}` : 'tone-watch'}`}>
-            {reviewItem?.reason ?? (loadError ?? 'Review row unavailable')}
-          </span>
+          <span class={`status-chip ${statusTone}`}>{statusLabel}</span>
           <h1 id="action-title">{title}</h1>
           <p>{dashboardData?.period.label ?? 'Firefly transaction'} · {groupId || 'No group id'}</p>
         </header>
@@ -88,6 +135,47 @@ const copyText = reviewItem
 
             <section class="action-copy-block" aria-label="Review fix note">
               <pre>{copyText}</pre>
+            </section>
+
+            <section class="action-category-panel" aria-label="Set category in Firefly">
+              <header>
+                <span>Firefly write</span>
+                <h2>Set category here</h2>
+                <p>Updates this transaction in Firefly using an existing category only.</p>
+              </header>
+
+              {categoryFixResult && (
+                <div class={`action-notice ${categoryFixResult.ok ? 'tone-ok' : 'tone-risk'}`}>
+                  <strong>{categoryFixResult.ok ? 'Saved' : 'Not saved'}</strong>
+                  <span>{categoryFixResult.message}</span>
+                </div>
+              )}
+
+              {categoryWriteAvailable ? (
+                <form method="post" class="category-fix-form">
+                  <label>
+                    <span>Category</span>
+                    <select name="categoryId" required>
+                      <option value="">Choose category</option>
+                      {categoryOptions.map((category) => (
+                        <option value={category.id} selected={category.id === selectedCategoryId}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label class="category-write-confirm">
+                    <input type="checkbox" name="confirmCategoryWrite" value="yes" required />
+                    <span>Save this category to Firefly for this transaction.</span>
+                  </label>
+                  <button type="submit">Save category</button>
+                </form>
+              ) : (
+                <div class="action-notice tone-watch">
+                  <strong>Category save unavailable</strong>
+                  <span>{categoryLoadError ?? 'Use Firefly for this edit until categories load here.'}</span>
+                </div>
+              )}
             </section>
           </>
         ) : (
