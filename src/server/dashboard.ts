@@ -644,6 +644,7 @@ function applyReviewItems(data: DashboardData, transactions: FireflyResource[]) 
       suggestion: review.suggestion,
       severity: Math.abs(signed) > 100 ? 'risk' : 'watch',
       fireflyGroupId: group.id,
+      fireflyEditHref: fireflyTransactionEditHref(group.id),
     });
   }
 
@@ -694,6 +695,19 @@ export function reviewReason(split: FireflySplit) {
   }
 
   return null;
+}
+
+export function fireflyTransactionEditHref(transactionGroupId: string) {
+  const cleanId = transactionGroupId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  return `${fireflyWebBase()}/transactions/edit/${encodeURIComponent(cleanId)}`;
+}
+
+function fireflyWebBase() {
+  return (process.env.FIREFLY_WEB_URL || 'https://firefly.home').replace(/\/+$/, '');
 }
 
 function applyExpected(data: DashboardData, transactions: FireflyResource[], bills: FireflyResource[]) {

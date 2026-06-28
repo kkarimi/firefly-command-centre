@@ -106,7 +106,10 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   );
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Copy grp_9A2F' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' }).first()).toBeDisabled();
+  const firstFireflyLink = page.getByRole('link', { name: 'Open transaction in Firefly' }).first();
+  await expect(firstFireflyLink).toBeVisible();
+  await expect(firstFireflyLink).toHaveAttribute('href', 'https://firefly.home/transactions/edit/grp_9A2F');
+  await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' })).toHaveCount(0);
   await expect(page.locator('.review-row').filter({ hasText: 'Generated payee 1842' }).locator('.row-detail span').last()).toHaveClass(
     /tone-watch/,
   );
