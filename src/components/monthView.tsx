@@ -34,6 +34,7 @@ export function MonthView({
   comparison,
   dailySpend,
   dashboardSettings,
+  incomeSeen,
   paidObligations,
   period,
   pendingMonthKey,
@@ -49,6 +50,7 @@ export function MonthView({
   comparison?: MonthComparison;
   dailySpend: DashboardData['dailySpend'];
   dashboardSettings: DashboardSettings;
+  incomeSeen: number;
   paidObligations: { count: number; total: number };
   period: DashboardData['period'];
   pendingMonthKey: string | null;
@@ -125,6 +127,7 @@ export function MonthView({
           cash={cash}
           dailySpend={dailySpend}
           onToggleDetails={() => setShowBudgetDetails((value) => !value)}
+          incomeSeen={incomeSeen}
           paidObligations={paidObligations}
           period={period}
           showDetails={showBudgetDetails}
@@ -220,6 +223,7 @@ function SpendRhythm({
   budgets,
   cash,
   dailySpend,
+  incomeSeen,
   onToggleDetails,
   paidObligations,
   period,
@@ -230,6 +234,7 @@ function SpendRhythm({
   budgets: BudgetCard[];
   cash: DashboardData['cash'];
   dailySpend: DashboardData['dailySpend'];
+  incomeSeen: number;
   onToggleDetails: () => void;
   paidObligations: { count: number; total: number };
   period: DashboardData['period'];
@@ -253,9 +258,10 @@ function SpendRhythm({
     : `Closed month spend was ${formatMoney(activeSpend)}.`;
   const planGap = monthPlanGap({ activeLimit, activeSpend, period, projectedSpend });
   const billPosition = formatBillPosition({ cash, paidObligations, period });
+  const cashFlow = monthCashFlow({ activeSpend, incomeSeen });
   const focusCategory = monthFocusCategory(budgets);
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${focusCategory.detail}`;
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${cashFlow.detail} ${focusCategory.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -299,6 +305,7 @@ function SpendRhythm({
           <span title={planGap.detail}>{planGap.label}</span>
           <span>{allowanceLabel}</span>
           <span>{billPosition.label}</span>
+          <span title={cashFlow.detail}>{cashFlow.label}</span>
           <span title={focusCategory.detail}>{focusCategory.label}</span>
         </span>
       </button>
@@ -371,6 +378,22 @@ function formatBillPosition({
   return {
     label: `Bills paid ${formatMoney(paidObligations.total, true)}`,
     detail: `${paidObligations.count} settled ${paidObligations.count === 1 ? 'bill' : 'bills'} found for this archived month.`,
+  };
+}
+
+function monthCashFlow({ activeSpend, incomeSeen }: { activeSpend: number; incomeSeen: number }) {
+  if (incomeSeen <= 0) {
+    return {
+      label: 'Net flow n/a',
+      detail: 'No income rows have been seen for this month.',
+    };
+  }
+
+  const netFlow = incomeSeen - activeSpend;
+
+  return {
+    label: `Net flow ${formatMoney(netFlow, true)}`,
+    detail: `${formatMoney(incomeSeen)} income seen minus ${formatMoney(activeSpend)} visible month spend.`,
   };
 }
 

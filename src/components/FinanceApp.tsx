@@ -42,6 +42,7 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
   const monthBudgets = useMemo(() => data.budgets.filter(isVisibleMonthBudget), [data.budgets]);
   const activeSpend = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.spent, 0), [monthBudgets]);
   const activeLimit = useMemo(() => monthBudgets.reduce((sum, budget) => sum + budget.limit, 0), [monthBudgets]);
+  const incomeSeen = useMemo(() => data.expected.income.reduce((sum, event) => sum + (event.actual ?? 0), 0), [data.expected.income]);
   const paidObligations = useMemo(() => paidObligationSummary(data.expected.obligations), [data.expected.obligations]);
   const reviewCount = data.reviewItems.length;
   const atRiskBudgets = monthBudgets.filter((budget) => {
@@ -233,6 +234,7 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
                 comparison={data.comparison}
                 dailySpend={data.dailySpend}
                 dashboardSettings={dashboardSettings}
+                incomeSeen={incomeSeen}
                 paidObligations={paidObligations}
                 period={data.period}
                 pendingMonthKey={pendingMonthKey}
