@@ -99,9 +99,33 @@ const copyText = reviewItem
 
         <div class="action-buttons">
           {fireflyEditHref && <a class="primary-action" href={fireflyEditHref}>Continue in Firefly</a>}
+          {reviewItem && (
+            <button type="button" data-copy-fix={copyText} aria-label={`Copy fix note for ${reviewItem.payee}`}>
+              Copy fix note
+            </button>
+          )}
           <a href={dashboardHref}>Dashboard</a>
+          <span class="action-copy-feedback" data-copy-feedback aria-live="polite"></span>
         </div>
       </section>
     </main>
+    <script>
+      const copyButton = document.querySelector('button[data-copy-fix]');
+      const copyFeedback = document.querySelector('[data-copy-feedback]');
+
+      if (copyButton instanceof HTMLButtonElement && copyFeedback instanceof HTMLElement) {
+        copyButton.addEventListener('click', async () => {
+          const copyText = copyButton.getAttribute('data-copy-fix') ?? '';
+
+          try {
+            await navigator.clipboard.writeText(copyText);
+            copyFeedback.textContent = 'Copied';
+            copyButton.setAttribute('aria-label', 'Copied fix note');
+          } catch {
+            copyFeedback.textContent = 'Copy unavailable';
+          }
+        });
+      }
+    </script>
   </body>
 </html>

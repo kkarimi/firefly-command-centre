@@ -246,3 +246,5 @@ do not merge or deploy from this branch without explicit approval.
 - Review row actions now open an internal transaction fix-prep page before the
   Firefly edit handoff, keeping category guidance inside the app without adding
   a write path.
+- Transaction fix-prep pages now include a copy action for the structured fix
+  note so the Firefly handoff can keep the category, tag, and movement context.

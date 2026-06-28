@@ -1234,7 +1234,8 @@ button.month-status-chip {
   gap: 10px;
 }
 
-.action-buttons a {
+.action-buttons a,
+.action-buttons button {
   display: inline-flex;
   min-height: 38px;
   align-items: center;
@@ -1243,13 +1244,16 @@ button.month-status-chip {
   border-radius: 8px;
   background: var(--panel-2);
   color: var(--ink);
+  cursor: pointer;
+  font: inherit;
   font-size: 0.86rem;
   font-weight: 820;
   padding: 0 14px;
   text-decoration: none;
 }
 
-.action-buttons a:hover {
+.action-buttons a:hover,
+.action-buttons button:hover {
   border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
 }
 
@@ -1257,6 +1261,13 @@ button.month-status-chip {
   border-color: var(--green);
   background: var(--green);
   color: white;
+}
+
+.action-copy-feedback {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .map-grid,

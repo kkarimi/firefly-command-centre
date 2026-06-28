@@ -295,6 +295,7 @@ test('renders an archived month on its own URL', async ({ page }, testInfo) => {
 });
 
 test('renders an internal transaction fix prep page before Firefly handoff', async ({ page }, testInfo) => {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('/actions/firefly/transactions/review?groupId=grp_9A2F&month=2026-06');
 
   await expect(page.getByRole('heading', { name: 'Unknown card presentment' })).toBeVisible();
@@ -306,6 +307,12 @@ test('renders an internal transaction fix prep page before Firefly handoff', asy
     'href',
     '/actions/firefly/transactions/edit?groupId=grp_9A2F',
   );
+  await page.getByRole('button', { name: 'Copy fix note for Unknown card presentment' }).click();
+  await expect(page.getByText('Copied')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copied fix note' })).toBeVisible();
+  const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clipboardText).toContain('Firefly group: grp_9A2F');
+  expect(clipboardText).toContain('Category: Travel & Holidays');
   const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(horizontalOverflow).toBeLessThanOrEqual(1);
   await page.screenshot({ path: testInfo.outputPath(`${testInfo.project.name}-transaction-fix-prep.png`), fullPage: true });
