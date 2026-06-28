@@ -23,6 +23,7 @@ export type ReviewItem = {
   suggestion: string;
   severity: Tone;
   fireflyGroupId: string;
+  fireflyEditHref?: string;
 };
 
 export type Account = {
@@ -236,6 +237,7 @@ export const dashboardFixture = {
       suggestion: 'Travel & Holidays, tag statement-review',
       severity: 'risk',
       fireflyGroupId: 'grp_9A2F',
+      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_9A2F',
     },
     {
       id: 'tx-20477',
@@ -247,6 +249,7 @@ export const dashboardFixture = {
       suggestion: 'Eating Out, create deterministic payee rule',
       severity: 'watch',
       fireflyGroupId: 'grp_87B1',
+      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_87B1',
     },
     {
       id: 'tx-20402',
@@ -258,6 +261,7 @@ export const dashboardFixture = {
       suggestion: 'Transfers, Savings & Investments; tag cash-movement',
       severity: 'watch',
       fireflyGroupId: 'grp_7C41',
+      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_7C41',
     },
     {
       id: 'tx-20388',
@@ -269,6 +273,7 @@ export const dashboardFixture = {
       suggestion: 'Rewrite payee from import metadata',
       severity: 'neutral',
       fireflyGroupId: 'grp_5B01',
+      fireflyEditHref: 'https://firefly.home/transactions/edit/grp_5B01',
     },
   ] satisfies ReviewItem[],
   moneyMap: {

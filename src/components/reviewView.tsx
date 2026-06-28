@@ -121,14 +121,17 @@ export function ReviewView({
                           >
                             <Copy size={16} />
                           </button>
-                          <button
-                            type="button"
-                            title="Firefly link not configured"
-                            aria-label="Open transaction in Firefly unavailable"
-                            disabled
-                          >
-                            <ArrowUpRight size={16} />
-                          </button>
+                          {item.fireflyEditHref && (
+                            <a
+                              href={item.fireflyEditHref}
+                              title="Open transaction in Firefly"
+                              aria-label="Open transaction in Firefly"
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <ArrowUpRight size={16} />
+                            </a>
+                          )}
                         </div>
                       </div>
                     </article>

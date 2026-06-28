@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { accountTone, buildMonthPeriod, currentMonthKey, isSelectableMonthKey, reviewReason } from './dashboard';
+import {
+  accountTone,
+  buildMonthPeriod,
+  currentMonthKey,
+  fireflyTransactionEditHref,
+  isSelectableMonthKey,
+  reviewReason,
+} from './dashboard';
 
 describe('dashboard period helpers', () => {
   const now = new Date(2026, 5, 27, 14, 30);
@@ -47,6 +54,11 @@ describe('dashboard period helpers', () => {
 });
 
 describe('dashboard review suggestions', () => {
+  it('points review warnings at the Firefly edit surface', () => {
+    expect(fireflyTransactionEditHref('304')).toBe('https://firefly.home/transactions/edit/304');
+    expect(fireflyTransactionEditHref(' group/1 ')).toBe('https://firefly.home/transactions/edit/group%2F1');
+  });
+
   it('keeps generic cash-in rows out of household spend suggestions', () => {
     expect(
       reviewReason({

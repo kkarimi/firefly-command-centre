@@ -987,6 +987,7 @@ p {
   gap: 6px;
 }
 
+.icon-actions a,
 .icon-actions button {
   display: inline-grid;
   width: 34px;
@@ -997,6 +998,10 @@ p {
   background: var(--panel-2);
   color: var(--ink);
   cursor: pointer;
+}
+
+.icon-actions a:hover {
+  border-color: color-mix(in srgb, var(--ink) 30%, var(--line));
 }
 
 .icon-actions button:disabled {

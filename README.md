@@ -78,11 +78,13 @@ Live Firefly mode is server-side only. Configure the container with:
 
 ```bash
 FIREFLY_BASE_URL=http://firefly-iii_server_1:8080
+FIREFLY_WEB_URL=https://firefly.home
 FIREFLY_TOKEN_FILE=/run/secrets/firefly_token
 ```
 
 The browser receives only aggregated dashboard data, never the Firefly token.
-Without a token, the app uses sanitized fixture data.
+Review warnings include Firefly edit links so visible alerts point at the place
+to resolve them. Without a token, the app uses sanitized fixture data.
 
 ## Safety
 
