@@ -143,7 +143,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(expectedSummary.getByText('£3,435')).toBeVisible();
   await expect(expectedSummary.getByText('Due next')).toBeVisible();
   await expect(expectedSummary.getByText('4 Jul')).toBeVisible();
-  await expect(expectedSummary.locator('.metric').filter({ hasText: 'Next 7d' })).toContainText('£1,435');
+  await expect(expectedSummary.locator('.metric').filter({ hasText: 'Next 7d' })).toContainText('1 / £1,435');
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
   await expect(cashCalendar).toBeVisible();
   await expect(cashCalendar.locator('header')).toContainText('2 open / £3,435 due / 3 logged');

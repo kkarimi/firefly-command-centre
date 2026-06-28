@@ -12,7 +12,8 @@ export function ExpectedView({ balanceDate, groups }: { balanceDate: string; gro
   const loggedTimelineCount = timeline.length - openTimelineCount;
   const openTimelineTotal = sumOutstanding(timeline.filter(isOpenEvent));
   const nextOpenEvent = timeline.find(isOpenEvent);
-  const nextWeekTotal = sumDueWithinDays({ balanceDate, days: 7, events: openEvents });
+  const nextWeekEvents = eventsDueWithinDays({ balanceDate, days: 7, events: openEvents });
+  const nextWeekTotal = sumOutstanding(nextWeekEvents);
 
   return (
     <div className="view-stack">
@@ -21,7 +22,11 @@ export function ExpectedView({ balanceDate, groups }: { balanceDate: string; gro
         <Metric label="Income seen" value={formatMoney(incomeSeen, true)} tone="ok" />
         <Metric label="Still expected" value={formatMoney(stillExpected, true)} tone={stillExpected > 0 ? 'watch' : 'ok'} />
         <Metric label="Due next" value={nextOpenEvent?.due ?? 'Clear'} tone={nextOpenEvent ? nextOpenEvent.tone : 'ok'} />
-        <Metric label="Next 7d" value={formatMoney(nextWeekTotal, true)} tone={nextWeekTotal > 0 ? 'watch' : 'ok'} />
+        <Metric
+          label="Next 7d"
+          value={formatDueWindow({ count: nextWeekEvents.length, total: nextWeekTotal })}
+          tone={dueWindowTone({ balanceDate, events: nextWeekEvents })}
+        />
       </section>
       {timeline.length > 0 && (
         <section className="expected-timeline" aria-label="Cash calendar">
@@ -124,6 +129,22 @@ function formatTimelineEventStatus({ balanceDate, event }: { balanceDate: string
   return dueTiming ? `${event.status} / ${dueTiming}` : event.status;
 }
 
+function formatDueWindow({ count, total }: { count: number; total: number }) {
+  if (count === 0) {
+    return 'Clear';
+  }
+
+  return `${count} / ${formatMoney(total, true)}`;
+}
+
+function dueWindowTone({ balanceDate, events }: { balanceDate: string; events: ExpectedEvent[] }) {
+  if (events.length === 0) {
+    return 'ok';
+  }
+
+  return events.some((event) => daysBetweenDateKeys({ from: balanceDate, to: event.dateKey ?? '' }) <= 0) ? 'risk' : 'watch';
+}
+
 function formatDueTiming({ balanceDate, dateKey }: { balanceDate: string; dateKey?: string }) {
   if (!dateKey) {
     return null;
@@ -145,15 +166,11 @@ function formatDueTiming({ balanceDate, dateKey }: { balanceDate: string; dateKe
   return `${Math.abs(daysUntilDue)}d overdue`;
 }
 
-function sumDueWithinDays({ balanceDate, days, events }: { balanceDate: string; days: number; events: ExpectedEvent[] }) {
-  return events.reduce((sum, event) => {
+function eventsDueWithinDays({ balanceDate, days, events }: { balanceDate: string; days: number; events: ExpectedEvent[] }) {
+  return events.filter((event) => {
     const daysUntilDue = daysBetweenDateKeys({ from: balanceDate, to: event.dateKey ?? '' });
-    if (daysUntilDue < 0 || daysUntilDue > days) {
-      return sum;
-    }
-
-    return sum + Math.max(event.expected - (event.actual ?? 0), 0);
-  }, 0);
+    return daysUntilDue <= days;
+  });
 }
 
 function daysBetweenDateKeys({ from, to }: { from: string; to: string }) {
