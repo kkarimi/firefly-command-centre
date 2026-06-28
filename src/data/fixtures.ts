@@ -92,7 +92,7 @@ export type DashboardData = {
     projectedLeft: number;
   };
   dailySpend: DailySpend[];
-  ops: Array<{ label: string; value: string; tone: Tone }>;
+  ops: Array<{ label: string; value: string; tone: Tone; href?: string }>;
   budgets: BudgetCard[];
   reviewItems: ReviewItem[];
   moneyMap: Record<string, Account[]>;
@@ -140,15 +140,15 @@ export const dashboardFixture = {
     72.6, 104.8, 318.9, 44.2, 52.1, 188.4, 124.6,
   ]),
   ops: [
-    { label: 'Repo', value: 'Aligned', tone: 'ok' },
-    { label: 'Firefly', value: 'Online', tone: 'ok' },
+    { label: 'Repo', value: 'Aligned', tone: 'ok', href: 'https://github.com/kkarimi/firefly-command-centre' },
+    { label: 'Firefly', value: 'Online', tone: 'ok', href: 'https://firefly.home' },
     { label: 'Monzo', value: '7m ago', tone: 'ok' },
     { label: 'Kraken', value: '41m ago', tone: 'ok' },
     { label: 'Backup', value: '03:14', tone: 'ok' },
     { label: 'Restore', value: 'Passed', tone: 'ok' },
     { label: 'Pico', value: 'Healthy', tone: 'ok' },
     { label: 'Alerts', value: 'Telegram ok', tone: 'ok' },
-  ] satisfies Array<{ label: string; value: string; tone: Tone }>,
+  ] satisfies Array<{ label: string; value: string; tone: Tone; href?: string }>,
   budgets: [
     {
       id: 'bills',
