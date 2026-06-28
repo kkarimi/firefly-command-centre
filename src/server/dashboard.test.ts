@@ -9,6 +9,7 @@ import {
   fireflyBudgetHref,
   fireflyTransactionActionHref,
   fireflyTransactionEditHref,
+  fireflyTransactionReviewActionHref,
   isSelectableMonthKey,
   reviewReason,
 } from './dashboard';
@@ -64,6 +65,12 @@ describe('dashboard review suggestions', () => {
     expect(fireflyTransactionEditHref(' group/1 ')).toBe('https://firefly.home/transactions/edit/group%2F1');
     expect(fireflyTransactionActionHref('304')).toBe('/actions/firefly/transactions/edit?groupId=304');
     expect(fireflyTransactionActionHref(' group/1 ')).toBe('/actions/firefly/transactions/edit?groupId=group%2F1');
+    expect(fireflyTransactionReviewActionHref({ transactionGroupId: '304', month: '2026-06' })).toBe(
+      '/actions/firefly/transactions/review?groupId=304&month=2026-06',
+    );
+    expect(fireflyTransactionReviewActionHref({ transactionGroupId: ' group/1 ' })).toBe(
+      '/actions/firefly/transactions/review?groupId=group%2F1',
+    );
   });
 
   it('points budget warnings at the Firefly budget surface', () => {

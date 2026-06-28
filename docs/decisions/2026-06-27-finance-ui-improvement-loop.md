@@ -243,3 +243,6 @@ do not merge or deploy from this branch without explicit approval.
   and rule guidance is easier to apply in Firefly without adding write access.
 - Review copy actions now copy a structured fix note rather than only the group
   id, so applying a category or movement decision in Firefly is less manual.
+- Review row actions now open an internal transaction fix-prep page before the
+  Firefly edit handoff, keeping category guidance inside the app without adding
+  a write path.

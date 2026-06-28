@@ -646,6 +646,7 @@ function applyReviewItems(data: DashboardData, transactions: FireflyResource[]) 
       severity: Math.abs(signed) > 100 ? 'risk' : 'watch',
       fireflyGroupId: group.id,
       fireflyEditHref: fireflyTransactionActionHref(group.id),
+      fireflyReviewHref: fireflyTransactionReviewActionHref({ transactionGroupId: group.id, month: data.period.key }),
     });
   }
 
@@ -714,6 +715,26 @@ export function fireflyTransactionActionHref(transactionGroupId: string) {
   }
 
   return `/actions/firefly/transactions/edit?groupId=${encodeURIComponent(cleanId)}`;
+}
+
+export function fireflyTransactionReviewActionHref({
+  transactionGroupId,
+  month,
+}: {
+  transactionGroupId: string;
+  month?: string | null;
+}) {
+  const cleanId = transactionGroupId.trim();
+  if (!cleanId) {
+    return undefined;
+  }
+
+  const params = new URLSearchParams({ groupId: cleanId });
+  if (month) {
+    params.set('month', month);
+  }
+
+  return `/actions/firefly/transactions/review?${params.toString()}`;
 }
 
 export function fireflyBudgetHref(budgetId: string) {

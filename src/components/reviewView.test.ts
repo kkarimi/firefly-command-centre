@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ReviewItem } from '../data/fixtures';
-import { reviewClipboardText, reviewFixBrief, reviewRuleReadyImpact, reviewSpendImpact } from './reviewView';
+import { reviewClipboardText, reviewFixBrief } from '../lib/reviewFix';
+import { reviewRuleReadyImpact, reviewSpendImpact } from './reviewView';
 
 describe('review spend impact', () => {
   it('keeps sub-1% review impact visible when review value is non-zero', () => {
@@ -103,6 +104,7 @@ function reviewItem(overrides: Partial<ReviewItem> = {}): ReviewItem {
     severity: 'watch',
     fireflyGroupId: '100',
     fireflyEditHref: '/actions/firefly/transactions/edit?groupId=100',
+    fireflyReviewHref: '/actions/firefly/transactions/review?groupId=100&month=2026-06',
     ...overrides,
   };
 }
