@@ -67,6 +67,7 @@ export function ExpectedView({
           <span>Due {formatExpectedCoverCount({ count: nextWeekEvents.length, total: nextWeekTotal })}</span>
           <span>Later {nearTermCover.laterLabel}</span>
           <span>After 7d {formatMoney(nearTermCover.remainingCash, true)}</span>
+          <span title={nearTermCover.allOpenDetail}>After all {formatMoney(nearTermCover.remainingAfterAll, true)}</span>
           <span title={monthPosition.detail}>{monthPosition.label}</span>
           <span>{nearTermCover.lead}</span>
         </div>
@@ -214,13 +215,16 @@ function expectedCover({
   const dueLabel = formatExpectedCoverCount({ count: soonEvents.length, total: dueTotal });
   const laterLabel = formatExpectedCoverCount({ count: laterEvents.length, total: laterTotal });
   const remainingCash = cash - dueTotal;
+  const remainingAfterAll = remainingCash - laterTotal;
   const reservedPercent = cash > 0 ? Math.min(100, Math.max(0, (dueTotal / cash) * 100)) : dueTotal > 0 ? 100 : 0;
   const tone: Tone = remainingCash < 0 ? 'risk' : reservedPercent >= 75 ? 'watch' : 'ok';
 
   return {
+    allOpenDetail: `Cash after all open expected items is ${formatMoney(remainingAfterAll)}.`,
     detail: `Near-term cover. ${dueLabel} due within 7 days. ${laterLabel} later.`,
     laterLabel,
     lead: nextOpenEvent ? `Next ${nextOpenEvent.due}` : 'All clear',
+    remainingAfterAll,
     remainingCash,
     reservedPercent,
     tone,
