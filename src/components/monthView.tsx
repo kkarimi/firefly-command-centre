@@ -252,6 +252,7 @@ function SpendRhythm({
   const remainingDays = Math.max(1, period.totalDays - period.daysElapsed);
   const remainingDaily = Math.max(0, (activeLimit - activeSpend) / remainingDays);
   const recentSpend = monthRecentSpend({ dailySpend, days: 7 });
+  const paceGap = monthPaceGap({ averageSpend, period, remainingDaily });
   const allowanceLabel = period.isCurrent ? `Left/day ${formatMoney(remainingDaily, true)}` : 'Month closed';
   const allowanceDetail = period.isCurrent
     ? `Remaining daily allowance ${formatMoney(remainingDaily)}.`
@@ -268,7 +269,8 @@ function SpendRhythm({
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
   const cashTrendDetail = cashTrend ? `${cashTrend.detail} ` : '';
   const recentSpendDetail = recentSpend ? `${recentSpend.detail} ` : '';
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${recentSpendDetail}${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${cashFlow.detail} ${cashTrendDetail}${focusCategory.detail}`;
+  const paceGapDetail = paceGap ? `${paceGap.detail} ` : '';
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${recentSpendDetail}${paceGapDetail}${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${cashFlow.detail} ${cashTrendDetail}${focusCategory.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -309,6 +311,11 @@ function SpendRhythm({
           <span>Avg {formatMoney(averageSpend, true)}</span>
           {dailySpend.length > 0 && <span>Peak {formatMoney(peakSpend, true)}</span>}
           {recentSpend && <span title={recentSpend.detail}>{recentSpend.label}</span>}
+          {paceGap && (
+            <span className={toneClass(paceGap.tone)} title={paceGap.detail}>
+              {paceGap.label}
+            </span>
+          )}
           <span>{projectedLabel}</span>
           <span title={planGap.detail}>{planGap.label}</span>
           <span>{allowanceLabel}</span>
@@ -333,6 +340,36 @@ function monthRecentSpend({ dailySpend, days }: { dailySpend: DashboardData['dai
   return {
     label: `${visibleDays}d spend ${formatMoney(total, true)}`,
     detail: `Trailing ${visibleDays}-day spend is ${formatMoney(total)}.`,
+  };
+}
+
+function monthPaceGap({
+  averageSpend,
+  period,
+  remainingDaily,
+}: {
+  averageSpend: number;
+  period: DashboardData['period'];
+  remainingDaily: number;
+}): { label: string; detail: string; tone: Tone } | null {
+  if (!period.isCurrent || averageSpend <= 0) {
+    return null;
+  }
+
+  const gap = averageSpend - remainingDaily;
+
+  if (Math.abs(gap) < 0.5) {
+    return {
+      label: 'Pace on room',
+      detail: `Average daily spend matches the remaining daily allowance of ${formatMoney(remainingDaily)}.`,
+      tone: 'ok',
+    };
+  }
+
+  return {
+    label: `Pace ${gap > 0 ? 'over' : 'spare'} ${formatMoney(Math.abs(gap), true)}/d`,
+    detail: `Average daily spend is ${formatMoney(averageSpend)} versus ${formatMoney(remainingDaily)} remaining daily allowance.`,
+    tone: gap > 0 ? 'risk' : 'ok',
   };
 }
 
