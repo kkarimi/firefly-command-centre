@@ -30,6 +30,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.locator('.spend-rhythm-foot')).toContainText('Forecast over £217');
   await expect(page.getByText(/Left\/day/)).toBeVisible();
   await expect(page.getByText('Bills left £1,810')).toBeVisible();
+  await expect(page.getByText('Net flow £4,738')).toBeVisible();
   await expect(page.getByText('Focus Review queue')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Month history' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'General / Review' })).toHaveCount(0);
