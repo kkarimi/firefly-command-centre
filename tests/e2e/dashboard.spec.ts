@@ -118,6 +118,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(cashCalendar).toBeVisible();
   await expect(cashCalendar.locator('header')).toContainText('2 open / £3,435 due / 3 logged');
   await expect(cashCalendar.getByText('AMEX statement payment')).toBeVisible();
+  await expect(cashCalendar.getByText(/Awaiting bank-side transfer \/ (in \d+d|due today|\d+d overdue)/)).toBeVisible();
   await expect(cashCalendar.getByText('31 Jul')).toBeVisible();
   await expect(page.getByText('WEFINDFLATS variable income')).toBeVisible();
   await expect(page.locator('.expected-group').filter({ hasText: 'Income' }).locator('header')).toContainText('£9,300');

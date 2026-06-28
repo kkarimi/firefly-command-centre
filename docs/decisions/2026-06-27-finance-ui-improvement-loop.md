@@ -197,3 +197,5 @@ do not merge or deploy from this branch without explicit approval.
 - Accounts group headers now include flagged balance value as well as count so
   manual asset and liability review pressure shows materiality before opening
   each group.
+- Expected cash calendar rows now show compact due timing for open dated events
+  so payment urgency is visible without relying on the event order alone.
