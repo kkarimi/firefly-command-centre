@@ -4,7 +4,7 @@ import type { ReviewItem, Tone } from '../data/fixtures';
 import { formatMoney, formatSignedMoney } from '../lib/money';
 import { EmptyState, Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
-export function ReviewView({ items }: { items: ReviewItem[] }) {
+export function ReviewView({ activeSpend, items }: { activeSpend: number; items: ReviewItem[] }) {
   const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
   const totalQueued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
@@ -16,6 +16,7 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
   const riskTotal = riskItems.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
   const actionBuckets = reviewActionBuckets(items);
+  const spendImpact = reviewSpendImpact({ activeSpend, reviewTotal: totalQueued });
 
   async function copyFireflyGroupId(groupId: string) {
     await navigator.clipboard.writeText(groupId);
@@ -46,8 +47,8 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
           <section className="review-actions" aria-label="Suggested fixes">
             <header>
               <h3>Suggested fixes</h3>
-              <span>
-                {formatRowCount(items.length)} / source {primaryReviewSource(items)}
+              <span title={spendImpact.detail}>
+                {formatRowCount(items.length)} / source {primaryReviewSource(items)} / {spendImpact.label}
               </span>
             </header>
             <div>
@@ -152,6 +153,22 @@ function formatReviewValueSummary({ count, total }: { count: number; total: numb
   }
 
   return `${count} / ${formatMoney(total, true)}`;
+}
+
+function reviewSpendImpact({ activeSpend, reviewTotal }: { activeSpend: number; reviewTotal: number }) {
+  if (activeSpend <= 0) {
+    return {
+      label: 'affects n/a',
+      detail: 'No visible month spend is available for comparison.',
+    };
+  }
+
+  const percent = Math.round((reviewTotal / activeSpend) * 100);
+
+  return {
+    label: `affects ${percent}% spend`,
+    detail: `${formatMoney(reviewTotal)} in review against ${formatMoney(activeSpend)} visible month spend.`,
+  };
 }
 
 function formatReviewGroupSummary(items: ReviewItem[]) {
