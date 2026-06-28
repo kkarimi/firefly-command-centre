@@ -231,3 +231,5 @@ do not merge or deploy from this branch without explicit approval.
   near-term cash obligations carry workload as well as amount.
 - Review summary now shows stale row count and queued value so old cleanup work
   has materiality as well as age.
+- Accounts summary now shows flagged account count and value so review exposure
+  is visible before opening the Money Map.

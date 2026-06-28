@@ -108,7 +108,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   const accountsSummary = page.locator('.accounts-summary');
   await expect(accountsSummary.getByText('Budgetable cash')).toBeVisible();
   await expect(accountsSummary.locator('.metric').filter({ hasText: 'Liabilities' })).toContainText('-£9,864.98');
-  await expect(accountsSummary.getByText('Needs review')).toBeVisible();
+  await expect(accountsSummary.locator('.metric').filter({ hasText: 'Needs review' })).toContainText('4 / £70,425');
   await expect(page.locator('.account-group').filter({ hasText: 'Credit and liabilities' })).toContainText('-£9,864.98');
   await expect(page.locator('.account-group').filter({ hasText: 'Cash accounts' }).locator('header')).toContainText(
     '6% of map / Clear',
