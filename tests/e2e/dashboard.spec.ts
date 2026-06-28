@@ -165,6 +165,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(nearTermCover).toContainText('Later 1 / £2,000');
   await expect(nearTermCover).toContainText('After 7d £3,495');
   await expect(nearTermCover).toContainText('After all £1,495');
+  await expect(nearTermCover).toContainText('Open reserve 70%');
   await expect(nearTermCover).toContainText('Month net £5,865');
   await expect(nearTermCover).toContainText('Next 4 Jul');
   const cashCalendar = page.getByRole('region', { name: 'Cash calendar' });
