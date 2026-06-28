@@ -35,7 +35,9 @@ Recent implementation guardrails:
   `accounts`. Avoid temporary product names in modules, storage keys, and data
   labels.
 - Keep live Firefly reads server-side.
-- Do not add Firefly write features.
+- Do not add Firefly write features unless the operator explicitly approves the
+  exact write class. The currently approved write class is setting an existing
+  category on a flagged transaction from its internal fix-prep page.
 - Do not commit secrets, raw exports, raw transactions, or private runtime
   files.
 - Prefer small source-controlled config over hidden local state.
@@ -85,7 +87,8 @@ The loop must stop for user approval before:
 
 - deploying to live infrastructure;
 - changing router, DNS, Caddy, Docker, secrets, tokens, permissions, or backups;
-- adding or using a Firefly mutation path;
+- adding or using a new Firefly mutation path beyond the approved transaction
+  category save flow;
 - committing private data, runtime paths, raw exports, or raw transactions;
 - introducing a browser-visible Firefly token or raw Firefly payload;
 - changing product policy, for example category taxonomy or account treatment.
@@ -250,3 +253,6 @@ do not merge or deploy from this branch without explicit approval.
   note so the Firefly handoff can keep the category, tag, and movement context.
 - Flagged account rows now link through an internal Firefly account action so
   stale/manual account warnings have a direct resolution path.
+- Transaction fix-prep pages now offer a warning-gated category save flow using
+  existing Firefly categories only, so missing-category warnings can be resolved
+  without leaving the app.

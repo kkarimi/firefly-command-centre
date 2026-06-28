@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import {
   dashboardFixture,
   type Account,
@@ -9,17 +8,7 @@ import {
   type Tone,
 } from '../data/fixtures';
 import { budgetStatus, percentUsed, projectMonthEnd } from '../lib/money';
-
-type FireflyDocument<T> = {
-  data: T[];
-};
-
-type FireflyResource = {
-  id: string;
-  attributes?: Record<string, unknown>;
-};
-
-type FireflySplit = Record<string, unknown>;
+import { fireflyGet, fireflyToken, loadCollection, type FireflyResource, type FireflySplit } from './fireflyClient';
 
 type LoadDashboardOptions = {
   bypassCache?: boolean;
@@ -376,49 +365,6 @@ function markOps(data: DashboardData, label: string, value: string, tone: Tone) 
   }
 }
 
-function fireflyToken() {
-  if (process.env.FIREFLY_TOKEN?.trim()) {
-    return process.env.FIREFLY_TOKEN.trim();
-  }
-
-  const tokenFile = process.env.FIREFLY_TOKEN_FILE;
-  if (!tokenFile) {
-    return null;
-  }
-
-  try {
-    return readFileSync(tokenFile, 'utf8').trim() || null;
-  } catch {
-    return null;
-  }
-}
-
-function apiBase() {
-  const base = (process.env.FIREFLY_BASE_URL || 'http://127.0.0.1:18080').replace(/\/+$/, '');
-  return base.endsWith('/api/v1') ? base : `${base}/api/v1`;
-}
-
-async function fireflyGet<T>(token: string, path: string, params?: Record<string, string>) {
-  const url = new URL(`${apiBase()}${path.startsWith('/') ? path : `/${path}`}`);
-  for (const [key, value] of Object.entries(params ?? {})) {
-    url.searchParams.set(key, value);
-  }
-
-  const response = await fetch(url, {
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    signal: AbortSignal.timeout(15000),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Firefly ${path} returned HTTP ${response.status}`);
-  }
-
-  return (await response.json()) as T;
-}
-
 async function loadAccounts(token: string, period: DashboardData['period']) {
   const groups = await Promise.allSettled([
     loadCollection(token, '/accounts', { type: 'asset', date: period.balanceDate, limit: '200' }),
@@ -439,11 +385,6 @@ async function loadBills(token: string) {
 async function loadTransactions(token: string, period: DashboardData['period']) {
   const { start, end } = monthApiRange(period);
   return loadCollection(token, '/transactions', { start, end, limit: '200' });
-}
-
-async function loadCollection(token: string, path: string, params: Record<string, string>) {
-  const response = await fireflyGet<FireflyDocument<FireflyResource>>(token, path, params);
-  return response.data ?? [];
 }
 
 function monthApiRange(period: DashboardData['period']) {
@@ -636,16 +577,21 @@ function applyReviewItems(data: DashboardData, transactions: FireflyResource[]) 
     }
 
     const signed = signedAmount(split);
+    const transactionJournalId = stringValue(split.transaction_journal_id);
     items.push({
-      id: stringValue(split.transaction_journal_id) || `${group.id}-${items.length}`,
+      id: transactionJournalId || `${group.id}-${items.length}`,
       source: stringValue(split.source_name) || 'Firefly',
       payee: payeeName(split) || 'Review transaction',
       amount: signed,
       ageDays: ageDays(stringValue(split.date), data.period.isCurrent ? new Date() : new Date(data.period.end)),
+      budgetName: stringValue(split.budget_name),
+      categoryId: stringValue(split.category_id),
+      categoryName: stringValue(split.category_name),
       reason: review.reason,
       suggestion: review.suggestion,
       severity: Math.abs(signed) > 100 ? 'risk' : 'watch',
       fireflyGroupId: group.id,
+      fireflyJournalId: transactionJournalId,
       fireflyEditHref: fireflyTransactionActionHref(group.id),
       fireflyReviewHref: fireflyTransactionReviewActionHref({ transactionGroupId: group.id, month: data.period.key }),
     });
