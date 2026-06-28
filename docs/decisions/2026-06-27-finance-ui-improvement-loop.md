@@ -215,3 +215,5 @@ do not merge or deploy from this branch without explicit approval.
   free cash after bills translates into time.
 - Expected group headers now show open item count and due value so each
   scheduled-cash group can be triaged without reading every row.
+- Month spend rhythm now shows projected month-end spend so current pace has a
+  whole-month landing estimate before opening category details.
