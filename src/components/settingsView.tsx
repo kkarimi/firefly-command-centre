@@ -14,12 +14,13 @@ export function SettingsView({
     { key: 'showCash', label: 'Cash signal', value: settings.showCash },
     { key: 'showFocus', label: 'Focus signal', value: settings.showFocus },
     { key: 'showCategories', label: 'Categories by default', value: settings.showCategories },
+    { key: 'showDetailSignals', label: 'Detail signals', value: settings.showDetailSignals },
   ];
 
   return (
     <div className="view-stack">
-      <ViewHeading icon={Settings} title="Settings" meta="First page" />
-      <section className="settings-grid" aria-label="First page settings">
+      <ViewHeading icon={Settings} title="Settings" meta="Default view" />
+      <section className="settings-grid" aria-label="Dashboard settings">
         {rows.map((row) => (
           <label className="setting-row" key={row.key}>
             <span>{row.label}</span>

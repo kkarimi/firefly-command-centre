@@ -8,11 +8,13 @@ export function AccountsView({
   cash,
   groups,
   period,
+  showDetailSignals,
 }: {
   activeSpend: number;
   cash: DashboardData['cash'];
   groups: Record<string, Account[]>;
   period: DashboardData['period'];
+  showDetailSignals: boolean;
 }) {
   const budgetableCash = sumAccounts(groups.budgetableCash);
   const liabilities = sumAccounts(groups.creditAndLiabilities);
@@ -63,12 +65,16 @@ export function AccountsView({
           </span>
           <span>Free after bills {formatMoney(cashAfterCommitments, true)}</span>
           <span>{formatRunwayDays(runwayDays)}</span>
-          <span title={debtCover.detail}>{debtCover.label}</span>
-          <span title={debtCover.detail}>After debt {formatMoney(debtCover.cashAfterDebt, true)}</span>
-          <span title={liquidity.detail}>{liquidity.label}</span>
-          <span className={toneClass(concentration.tone)} title={concentration.detail}>
-            {concentration.label}
-          </span>
+          {showDetailSignals && (
+            <>
+              <span title={debtCover.detail}>{debtCover.label}</span>
+              <span title={debtCover.detail}>After debt {formatMoney(debtCover.cashAfterDebt, true)}</span>
+              <span title={liquidity.detail}>{liquidity.label}</span>
+              <span className={toneClass(concentration.tone)} title={concentration.detail}>
+                {concentration.label}
+              </span>
+            </>
+          )}
         </div>
       </section>
       <div className="map-grid">
@@ -76,24 +82,28 @@ export function AccountsView({
           title="Cash accounts"
           icon={PiggyBank}
           accounts={groups.budgetableCash}
+          showDetailSignals={showDetailSignals}
           totalExposure={totalExposure}
         />
         <AccountGroup
           title="Credit and liabilities"
           icon={WalletCards}
           accounts={groups.creditAndLiabilities}
+          showDetailSignals={showDetailSignals}
           totalExposure={totalExposure}
         />
         <AccountGroup
           title="Wealth and manual assets"
           icon={Banknote}
           accounts={groups.wealth}
+          showDetailSignals={showDetailSignals}
           totalExposure={totalExposure}
         />
         <AccountGroup
           title="Excluded and accounting"
           icon={GitBranch}
           accounts={groups.excluded}
+          showDetailSignals={showDetailSignals}
           totalExposure={totalExposure}
         />
       </div>
@@ -105,11 +115,13 @@ function AccountGroup({
   title,
   icon: Icon,
   accounts,
+  showDetailSignals,
   totalExposure,
 }: {
   title: string;
   icon: LucideIcon;
   accounts: Account[];
+  showDetailSignals: boolean;
   totalExposure: number;
 }) {
   const total = sumAccounts(accounts);
@@ -128,7 +140,7 @@ function AccountGroup({
         <div className="account-group-summary">
           <strong>{formatMoney(total)}</strong>
           <span className={flaggedCount > 0 ? toneClass('watch') : toneClass('ok')}>
-            {formatGroupSummary({ count: flaggedCount, exposure, flaggedTotal, totalExposure })}
+            {formatGroupSummary({ count: flaggedCount, exposure, flaggedTotal, showDetailSignals, totalExposure })}
           </span>
         </div>
       </header>
@@ -267,16 +279,18 @@ function formatGroupSummary({
   count,
   exposure,
   flaggedTotal,
+  showDetailSignals,
   totalExposure,
 }: {
   count: number;
   exposure: number;
   flaggedTotal: number;
+  showDetailSignals: boolean;
   totalExposure: number;
 }) {
   const share = totalExposure > 0 ? Math.round((exposure / totalExposure) * 100) : 0;
   const flagged = count === 0 ? 'Clear' : `${count} flagged / ${formatMoney(flaggedTotal, true)}`;
-  return `${share}% of map / ${flagged}`;
+  return showDetailSignals ? `${share}% of map / ${flagged}` : flagged;
 }
 
 const accountToneRank: Record<Tone, number> = {

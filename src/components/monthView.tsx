@@ -131,6 +131,7 @@ export function MonthView({
           incomeSeen={incomeSeen}
           paidObligations={paidObligations}
           period={period}
+          showDetailSignals={dashboardSettings.showDetailSignals}
           showDetails={showBudgetDetails}
         />
       )}
@@ -229,6 +230,7 @@ function SpendRhythm({
   onToggleDetails,
   paidObligations,
   period,
+  showDetailSignals,
   showDetails,
 }: {
   activeLimit: number;
@@ -241,6 +243,7 @@ function SpendRhythm({
   onToggleDetails: () => void;
   paidObligations: { count: number; total: number };
   period: DashboardData['period'];
+  showDetailSignals: boolean;
   showDetails: boolean;
 }) {
   const dailySpendAmounts = dailySpend.map((day) => day.amount);
@@ -310,19 +313,27 @@ function SpendRhythm({
         <span className="spend-rhythm-foot">
           <span>Avg {formatMoney(averageSpend, true)}</span>
           {dailySpend.length > 0 && <span>Peak {formatMoney(peakSpend, true)}</span>}
-          {recentSpend && <span title={recentSpend.detail}>{recentSpend.label}</span>}
-          {paceGap && (
-            <span className={toneClass(paceGap.tone)} title={paceGap.detail}>
-              {paceGap.label}
-            </span>
+          {showDetailSignals && (
+            <>
+              {recentSpend && <span title={recentSpend.detail}>{recentSpend.label}</span>}
+              {paceGap && (
+                <span className={toneClass(paceGap.tone)} title={paceGap.detail}>
+                  {paceGap.label}
+                </span>
+              )}
+            </>
           )}
           <span>{projectedLabel}</span>
-          <span title={planGap.detail}>{planGap.label}</span>
+          {showDetailSignals && <span title={planGap.detail}>{planGap.label}</span>}
           <span>{allowanceLabel}</span>
-          <span>{billPosition.label}</span>
-          <span title={cashFlow.detail}>{cashFlow.label}</span>
-          {cashTrend && <span title={cashTrend.detail}>{cashTrend.label}</span>}
-          <span title={focusCategory.detail}>{focusCategory.label}</span>
+          {showDetailSignals && (
+            <>
+              <span>{billPosition.label}</span>
+              <span title={cashFlow.detail}>{cashFlow.label}</span>
+              {cashTrend && <span title={cashTrend.detail}>{cashTrend.label}</span>}
+              <span title={focusCategory.detail}>{focusCategory.label}</span>
+            </>
+          )}
         </span>
       </button>
     </section>

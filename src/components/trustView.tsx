@@ -2,7 +2,7 @@ import { Activity, AlertCircle, CheckCircle2, Info, ShieldAlert, type LucideIcon
 import type { DashboardData, Tone } from '../data/fixtures';
 import { Metric, toneClass, toneLabels, ViewHeading } from './uiPrimitives';
 
-export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
+export function TrustView({ ops, showDetailSignals }: { ops: DashboardData['ops']; showDetailSignals: boolean }) {
   const verifiedCount = ops.filter((item) => item.tone === 'ok').length;
   const gapCount = ops.filter((item) => item.tone === 'neutral').length;
   const watchCount = ops.filter((item) => item.tone === 'watch').length;
@@ -11,15 +11,24 @@ export function TrustView({ ops }: { ops: DashboardData['ops'] }) {
   const verifiedTone: Tone = riskCount > 0 ? 'risk' : watchCount > 0 ? 'watch' : gapCount > 0 ? 'neutral' : 'ok';
   const sortedOps = [...ops].sort((left, right) => toneRank[left.tone] - toneRank[right.tone]);
   const leadIssue = sortedOps.find((item) => item.tone === 'risk' || item.tone === 'watch');
+  const trustSummaryClass = showDetailSignals ? 'split-summary trust-summary' : 'split-summary trust-summary minimal';
 
   return (
     <div className="view-stack">
-      <ViewHeading icon={Activity} title="Data Trust" meta={`${formatSourceCount(ops.length)} observed`} />
-      <section className="split-summary trust-summary" aria-label="Trust summary">
+      <ViewHeading
+        icon={Activity}
+        title="Data Trust"
+        meta={showDetailSignals ? `${formatSourceCount(ops.length)} observed` : 'Read-only checks'}
+      />
+      <section className={trustSummaryClass} aria-label="Trust summary">
         <Metric label="Verified" value={verifiedPercent} tone={verifiedTone} />
         <Metric label="Lead issue" value={leadIssue?.label ?? 'Clear'} tone={leadIssue?.tone ?? 'ok'} />
-        <Metric label="Watch" value={formatSourceCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
-        <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
+        {showDetailSignals && (
+          <>
+            <Metric label="Watch" value={formatSourceCount(watchCount)} tone={watchCount > 0 ? 'watch' : 'ok'} />
+            <Metric label="Risk" value={formatSourceCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
+          </>
+        )}
       </section>
       <div className="ops-detail-grid">
         {sortedOps.map((item) => {

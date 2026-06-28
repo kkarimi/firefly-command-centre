@@ -246,14 +246,31 @@ export default function FinanceApp({ initialData }: { initialData?: DashboardDat
                 riskBudgets={atRiskBudgets}
               />
             )}
-            {activeTab === 'review' && <ReviewView activeSpend={activeSpend} items={data.reviewItems} />}
+            {activeTab === 'review' && (
+              <ReviewView
+                activeSpend={activeSpend}
+                items={data.reviewItems}
+                showDetailSignals={dashboardSettings.showDetailSignals}
+              />
+            )}
             {activeTab === 'money' && (
-              <AccountsView activeSpend={activeSpend} cash={data.cash} groups={data.moneyMap} period={data.period} />
+              <AccountsView
+                activeSpend={activeSpend}
+                cash={data.cash}
+                groups={data.moneyMap}
+                period={data.period}
+                showDetailSignals={dashboardSettings.showDetailSignals}
+              />
             )}
             {activeTab === 'expected' && (
-              <ExpectedView balanceDate={data.period.balanceDate} cash={data.cash} groups={data.expected} />
+              <ExpectedView
+                balanceDate={data.period.balanceDate}
+                cash={data.cash}
+                groups={data.expected}
+                showDetailSignals={dashboardSettings.showDetailSignals}
+              />
             )}
-            {activeTab === 'ops' && <TrustView ops={data.ops} />}
+            {activeTab === 'ops' && <TrustView ops={data.ops} showDetailSignals={dashboardSettings.showDetailSignals} />}
             {activeTab === 'settings' && <SettingsView settings={dashboardSettings} onChange={updateDashboardSettings} />}
           </section>
         </div>
