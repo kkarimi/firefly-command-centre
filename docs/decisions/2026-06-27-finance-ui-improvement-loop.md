@@ -235,3 +235,5 @@ do not merge or deploy from this branch without explicit approval.
   is visible before opening the Money Map.
 - Month spend rhythm now shows bills left, or bills paid for archived months,
   so scheduled-obligation pressure is visible on the default Month surface.
+- Review summary now shows risk row count and queued value so the highest
+  priority cleanup has materiality before opening suggested fixes.

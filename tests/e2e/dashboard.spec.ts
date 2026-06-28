@@ -76,6 +76,7 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('heading', { name: 'Review Inbox' })).toBeVisible();
   const reviewSummary = page.getByRole('region', { name: 'Review summary' });
   await expect(reviewSummary).toBeVisible();
+  await expect(reviewSummary.locator('.metric').filter({ hasText: 'Risk' })).toContainText('1 / £184');
   await expect(page.getByText('£2,246')).toBeVisible();
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 / £19');
   const suggestedFixes = page.getByRole('region', { name: 'Suggested fixes' });

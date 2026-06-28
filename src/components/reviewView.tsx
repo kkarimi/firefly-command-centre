@@ -11,7 +11,9 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
   const staleItems = items.filter((item) => item.ageDays >= staleAgeDays);
   const staleTotal = staleItems.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const groups = reviewGroups(items);
-  const riskCount = groups.find((group) => group.tone === 'risk')?.items.length ?? 0;
+  const riskItems = groups.find((group) => group.tone === 'risk')?.items ?? [];
+  const riskCount = riskItems.length;
+  const riskTotal = riskItems.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const summaryTone: Tone = riskCount > 0 ? 'risk' : items.length > 0 ? 'watch' : 'ok';
   const actionBuckets = reviewActionBuckets(items);
 
@@ -28,7 +30,11 @@ export function ReviewView({ items }: { items: ReviewItem[] }) {
       ) : (
         <>
           <section className="split-summary review-summary" aria-label="Review summary">
-            <Metric label="Risk" value={formatRowCount(riskCount)} tone={riskCount > 0 ? 'risk' : 'ok'} />
+            <Metric
+              label="Risk"
+              value={formatReviewValueSummary({ count: riskCount, total: riskTotal })}
+              tone={riskCount > 0 ? 'risk' : 'ok'}
+            />
             <Metric label="Queued" value={formatMoney(totalQueued, true)} tone={summaryTone} />
             <Metric label="Oldest" value={`${oldestAgeDays}d`} tone={oldestAgeDays >= 7 ? 'watch' : 'ok'} />
             <Metric
@@ -137,6 +143,10 @@ function formatRowCount(count: number) {
 }
 
 function formatStaleSummary({ count, total }: { count: number; total: number }) {
+  return formatReviewValueSummary({ count, total });
+}
+
+function formatReviewValueSummary({ count, total }: { count: number; total: number }) {
   if (count === 0) {
     return '0 rows';
   }
