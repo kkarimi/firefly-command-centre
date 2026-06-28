@@ -77,6 +77,9 @@ test('renders the finance review UI and all v0 sections', async ({ page }, testI
   await expect(page.getByRole('region', { name: 'Watch next review rows' }).locator('header')).toContainText(
     '2 rows / £2,043 / oldest 5d',
   );
+  await expect(page.getByRole('region', { name: 'Watch next review rows' }).locator('.review-row').first()).toContainText(
+    'Cash movement',
+  );
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Copy grp_9A2F' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open transaction in Firefly unavailable' }).first()).toBeDisabled();
