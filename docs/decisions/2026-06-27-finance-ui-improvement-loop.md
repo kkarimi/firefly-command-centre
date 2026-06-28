@@ -241,3 +241,5 @@ do not merge or deploy from this branch without explicit approval.
   obligations carry workload as well as cash impact.
 - Review rows now expose a detail-only fix brief so category, tag, movement,
   and rule guidance is easier to apply in Firefly without adding write access.
+- Review copy actions now copy a structured fix note rather than only the group
+  id, so applying a category or movement decision in Firefly is less manual.

@@ -121,7 +121,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
     'Cash movement',
   );
   await expect(page.getByText('Unknown card presentment')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Copy grp_9A2F' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Copy review fix for Unknown card presentment' })).toBeVisible();
   const firstFireflyLink = page.getByRole('link', { name: 'Open transaction in Firefly' }).first();
   await expect(firstFireflyLink).toBeVisible();
   await expect(firstFireflyLink).toHaveAttribute('href', '/actions/firefly/transactions/edit?groupId=grp_9A2F');

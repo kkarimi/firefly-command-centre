@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ReviewItem } from '../data/fixtures';
-import { reviewFixBrief, reviewRuleReadyImpact, reviewSpendImpact } from './reviewView';
+import { reviewClipboardText, reviewFixBrief, reviewRuleReadyImpact, reviewSpendImpact } from './reviewView';
 
 describe('review spend impact', () => {
   it('keeps sub-1% review impact visible when review value is non-zero', () => {
@@ -57,6 +57,37 @@ describe('review fix brief', () => {
       { label: 'Tag', value: 'cash-movement' },
       { label: 'Movement', value: 'Confirm type' },
     ]);
+  });
+});
+
+describe('review clipboard text', () => {
+  it('copies the context needed to apply a fix in Firefly', () => {
+    expect(
+      reviewClipboardText(
+        reviewItem({
+          payee: 'Unknown card presentment',
+          source: 'AMEX',
+          amount: -184.2,
+          reason: 'Missing category and statement marker',
+          suggestion: 'Travel & Holidays, tag statement-review',
+          fireflyGroupId: 'grp_9A2F',
+          fireflyEditHref: '/actions/firefly/transactions/edit?groupId=grp_9A2F',
+        }),
+      ),
+    ).toBe(
+      [
+        'Firefly group: grp_9A2F',
+        'Payee: Unknown card presentment',
+        'Source: AMEX',
+        'Amount: -£184.20',
+        'Reason: Missing category and statement marker',
+        'Suggested fix: Travel & Holidays, tag statement-review',
+        'Fix brief:',
+        'Category: Travel & Holidays',
+        'Tag: statement-review',
+        'Open: /actions/firefly/transactions/edit?groupId=grp_9A2F',
+      ].join('\n'),
+    );
   });
 });
 

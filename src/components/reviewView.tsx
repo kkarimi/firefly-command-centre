@@ -15,7 +15,7 @@ export function ReviewView({
   items: ReviewItem[];
   showDetailSignals: boolean;
 }) {
-  const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
+  const [copiedReviewId, setCopiedReviewId] = useState<string | null>(null);
   const totalQueued = items.reduce((sum, item) => sum + Math.abs(item.amount), 0);
   const oldestAgeDays = items.reduce((oldest, item) => Math.max(oldest, item.ageDays), 0);
   const staleItems = items.filter((item) => item.ageDays >= staleAgeDays);
@@ -48,9 +48,9 @@ export function ReviewView({
     ? `${netImpact.detail} ${spendImpact.detail} ${staleShare.detail} ${ruleReadyImpact.detail}`
     : undefined;
 
-  async function copyFireflyGroupId(groupId: string) {
-    await navigator.clipboard.writeText(groupId);
-    setCopiedGroupId(groupId);
+  async function copyReviewFix(item: ReviewItem) {
+    await navigator.clipboard.writeText(reviewClipboardText(item));
+    setCopiedReviewId(item.id);
   }
 
   return (
@@ -130,12 +130,12 @@ export function ReviewView({
                         <div className="icon-actions">
                           <button
                             type="button"
-                            title={`Copy ${item.fireflyGroupId}`}
+                            title="Copy review fix"
                             aria-label={
-                              copiedGroupId === item.fireflyGroupId ? `Copied ${item.fireflyGroupId}` : `Copy ${item.fireflyGroupId}`
+                              copiedReviewId === item.id ? `Copied review fix for ${item.payee}` : `Copy review fix for ${item.payee}`
                             }
                             onClick={() => {
-                              void copyFireflyGroupId(item.fireflyGroupId);
+                              void copyReviewFix(item);
                             }}
                           >
                             <Copy size={16} />
@@ -293,6 +293,24 @@ export function reviewFixBrief(item: ReviewItem) {
   ].filter((entry): entry is ReviewFixBriefEntry => Boolean(entry));
 
   return dedupeFixBrief(entries).slice(0, 3);
+}
+
+export function reviewClipboardText(item: ReviewItem) {
+  const fixBrief = reviewFixBrief(item)
+    .map((entry) => `${entry.label}: ${entry.value}`)
+    .join('\n');
+  const lines = [
+    `Firefly group: ${item.fireflyGroupId}`,
+    `Payee: ${item.payee}`,
+    `Source: ${item.source}`,
+    `Amount: ${formatSignedMoney(item.amount)}`,
+    `Reason: ${item.reason}`,
+    `Suggested fix: ${item.suggestion}`,
+    fixBrief ? `Fix brief:\n${fixBrief}` : null,
+    item.fireflyEditHref ? `Open: ${item.fireflyEditHref}` : null,
+  ].filter((line): line is string => Boolean(line));
+
+  return lines.join('\n');
 }
 
 function categoryFixEntry(item: ReviewItem) {
