@@ -245,6 +245,7 @@ test('renders the minimal finance review UI and opt-in detail signals', async ({
   await expect(page.getByText('7d spend £833')).toBeVisible();
   await expect(page.getByText('Pace over £109/d')).toBeVisible();
   await expect(page.getByText('Forecast over £217')).toBeVisible();
+  await expect(page.getByText('After bills -£851/d')).toBeVisible();
 
   await page.getByRole('button', { name: 'Review', exact: true }).click();
   await expect(reviewSummary.locator('.metric').filter({ hasText: 'Stale' })).toContainText('1 / £19');

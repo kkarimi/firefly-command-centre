@@ -280,3 +280,6 @@ do not merge or deploy from this branch without explicit approval.
 - The generic Firefly Trust action now opens an internal status handoff page
   before Firefly home, so API/status warnings also resolve through a local
   explanation and final external action.
+- Month detail signals now include daily spending room after reserving known
+  bills, so recurring obligations affect the spend rhythm only when detail
+  mode is enabled.

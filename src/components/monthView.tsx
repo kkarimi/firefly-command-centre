@@ -283,11 +283,13 @@ function SpendRhythm({
   const cashFlow = monthCashFlow({ activeSpend, incomeSeen });
   const cashTrend = monthCashTrend({ cash, comparison });
   const focusCategory = monthFocusCategory(budgets);
+  const billAdjustedRoom = monthBillAdjustedRoom({ activeLimit, activeSpend, cash, period });
   const targetPercent = Math.min(100, Math.max(0, (targetDaily / maxSpend) * 100));
   const cashTrendDetail = cashTrend ? `${cashTrend.detail} ` : '';
   const recentSpendDetail = recentSpend ? `${recentSpend.detail} ` : '';
   const paceGapDetail = paceGap ? `${paceGap.detail} ` : '';
-  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${recentSpendDetail}${paceGapDetail}${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${cashFlow.detail} ${cashTrendDetail}${focusCategory.detail}`;
+  const billAdjustedRoomDetail = billAdjustedRoom ? `${billAdjustedRoom.detail} ` : '';
+  const title = `Spend ${formatMoney(activeSpend)} of ${formatMoney(activeLimit)}. Average ${formatMoney(averageSpend)} per active day. Peak ${formatMoney(peakSpend)}. ${recentSpendDetail}${paceGapDetail}${projectedDetail} ${planGap.detail} ${allowanceDetail} ${billPosition.detail} ${billAdjustedRoomDetail}${cashFlow.detail} ${cashTrendDetail}${focusCategory.detail}`;
 
   return (
     <section className="spend-rhythm" aria-label="Monthly spend rhythm">
@@ -343,6 +345,11 @@ function SpendRhythm({
           {showDetailSignals && (
             <>
               <span>{billPosition.label}</span>
+              {billAdjustedRoom && (
+                <span className={toneClass(billAdjustedRoom.tone)} title={billAdjustedRoom.detail}>
+                  {billAdjustedRoom.label}
+                </span>
+              )}
               <span title={cashFlow.detail}>{cashFlow.label}</span>
               {cashTrend && <span title={cashTrend.detail}>{cashTrend.label}</span>}
               <span title={focusCategory.detail}>{focusCategory.label}</span>
@@ -479,6 +486,33 @@ function monthCashFlow({ activeSpend, incomeSeen }: { activeSpend: number; incom
   return {
     label: `Net flow ${formatMoney(netFlow, true)}`,
     detail: `${formatMoney(incomeSeen)} income seen minus ${formatMoney(activeSpend)} visible month spend.`,
+  };
+}
+
+export function monthBillAdjustedRoom({
+  activeLimit,
+  activeSpend,
+  cash,
+  period,
+}: {
+  activeLimit: number;
+  activeSpend: number;
+  cash: DashboardData['cash'];
+  period: DashboardData['period'];
+}): { label: string; detail: string; tone: Tone } | null {
+  if (!period.isCurrent || cash.committedUntilMonthEnd <= 0) {
+    return null;
+  }
+
+  const remainingDays = Math.max(1, period.totalDays - period.daysElapsed);
+  const remainingAfterBills = activeLimit - activeSpend - cash.committedUntilMonthEnd;
+  const dailyAfterBills = remainingAfterBills / remainingDays;
+  const tone: Tone = remainingAfterBills < 0 ? 'risk' : dailyAfterBills < 25 ? 'watch' : 'ok';
+
+  return {
+    label: `After bills ${formatSignedCompactMoney(dailyAfterBills)}/d`,
+    detail: `${formatMoney(remainingAfterBills)} remains after reserving ${formatMoney(cash.committedUntilMonthEnd)} known bills for ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}.`,
+    tone,
   };
 }
 
